@@ -1,4 +1,4 @@
-/* Global styling */
+/* Global */
 body {
   font-family: Arial, sans-serif;
   background-color: #f5f5f5;
@@ -16,7 +16,7 @@ body {
   height: 100%;
 }
 
-/* Zones */
+/* Colonnes */
 #gauche, #centre, #droite {
   flex: 1;
   padding: 10px;
@@ -29,10 +29,22 @@ h2 {
 }
 
 /* Palette de tuiles */
-#palette {
+.palette-section {
+  margin-bottom: 20px;
+}
+
+.palette-section h3 {
+  margin: 10px 0 5px;
+  font-size: 1em;
+  color: #444;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 4px;
+}
+
+.tuile-ligne {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tuile {
@@ -43,17 +55,19 @@ h2 {
   margin: 2px;
 }
 
-.selected {
+.tuile.selected {
   border: 2px solid #000;
 }
 
-/* Grille de la salle */
+/* Grille */
 #grille {
   display: grid;
-  grid-template-columns: repeat(16, 1fr);  /* 🔁 CHANGÉ de 15 à 16 */
-  grid-template-rows: repeat(16, 1fr);     /* 🔁 CHANGÉ aussi */
+  grid-template-columns: repeat(16, 1fr);
+  grid-template-rows: repeat(16, 1fr);
   gap: 1px;
   margin-top: 4px;
+  min-width: 640px;
+  min-height: 640px;
 }
 
 .cellule {
@@ -82,7 +96,7 @@ input#nom-salle {
   padding: 5px;
 }
 
-/* Message de statut */
+/* Message */
 #message {
   margin-bottom: 10px;
   color: #007b00;
@@ -93,12 +107,41 @@ input#nom-salle {
 .salle-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 4px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 6px;
   border-bottom: 1px solid #ccc;
 }
 
+.salle-item canvas {
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+  border: 1px solid #999;
+  background: #eee;
+  vertical-align: middle;
+}
+
+.salle-item strong {
+  flex: 1;
+  font-size: 0.9em;
+  color: #333;
+}
+
 .salle-item button {
-  margin-left: 5px;
   cursor: pointer;
+  padding: 4px 6px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.salle-item button:hover {
+  background-color: #eee;
+}
+
+.salle-item button:focus {
+  outline: none;
+  border: 1px solid red;
 }

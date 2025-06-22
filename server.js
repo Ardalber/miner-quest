@@ -39,7 +39,7 @@ app.post("/api/ajouter-salle", (req, res) => {
   res.json({ success: true });
 });
 
-// 🔁 Lire les salles
+// 🔁 Lire toutes les salles
 app.get("/api/salles", (req, res) => {
   res.json(lireSalles());
 });
@@ -67,20 +67,30 @@ app.put("/api/modifier-salle/:nom", (req, res) => {
   res.json({ success: true });
 });
 
-// 🖼️ Liste dynamique des sprites dans /sprites
+// 🖼️ Liste dynamique des sprites par sous-dossier (minerai, pioche, decor)
 app.get("/api/sprites", (req, res) => {
-  const spritesDir = path.join(__dirname, "public", "sprites");
+  const spritesRoot = path.join(__dirname, "public", "sprites");
+  if (!fs.existsSync(spritesRoot)) return res.json([]);
 
-  if (!fs.existsSync(spritesDir)) return res.json([]);
+  const categories = fs.readdirSync(spritesRoot).filter(dir => {
+    const fullPath = path.join(spritesRoot, dir);
+    return fs.statSync(fullPath).isDirectory();
+  });
 
-  const fichiers = fs.readdirSync(spritesDir)
-    .filter(f => f.endsWith(".png") || f.endsWith(".jpg"))
-    .map(f => {
-      const nom = f.replace(/\.[^.]+$/, ""); // enlève l'extension
-      return { nom, chemin: `sprites/${f}` };
-    });
+  let resultat = [];
 
-  res.json(fichiers);
+  for (const categorie of categories) {
+    const dossier = path.join(spritesRoot, categorie);
+    const fichiers = fs.readdirSync(dossier).filter(f => f.endsWith(".png") || f.endsWith(".jpg"));
+
+    for (const fichier of fichiers) {
+      const nom = fichier.replace(/\.[^.]+$/, ""); // sans extension
+      const chemin = `sprites/${categorie}/${fichier}`;
+      resultat.push({ nom, chemin, categorie });
+    }
+  }
+
+  res.json(resultat);
 });
 
 // 🚀 Lancer le serveur
