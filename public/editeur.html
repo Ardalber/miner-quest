@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Éditeur de Salles</title>
+  <link rel="stylesheet" href="editeur.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="gauche">
+      <h2>Palette de tuiles</h2>
+      <div id="palette"></div>
+    </div>
+
+    <div id="centre">
+      <div class="actions-ligne">
+        <button onclick="resetGrille()">🧹 Vider</button>
+        <input type="text" id="nom-salle" placeholder="Nom de la salle" />
+        <button onclick="sauvegarder()">💾 Sauvegarder</button>
+      </div>
+      <div id="message"></div>
+      <div id="grille"></div>
+    </div>
+
+    <div id="droite">
+      <h2>Salles créées</h2>
+      <div id="liste-salles"></div>
+    </div>
+  </div>
+
+  <script src="editeur.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+/* Global styling */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 20px;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+#container {
+  display: flex;
+  gap: 20px;
+  width: 90%;
+  height: 100%;
+}
+
+#gauche, #centre, #droite {
+  flex: 1;
+  padding: 10px;
+}
+
+h2 {
+  font-size: 1.2em;
+  text-align: center;
+  color: #333;
+}
+
+/* Palette de tuiles */
+#palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tuile {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  margin: 2px;
+}
+
+.selected {
+  border: 2px solid #000;
+}
+
+/* Grille de la salle */
+#grille {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(15, 1fr);
+  gap: 1px;
+  margin-top: 4px; /* 🔽 Rapprochement des boutons */
+}
+
+.cellule {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ddd;
+  position: relative;
+}
+
+.cellule img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Actions ligne */
+.actions-ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;        /* 🔽 Moins d'espace entre les boutons */
+  margin-bottom: 4px; /* 🔽 Moins d'espace sous les boutons */
+}
+
+#message {
+  margin-top: 4px;
+  font-weight: bold;
+  color: lime;
+  min-height: 1.5em;
+  text-align: center;
+}
+
+/* Liste des salles */
+#liste-salles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.salle {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.salle input {
+  width: 150px;
+  padding: 5px;
+  font-size: 0.9em;
+}
+
+.salle button {
+  cursor: pointer;
+  padding: 5px 10px;
+}

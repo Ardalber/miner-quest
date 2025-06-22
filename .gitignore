@@ -1,0 +1,12 @@
+# Ignorer les dépendances installées par npm
+node_modules/
+
+# Ignorer les fichiers de configuration sensibles
+.env
+
+# Ignorer les logs d'erreur npm
+npm-debug.log*
+
+# Ignorer les fichiers système
+.DS_Store
+Thumbs.db
