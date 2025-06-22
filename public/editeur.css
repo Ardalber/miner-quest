@@ -16,6 +16,7 @@ body {
   height: 100%;
 }
 
+/* Zones */
 #gauche, #centre, #droite {
   flex: 1;
   padding: 10px;
@@ -49,10 +50,10 @@ h2 {
 /* Grille de la salle */
 #grille {
   display: grid;
-  grid-template-columns: repeat(15, 1fr);
-  grid-template-rows: repeat(15, 1fr);
+  grid-template-columns: repeat(16, 1fr);  /* 🔁 CHANGÉ de 15 à 16 */
+  grid-template-rows: repeat(16, 1fr);     /* 🔁 CHANGÉ aussi */
   gap: 1px;
-  margin-top: 4px; /* 🔽 Rapprochement des boutons */
+  margin-top: 4px;
 }
 
 .cellule {
@@ -68,44 +69,36 @@ h2 {
   object-fit: cover;
 }
 
-/* Actions ligne */
+/* Ligne d'action */
 .actions-ligne {
   display: flex;
   align-items: center;
-  gap: 8px;        /* 🔽 Moins d'espace entre les boutons */
-  margin-bottom: 4px; /* 🔽 Moins d'espace sous les boutons */
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
+input#nom-salle {
+  flex: 1;
+  padding: 5px;
+}
+
+/* Message de statut */
 #message {
-  margin-top: 4px;
+  margin-bottom: 10px;
+  color: #007b00;
   font-weight: bold;
-  color: lime;
-  min-height: 1.5em;
-  text-align: center;
 }
 
 /* Liste des salles */
-#liste-salles {
+.salle-item {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.salle {
-  display: flex;
-  gap: 10px;
   align-items: center;
+  justify-content: space-between;
+  padding: 4px;
+  border-bottom: 1px solid #ccc;
 }
 
-.salle input {
-  width: 150px;
-  padding: 5px;
-  font-size: 0.9em;
-}
-
-.salle button {
+.salle-item button {
+  margin-left: 5px;
   cursor: pointer;
-  padding: 5px 10px;
 }

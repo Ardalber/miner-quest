@@ -36,48 +36,54 @@ app.post("/api/ajouter-salle", (req, res) => {
   const salles = lireSalles();
   salles.push({ nom, data });
   ecrireSalles(salles);
+  res.json({ success: true });
+});
 
-  res.json({ success: true, index: salles.length - 1 });
+// 🔁 Lire les salles
+app.get("/api/salles", (req, res) => {
+  res.json(lireSalles());
 });
 
 // ❌ Supprimer une salle
-app.delete("/api/supprimer-salle/:index", (req, res) => {
-  const index = parseInt(req.params.index, 10);
-  const salles = lireSalles();
-  if (index < 0 || index >= salles.length) return res.json({ success: false });
-
-  salles.splice(index, 1);
+app.delete("/api/supprimer-salle/:nom", (req, res) => {
+  const nom = decodeURIComponent(req.params.nom);
+  let salles = lireSalles();
+  salles = salles.filter(s => s.nom !== nom);
   ecrireSalles(salles);
   res.json({ success: true });
 });
 
-// ✏️ Modifier une salle existante
-app.put("/api/modifier-salle/:index", (req, res) => {
-  const index = parseInt(req.params.index, 10);
-  const { data } = req.body;
-  const salles = lireSalles();
-  if (!Array.isArray(data) || index < 0 || index >= salles.length)
-    return res.json({ success: false });
+// ✏️ Modifier une salle
+app.put("/api/modifier-salle/:nom", (req, res) => {
+  const nom = decodeURIComponent(req.params.nom);
+  const { nouveauNom, data } = req.body;
 
-  salles[index].data = data;
+  let salles = lireSalles();
+  const index = salles.findIndex(s => s.nom === nom);
+  if (index === -1) return res.status(404).json({ success: false });
+
+  salles[index] = { nom: nouveauNom || nom, data: data || salles[index].data };
   ecrireSalles(salles);
   res.json({ success: true });
 });
 
-// 📝 Renommer une salle
-app.put("/api/renommer-salle/:index", (req, res) => {
-  const index = parseInt(req.params.index, 10);
-  const { nom } = req.body;
-  const salles = lireSalles();
-  if (typeof nom !== "string" || index < 0 || index >= salles.length)
-    return res.json({ success: false });
+// 🖼️ Liste dynamique des sprites dans /sprites
+app.get("/api/sprites", (req, res) => {
+  const spritesDir = path.join(__dirname, "public", "sprites");
 
-  salles[index].nom = nom;
-  ecrireSalles(salles);
-  res.json({ success: true });
+  if (!fs.existsSync(spritesDir)) return res.json([]);
+
+  const fichiers = fs.readdirSync(spritesDir)
+    .filter(f => f.endsWith(".png") || f.endsWith(".jpg"))
+    .map(f => {
+      const nom = f.replace(/\.[^.]+$/, ""); // enlève l'extension
+      return { nom, chemin: `sprites/${f}` };
+    });
+
+  res.json(fichiers);
 });
 
 // 🚀 Lancer le serveur
 app.listen(PORT, () => {
-  console.log(`✅ Serveur prêt : http://localhost:${PORT}`);
+  console.log(`✅ Serveur lancé sur http://localhost:${PORT}`);
 });
