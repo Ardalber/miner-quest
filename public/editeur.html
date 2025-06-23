@@ -8,6 +8,7 @@
 </head>
 <body>
   <div id="container">
+
     <!-- Palette de gauche -->
     <div id="gauche">
       <h2>Palette de tuiles</h2>
@@ -22,7 +23,20 @@
         <button onclick="sauvegarder()">💾 Sauvegarder</button>
       </div>
       <div id="message"></div>
-      <div id="grille"></div>
+
+      <!-- GRILLE + FLÈCHES + LABEL -->
+      <div id="grille-wrapper">
+        <div id="fleches-lignes">
+          <button id="retirer-ligne">⬆️</button>
+          <button id="ajouter-ligne">⬇️</button>
+        </div>
+        <div id="grille"></div>
+        <div id="fleches-colonnes">
+          <button id="retirer-colonne">⬅️</button>
+          <button id="ajouter-colonne">➡️</button>
+        </div>
+        <div id="taille-grille">Grille : 16 × 16</div>
+      </div>
     </div>
 
     <!-- Liste des salles à droite -->
@@ -30,6 +44,7 @@
       <h2>Salles créées</h2>
       <div id="liste-salles"></div>
     </div>
+
   </div>
 
   <script src="editeur.js"></script>

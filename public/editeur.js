@@ -1,5 +1,6 @@
 let typeActif = "vide";
-const taille = 16;
+let nbLignes = 16;
+let nbColonnes = 16;
 let salle = [];
 let salleModifiee = false;
 
@@ -9,13 +10,19 @@ const messageDiv = document.getElementById("message");
 const nomInput = document.getElementById("nom-salle");
 const listeSallesDiv = document.getElementById("liste-salles");
 
+function mettreAJourLabelGrille() {
+  const label = document.getElementById("taille-grille");
+  if (label) {
+    label.textContent = `Grille : ${nbLignes} × ${nbColonnes}`;
+  }
+}
+
 const TITRES_CATEGORIES = {
   minerai: "🪨 Minerai",
   pioche: "🪓 Pioche",
   decor: "🎨 Décor"
 };
 
-// 🔁 Palette dynamique par catégories
 fetch("/api/sprites")
   .then(res => res.json())
   .then(tuiles => {
@@ -67,40 +74,48 @@ fetch("/api/sprites")
     initGrille();
     chargerSalles();
   });
+
 function initGrille() {
-  salle = [];
   grilleDiv.innerHTML = "";
 
-  for (let y = 0; y < taille; y++) {
-    const ligne = [];
-    for (let x = 0; x < taille; x++) {
+  // ✅ Fixer le nombre de colonnes dans la grille
+  grilleDiv.style.gridTemplateColumns = `repeat(${nbColonnes}, 32px)`;
+
+  for (let y = 0; y < nbLignes; y++) {
+    if (!salle[y]) salle[y] = Array(nbColonnes).fill("vide");
+
+    for (let x = 0; x < nbColonnes; x++) {
+      if (!salle[y][x]) salle[y][x] = "vide";
+
       const cellule = document.createElement("div");
       cellule.className = "cellule";
 
       const img = document.createElement("img");
-      img.src = `sprites/decor/vide.png`;
-      img.alt = "vide";
+      const tuile = document.querySelector(`.tuile[alt="${salle[y][x]}"]`);
+      img.src = tuile ? tuile.src : "sprites/decor/vide.png";
+      img.alt = salle[y][x];
+
       cellule.appendChild(img);
 
       cellule.addEventListener("click", () => {
-        const allTuiles = document.querySelectorAll(".tuile");
-        const tuile = [...allTuiles].find(img => img.alt === typeActif);
+        const tuile = document.querySelector(`.tuile[alt="${typeActif}"]`);
         if (tuile) {
           img.src = tuile.src;
           img.alt = typeActif;
         }
-        ligne[x] = typeActif;
+        salle[y][x] = typeActif;
         salleModifiee = true;
       });
 
       grilleDiv.appendChild(cellule);
-      ligne[x] = "vide";
     }
-    salle.push(ligne);
   }
+
+  mettreAJourLabelGrille();
 }
 
 function resetGrille() {
+  salle = Array.from({ length: nbLignes }, () => Array(nbColonnes).fill("vide"));
   initGrille();
 }
 
@@ -128,6 +143,7 @@ function sauvegarder() {
       }
     });
 }
+
 function chargerSalles() {
   fetch("/api/salles")
     .then(res => res.json())
@@ -148,7 +164,6 @@ function chargerSalles() {
         canvas.height = 16;
         const ctx = canvas.getContext("2d");
 
-        const tailleTuile = 1;
         const promises = [];
 
         for (let y = 0; y < 16; y++) {
@@ -156,12 +171,10 @@ function chargerSalles() {
             const type = salle.data[y]?.[x] || "vide";
             const img = new Image();
             img.src = mapSrc[type] || mapSrc["vide"];
-            const px = x * tailleTuile;
-            const py = y * tailleTuile;
 
             const prom = new Promise(resolve => {
               img.onload = () => {
-                ctx.drawImage(img, 0, 0, img.width, img.height, px, py, 1, 1);
+                ctx.drawImage(img, 0, 0, img.width, img.height, x, y, 1, 1);
                 resolve();
               };
               img.onerror = () => resolve();
@@ -221,35 +234,9 @@ function charger(nom) {
       if (!cible) return;
 
       salle = cible.data;
-      grilleDiv.innerHTML = "";
-
-      for (let y = 0; y < taille; y++) {
-        for (let x = 0; x < taille; x++) {
-          const cellule = document.createElement("div");
-          cellule.className = "cellule";
-
-          const type = salle[y][x];
-          const tuile = document.querySelector(`.tuile[alt="${type}"]`);
-          const chemin = tuile ? tuile.src : `sprites/decor/vide.png`;
-
-          const img = document.createElement("img");
-          img.src = chemin;
-          img.alt = type;
-          cellule.appendChild(img);
-
-          cellule.addEventListener("click", () => {
-            const tuile = document.querySelector(`.tuile[alt="${typeActif}"]`);
-            if (tuile) {
-              img.src = tuile.src;
-              img.alt = typeActif;
-            }
-            salle[y][x] = typeActif;
-            salleModifiee = true;
-          });
-
-          grilleDiv.appendChild(cellule);
-        }
-      }
+      nbLignes = salle.length;
+      nbColonnes = salle[0]?.length || 0;
+      initGrille();
     });
 }
 
@@ -260,3 +247,36 @@ function supprimer(nom) {
     .then(res => res.json())
     .then(() => chargerSalles());
 }
+
+// 🔁 Redimension dynamique
+document.getElementById("ajouter-ligne").addEventListener("click", () => {
+  nbLignes++;
+  salle.push(Array(nbColonnes).fill("vide"));
+  initGrille();
+});
+
+document.getElementById("retirer-ligne").addEventListener("click", () => {
+  if (nbLignes > 1) {
+    nbLignes--;
+    salle.pop();
+    initGrille();
+  }
+});
+
+document.getElementById("ajouter-colonne").addEventListener("click", () => {
+  nbColonnes++;
+  for (let ligne of salle) {
+    ligne.push("vide");
+  }
+  initGrille();
+});
+
+document.getElementById("retirer-colonne").addEventListener("click", () => {
+  if (nbColonnes > 1) {
+    nbColonnes--;
+    for (let ligne of salle) {
+      ligne.pop();
+    }
+    initGrille();
+  }
+});
