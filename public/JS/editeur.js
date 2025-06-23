@@ -1,212 +1,193 @@
-// public/JS/editeur.js
+let typeActif = { nom: "vide", categorie: "decor" };
+let nbLignes = 16;
+let nbColonnes = 16;
+let salle = [];
+let salleModifiee = false;
 
-let typeActif   = "vide";
-let salle       = [];
-let nbLignes    = 16;
-let nbColonnes  = 16;
-
-const paletteDiv     = document.getElementById("palette");
-const grilleDiv      = document.getElementById("grille");
-const messageDiv     = document.getElementById("message");
-const nomInput       = document.getElementById("nom-salle");
+const paletteDiv = document.getElementById("palette");
+const grilleDiv = document.getElementById("grille");
+const messageDiv = document.getElementById("message");
+const nomInput = document.getElementById("nom-salle");
 const listeSallesDiv = document.getElementById("liste-salles");
+const tailleGrilleDiv = document.getElementById("taille-grille");
 
 window.addEventListener("DOMContentLoaded", () => {
-  synchroniserDonnees();
-  chargerPalette();
+  chargerSprites();
   chargerSalles();
-  renderGrille();
+  genererGrille();
   setupFleches();
-  document.getElementById("reset-grille")
-    .addEventListener("click", resetGrille);
-  document.getElementById("sauvegarder")
-    .addEventListener("click", sauvegarder);
+  document.getElementById("reset-grille").addEventListener("click", resetGrille);
+  document.getElementById("sauvegarder").addEventListener("click", sauvegarderSalle);
 });
 
-function synchroniserDonnees() {
-  if (!salle.length) {
-    salle = Array.from({ length: nbLignes },
-      () => Array(nbColonnes).fill("vide"));
-  } else {
-    while (salle.length < nbLignes) salle.push(Array(nbColonnes).fill("vide"));
-    while (salle.length > nbLignes) salle.pop();
-    salle.forEach(row => {
-      while (row.length < nbColonnes) row.push("vide");
-      while (row.length > nbColonnes) row.pop();
-    });
-  }
-}
-
-function renderGrille() {
+function genererGrille() {
   grilleDiv.innerHTML = "";
   grilleDiv.style.gridTemplateColumns = `repeat(${nbColonnes}, 32px)`;
-  grilleDiv.style.gridTemplateRows    = `repeat(${nbLignes},    32px)`;
+  grilleDiv.style.gridTemplateRows = `repeat(${nbLignes}, 32px)`;
+  tailleGrilleDiv.textContent = `Grille : ${nbColonnes} × ${nbLignes}`;
+
   for (let y = 0; y < nbLignes; y++) {
+    salle[y] = salle[y] || [];
     for (let x = 0; x < nbColonnes; x++) {
-      const cell = document.createElement("div");
-      cell.className = "cellule";
-      const img    = document.createElement("img");
-      const type   = salle[y][x];
-      const spr    = document.querySelector(`.tuile[alt="${type}"]`);
-      img.src = (type && type !== "vide" && spr)
-        ? spr.src
-        : "/sprites/decor/vide.png";
-      cell.appendChild(img);
-      cell.addEventListener("click", () => {
-        salle[y][x] = typeActif;
-        renderGrille();
-      });
-      grilleDiv.appendChild(cell);
-    }
-  }
-  document.getElementById("taille-grille").textContent =
-    `Grille : ${nbLignes} × ${nbColonnes}`;
-}
+      salle[y][x] = salle[y][x] || { nom: "vide", categorie: "decor" };
 
-async function chargerPalette() {
-  try {
-    const res = await fetch("/api/sprites");
-    const sprites = await res.json();
-    paletteDiv.innerHTML = "";
-    const sections = sprites.reduce((acc, sp) => {
-      (acc[sp.categorie] = acc[sp.categorie]||[]).push(sp);
-      return acc;
-    }, {});
-    for (const [cat, list] of Object.entries(sections)) {
-      const sec = document.createElement("div");
-      sec.className = "palette-section";
-      const h3 = document.createElement("h3");
-      h3.textContent = cat;
-      sec.appendChild(h3);
-      const row = document.createElement("div");
-      row.className = "tuile-ligne";
-      list.forEach(sp => {
-        const img = document.createElement("img");
-        img.src = `/${sp.chemin}`;
-        img.alt = sp.nom;
-        img.className = "tuile";
-        if (sp.nom === "vide") img.classList.add("selected");
-        img.addEventListener("click", () => {
-          document.querySelectorAll(".tuile.selected")
-            .forEach(t => t.classList.remove("selected"));
-          img.classList.add("selected");
-          typeActif = sp.nom;
-        });
-        row.appendChild(img);
-      });
-      sec.appendChild(row);
-      paletteDiv.appendChild(sec);
-    }
-  } catch (err) {
-    console.error("Erreur chargement palette :", err);
-    messageDiv.textContent = "❌ Erreur chargement palette";
-  }
-}
+      const cellule = document.createElement("div");
+      cellule.className = "cellule";
 
-async function chargerSalles() {
-  try {
-    const res = await fetch("/api/salles");
-    const salles = await res.json();
-    listeSallesDiv.innerHTML = "";
-    const mapSrc = {};
-    document.querySelectorAll(".tuile")
-      .forEach(t => mapSrc[t.alt] = t.src);
-    for (const s of salles) {
-      const div = document.createElement("div");
-      div.className = "salle-item";
-      const canvas = document.createElement("canvas");
-      canvas.width  = s.data[0]?.length || 16;
-      canvas.height = s.data.length;
-      const ctx = canvas.getContext("2d");
-      const prom = [];
-      for (let y = 0; y < s.data.length; y++) {
-        for (let x = 0; x < (s.data[0]||[]).length; x++) {
-          const img = new Image();
-          img.src = mapSrc[s.data[y][x]] || mapSrc["vide"];
-          prom.push(new Promise(r => {
-            img.onload  = () => { 
-              ctx.drawImage(img, 0, 0, img.width, img.height, x, y, 1, 1);
-              r();
-            };
-            img.onerror = r;
-          }));
-        }
-      }
-      await Promise.all(prom);
-      const titre = document.createElement("strong");
-      titre.textContent = s.nom;
-      const btnCh = document.createElement("button");
-      btnCh.textContent = "📂";
-      btnCh.addEventListener("click", () => {
-        if (confirm("Charger cette salle ?")) {
-          salle       = JSON.parse(JSON.stringify(s.data));
-          nbLignes    = salle.length;
-          nbColonnes  = salle[0]?.length || nbColonnes;
-          synchroniserDonnees();
-          renderGrille();
-          nomInput.value = s.nom;
-        }
+      const img = document.createElement("img");
+      img.src = `../sprites/${salle[y][x].categorie}/${salle[y][x].nom}.png`;
+      cellule.appendChild(img);
+
+      cellule.addEventListener("click", () => {
+        salle[y][x] = { nom: typeActif.nom, categorie: typeActif.categorie };
+        genererGrille();
+        salleModifiee = true;
       });
-      const btnDel = document.createElement("button");
-      btnDel.textContent = "🗑️";
-      btnDel.addEventListener("click", () => {
-        if (confirm(`Supprimer "${s.nom}" ?`)) {
-          fetch(`/api/supprimer-salle/${encodeURIComponent(s.nom)}`, { method: "DELETE" })
-            .then(() => chargerSalles());
-        }
-      });
-      div.append(canvas, titre, btnCh, btnDel);
-      listeSallesDiv.appendChild(div);
+
+      grilleDiv.appendChild(cellule);
     }
-  } catch (err) {
-    console.error("Erreur chargement salles :", err);
-    messageDiv.textContent = "❌ Erreur chargement salles";
   }
 }
 
 function setupFleches() {
-  document.getElementById("ajouter-ligne")
-    .addEventListener("click", () => {
-      nbLignes++; synchroniserDonnees(); renderGrille();
-    });
-  document.getElementById("retirer-ligne")
-    .addEventListener("click", () => {
-      if (nbLignes > 1) { nbLignes--; synchroniserDonnees(); renderGrille(); }
-    });
-  document.getElementById("ajouter-colonne")
-    .addEventListener("click", () => {
-      nbColonnes++; synchroniserDonnees(); renderGrille();
-    });
-  document.getElementById("retirer-colonne")
-    .addEventListener("click", () => {
-      if (nbColonnes > 1) { nbColonnes--; synchroniserDonnees(); renderGrille(); }
-    });
+  document.getElementById("ajouter-ligne").addEventListener("click", () => {
+    nbLignes++;
+    genererGrille();
+  });
+  document.getElementById("retirer-ligne").addEventListener("click", () => {
+    if (nbLignes > 1) nbLignes--;
+    genererGrille();
+  });
+  document.getElementById("ajouter-colonne").addEventListener("click", () => {
+    nbColonnes++;
+    genererGrille();
+  });
+  document.getElementById("retirer-colonne").addEventListener("click", () => {
+    if (nbColonnes > 1) nbColonnes--;
+    genererGrille();
+  });
 }
 
 function resetGrille() {
-  salle = Array.from({ length: nbLignes }, () => Array(nbColonnes).fill("vide"));
-  renderGrille();
+  salle = Array.from({ length: nbLignes }, () =>
+    Array(nbColonnes).fill({ nom: "vide", categorie: "decor" })
+  );
+  genererGrille();
+  salleModifiee = true;
 }
 
-function sauvegarder() {
+function chargerSprites() {
+  fetch("/api/sprites")
+    .then(res => res.json())
+    .then(sprites => {
+      paletteDiv.innerHTML = "";
+      const categories = ["decor", "minerai", "pioche"];
+      categories.forEach(cat => {
+        const catTitre = document.createElement("h3");
+        catTitre.textContent = cat.toUpperCase();
+        paletteDiv.appendChild(catTitre);
+
+        sprites
+          .filter(s => s.categorie === cat)
+          .forEach(sprite => {
+            const img = document.createElement("img");
+            img.src = `../${sprite.chemin}`;
+            img.alt = sprite.nom;
+            img.className = "tuile";
+            img.title = sprite.nom;
+
+            img.addEventListener("click", () => {
+              typeActif = { nom: sprite.nom, categorie: sprite.categorie };
+              document.querySelectorAll(".tuile").forEach(i => i.classList.remove("active"));
+              img.classList.add("active");
+            });
+
+            paletteDiv.appendChild(img);
+          });
+      });
+    });
+}
+
+function sauvegarderSalle() {
   const nom = nomInput.value.trim();
-  if (!nom) {
-    messageDiv.textContent = "❌ Entrez un nom de salle.";
-    return;
-  }
+  if (!nom) return alert("Nom de salle invalide");
+
   fetch("/api/ajouter-salle", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ nom, data: salle })
   })
-  .then(res => res.json())
-  .then(data => {
-    messageDiv.textContent = data.success
-      ? "✅ Salle sauvegardée."
-      : "❌ Erreur lors de la sauvegarde.";
-    chargerSalles();
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        salleModifiee = false;
+        chargerSalles();
+        alert("Salle sauvegardée !");
+      } else {
+        alert("Erreur lors de la sauvegarde.");
+      }
+    })
+    .catch(err => {
+      console.error("Erreur réseau :", err);
+      alert("Erreur de réseau");
+    });
+}
+
+function chargerSalles() {
+  fetch("/api/salles")
+    .then(res => res.json())
+    .then(salles => {
+      listeSallesDiv.innerHTML = "";
+      salles.forEach(salle => {
+        const div = document.createElement("div");
+        div.className = "salle-item";
+
+        const nomSpan = document.createElement("span");
+        nomSpan.textContent = salle.nom;
+        div.appendChild(nomSpan);
+
+        const btnCharger = document.createElement("button");
+        btnCharger.textContent = "📂";
+        btnCharger.title = "Charger";
+        btnCharger.addEventListener("click", () => chargerSalleDansGrille(salle));
+        div.appendChild(btnCharger);
+
+        const btnSupprimer = document.createElement("button");
+        btnSupprimer.textContent = "🗑";
+        btnSupprimer.title = "Supprimer";
+        btnSupprimer.addEventListener("click", () => supprimerSalle(salle.nom));
+        div.appendChild(btnSupprimer);
+
+        listeSallesDiv.appendChild(div);
+      });
+    });
+}
+
+function chargerSalleDansGrille(salleData) {
+  nbLignes = salleData.data.length;
+  nbColonnes = salleData.data[0].length;
+  salle = salleData.data.map(row => row.map(c => c || { nom: "vide", categorie: "decor" }));
+  nomInput.value = salleData.nom;
+  genererGrille();
+}
+
+function supprimerSalle(nomSalle) {
+  if (!confirm(`Supprimer la salle "${nomSalle}" ?`)) return;
+
+  fetch(`/api/salle/${encodeURIComponent(nomSalle)}`, {
+    method: "DELETE"
   })
-  .catch(() => {
-    messageDiv.textContent = "❌ Erreur réseau.";
-  });
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("Salle supprimée !");
+        chargerSalles();
+      } else {
+        alert("Erreur lors de la suppression.");
+      }
+    })
+    .catch(err => {
+      console.error("Erreur lors de la suppression :", err);
+      alert("Erreur réseau.");
+    });
 }

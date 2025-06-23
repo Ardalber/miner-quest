@@ -102,3 +102,33 @@ body {
   height: 48px;
   border: 1px solid #ccc;
 }
+/* Style des tuiles dans la palette */
+#palette .tuile {
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  margin: 2px;
+  cursor: pointer;
+  image-rendering: pixelated;
+}
+
+/* Tuile actuellement sélectionnée */
+#palette .tuile.active {
+  border: 2px solid #4caf50;
+  background-color: #e8f5e9;
+  box-shadow: 0 0 5px #4caf50;
+}
+
+/* Style des boutons dans la liste des salles */
+.salle-item button {
+  background-color: #f0f0f0;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+}
+
+.salle-item button:hover {
+  background-color: #e0e0e0;
+}
