@@ -1,6 +1,7 @@
 let typeActif = "vide";
 const taille = 16;
 let salle = [];
+let salleModifiee = false;
 
 const paletteDiv = document.getElementById("palette");
 const grilleDiv = document.getElementById("grille");
@@ -66,7 +67,6 @@ fetch("/api/sprites")
     initGrille();
     chargerSalles();
   });
-
 function initGrille() {
   salle = [];
   grilleDiv.innerHTML = "";
@@ -78,12 +78,11 @@ function initGrille() {
       cellule.className = "cellule";
 
       const img = document.createElement("img");
-      img.src = `sprites/decor/vide.png`; // ❗ Attention : chemin corrigé si "vide.png" est dans decor/
+      img.src = `sprites/decor/vide.png`;
       img.alt = "vide";
       cellule.appendChild(img);
 
       cellule.addEventListener("click", () => {
-        // Cherche le chemin correct selon la palette chargée
         const allTuiles = document.querySelectorAll(".tuile");
         const tuile = [...allTuiles].find(img => img.alt === typeActif);
         if (tuile) {
@@ -91,6 +90,7 @@ function initGrille() {
           img.alt = typeActif;
         }
         ligne[x] = typeActif;
+        salleModifiee = true;
       });
 
       grilleDiv.appendChild(cellule);
@@ -122,19 +122,18 @@ function sauvegarder() {
         messageDiv.textContent = "✅ Salle sauvegardée.";
         nomInput.value = "";
         chargerSalles();
+        salleModifiee = false;
       } else {
         messageDiv.textContent = "❌ Erreur lors de la sauvegarde.";
       }
     });
 }
-
 function chargerSalles() {
   fetch("/api/salles")
     .then(res => res.json())
     .then(salles => {
       listeSallesDiv.innerHTML = "";
 
-      // Créer une map tuile -> src
       const mapSrc = {};
       document.querySelectorAll(".tuile").forEach(t => {
         mapSrc[t.alt] = t.src;
@@ -144,16 +143,12 @@ function chargerSalles() {
         const div = document.createElement("div");
         div.className = "salle-item";
 
-        // Miniature en canvas
         const canvas = document.createElement("canvas");
         canvas.width = 16;
         canvas.height = 16;
         const ctx = canvas.getContext("2d");
 
-        const tailleSalle = salle.data.length;
-        const tailleTuile = 1; // 1 pixel par bloc
-
-        // Créer une image pour chaque tuile et dessiner dans le canvas
+        const tailleTuile = 1;
         const promises = [];
 
         for (let y = 0; y < 16; y++) {
@@ -177,31 +172,36 @@ function chargerSalles() {
         }
 
         Promise.all(promises).then(() => {
-          // Titre et boutons
           const titre = document.createElement("strong");
           titre.textContent = salle.nom;
 
           const btnCharger = document.createElement("button");
           btnCharger.textContent = "📂";
-          btnCharger.onclick = () => charger(salle.nom);
+          btnCharger.addEventListener("click", () => {
+            if (salleModifiee) {
+              const confirmation = confirm("Des modifications non sauvegardées seront perdues. Continuer ?");
+              if (!confirmation) return;
+            }
+            salleModifiee = false;
+            charger(salle.nom);
+          });
 
           const btnSupprimer = document.createElement("button");
           btnSupprimer.textContent = "🗑️";
-let confirme = false;
-btnSupprimer.onclick = () => {
-  if (!confirme) {
-    btnSupprimer.textContent = "❗Confirmer ?";
-    confirme = true;
-    setTimeout(() => {
-      btnSupprimer.textContent = "🗑️";
-      confirme = false;
-    }, 3000); // délai avant retour au bouton normal
-  } else {
-    supprimer(salle.nom);
-  }
-};
+          let confirme = false;
+          btnSupprimer.onclick = () => {
+            if (!confirme) {
+              btnSupprimer.textContent = "❗Confirmer ?";
+              confirme = true;
+              setTimeout(() => {
+                btnSupprimer.textContent = "🗑️";
+                confirme = false;
+              }, 3000);
+            } else {
+              supprimer(salle.nom);
+            }
+          };
 
-          // Affichage
           div.appendChild(canvas);
           div.appendChild(titre);
           div.appendChild(btnCharger);
@@ -244,6 +244,7 @@ function charger(nom) {
               img.alt = typeActif;
             }
             salle[y][x] = typeActif;
+            salleModifiee = true;
           });
 
           grilleDiv.appendChild(cellule);
