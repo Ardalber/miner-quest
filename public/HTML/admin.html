@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin – MinerQuest</title>
+  <link rel="stylesheet" href="/CSS/admin.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Panneau d'administration</h1>
+
+    <div id="compte-info"></div>
+
+    <h2>Liste des comptes</h2>
+    <ul id="liste-comptes"></ul>
+  </div>
+
+  <script>
+    async function chargerComptes() {
+      const res = await fetch('/comptes.json');
+      const comptes = await res.json();
+      const liste = document.getElementById('liste-comptes');
+      liste.innerHTML = '';
+
+      comptes.forEach(c => {
+        const li = document.createElement('li');
+        li.textContent = c.nom;
+
+        if (c.nom !== 'Ardalber') {
+          const btn = document.createElement('button');
+          btn.textContent = '❌ Supprimer';
+          btn.onclick = async () => {
+            if (confirm(`Supprimer le compte "${c.nom}" ?`)) {
+              await fetch(`/api/compte/${encodeURIComponent(c.nom)}`, { method: 'DELETE' });
+              chargerComptes();
+            }
+          };
+          li.appendChild(btn);
+        } else {
+          li.innerHTML += " (admin)";
+        }
+
+        liste.appendChild(li);
+      });
+    }
+
+    // Authentification simple
+    const identifiant = prompt("Identifiant admin :");
+    if (identifiant === "Ardalber") {
+      document.getElementById('compte-info').textContent = `Connecté en tant qu'admin : ${identifiant}`;
+      chargerComptes();
+    } else {
+      document.body.innerHTML = "<h1>Accès refusé</h1>";
+    }
+  </script>
+</body>
+</html>

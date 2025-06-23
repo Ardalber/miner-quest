@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MinerQuest</title>
+  <link rel="stylesheet" href="/CSS/index.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>MinerQuest</h1>
+
+    <div class="bloc">
+      <label for="compte">Choisir un compte :</label>
+      <select id="compte">
+        <!-- Les options seront insérées dynamiquement -->
+      </select>
+    </div>
+
+    <div class="bloc">
+      <button onclick="lancerPartie()">🎮 Lancer la partie</button>
+      <button onclick="window.location.href='/HTML/editeur.html'">🛠️ Éditeur de salles</button>
+      <button onclick="window.location.href='/HTML/creer.html'">➕ Créer un compte</button>
+    </div>
+  </div>
+
+  <script src="/JS/index.js"></script>
+</body>
+</html>

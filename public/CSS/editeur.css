@@ -65,7 +65,7 @@ body {
 
 #fleches-lignes {
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* ✅ On aligne horizontalement */
   justify-content: center;
   align-items: center;
   gap: 0.5rem;

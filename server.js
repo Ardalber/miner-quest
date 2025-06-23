@@ -1,5 +1,6 @@
 import express from "express";
 import fs from "fs";
+import fsPromises from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -7,10 +8,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.static(path.join(__dirname, 'public', 'HTML')));
 app.use(express.static("public"));
 app.use(express.json({ limit: "1mb" }));
 
 const sallesPath = path.join(__dirname, "public", "salles.json");
+const dataDir = path.join(__dirname, "data");
+const comptesPath = path.join(dataDir, "comptes.json");
+
+// ✅ Création du dossier data/ et fichier comptes.json si absent
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir);
+}
+if (!fs.existsSync(comptesPath)) {
+  fs.writeFileSync(comptesPath, "[]", "utf-8");
+}
 
 // 🧠 Lire les salles
 function lireSalles() {
@@ -67,7 +79,7 @@ app.put("/api/modifier-salle/:nom", (req, res) => {
   res.json({ success: true });
 });
 
-// 🖼️ Liste dynamique des sprites par sous-dossier (minerai, pioche, decor)
+// 🖼️ Liste des sprites
 app.get("/api/sprites", (req, res) => {
   const spritesRoot = path.join(__dirname, "public", "sprites");
   if (!fs.existsSync(spritesRoot)) return res.json([]);
@@ -84,7 +96,7 @@ app.get("/api/sprites", (req, res) => {
     const fichiers = fs.readdirSync(dossier).filter(f => f.endsWith(".png") || f.endsWith(".jpg"));
 
     for (const fichier of fichiers) {
-      const nom = fichier.replace(/\.[^.]+$/, ""); // sans extension
+      const nom = fichier.replace(/\.[^.]+$/, "");
       const chemin = `sprites/${categorie}/${fichier}`;
       resultat.push({ nom, chemin, categorie });
     }
@@ -93,7 +105,58 @@ app.get("/api/sprites", (req, res) => {
   res.json(resultat);
 });
 
-// 🚀 Lancer le serveur
+// 📋 Renvoyer tous les comptes
+app.get("/comptes.json", async (req, res) => {
+  try {
+    const contenu = await fsPromises.readFile(comptesPath, "utf-8");
+    res.json(JSON.parse(contenu));
+  } catch {
+    res.status(500).json({ erreur: "Impossible de lire les comptes." });
+  }
+});
+
+// ➕ Ajouter un compte (avec mot de passe)
+app.post("/api/compte", async (req, res) => {
+  const { nom, motDePasse } = req.body;
+
+  if (!nom || typeof nom !== 'string' || !motDePasse || typeof motDePasse !== 'string') {
+    return res.status(400).send("Nom ou mot de passe invalide");
+  }
+
+  try {
+    const data = await fsPromises.readFile(comptesPath, 'utf-8');
+    const comptes = JSON.parse(data);
+
+    if (comptes.some(c => c.nom === nom)) {
+      return res.status(409).send("Ce nom existe déjà");
+    }
+
+    comptes.push({ nom, motDePasse });
+    await fsPromises.writeFile(comptesPath, JSON.stringify(comptes, null, 2));
+    res.status(201).send("Compte créé");
+  } catch (err) {
+    console.error("Erreur lors de la création du compte :", err);
+    res.status(500).json({ erreur: "Erreur lors de la création du compte" });
+  }
+});
+
+// ❌ Supprimer un compte (sauf admin)
+app.delete("/api/compte/:nom", async (req, res) => {
+  const nom = decodeURIComponent(req.params.nom);
+  if (nom === 'Ardalber') return res.status(403).send("Impossible de supprimer l'admin");
+
+  try {
+    const data = await fsPromises.readFile(comptesPath, 'utf-8');
+    let comptes = JSON.parse(data);
+    comptes = comptes.filter(c => c.nom !== nom);
+    await fsPromises.writeFile(comptesPath, JSON.stringify(comptes, null, 2));
+    res.sendStatus(200);
+  } catch {
+    res.status(500).json({ erreur: "Erreur lors de la suppression du compte" });
+  }
+});
+
+// 🚀 Démarrage du serveur
 app.listen(PORT, () => {
   console.log(`✅ Serveur lancé sur http://localhost:${PORT}`);
 });
