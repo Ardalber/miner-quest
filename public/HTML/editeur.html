@@ -3,28 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Éditeur de Salles</title>
+  <title>Éditeur de Salles – MinerQuest</title>
   <link rel="stylesheet" href="/CSS/editeur.css" />
 </head>
 <body>
   <div id="container">
-
-    <!-- Palette de gauche -->
     <div id="gauche">
       <h2>Palette de tuiles</h2>
       <div id="palette"></div>
     </div>
 
-    <!-- Éditeur au centre -->
     <div id="centre">
       <div class="actions-ligne">
-        <button onclick="resetGrille()">🧹 Vider</button>
+        <button id="reset-grille">🧹 Vider</button>
         <input type="text" id="nom-salle" placeholder="Nom de la salle" />
-        <button onclick="sauvegarder()">💾 Sauvegarder</button>
+        <button id="sauvegarder">💾 Sauvegarder</button>
       </div>
       <div id="message"></div>
 
-      <!-- GRILLE + FLÈCHES + LABEL -->
       <div id="grille-wrapper">
         <div id="fleches-lignes">
           <button id="retirer-ligne">⬆️</button>
@@ -39,12 +35,10 @@
       </div>
     </div>
 
-    <!-- Liste des salles à droite -->
     <div id="droite">
       <h2>Salles créées</h2>
       <div id="liste-salles"></div>
     </div>
-
   </div>
 
   <script src="/JS/editeur.js"></script>
