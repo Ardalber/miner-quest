@@ -7,23 +7,24 @@
   <link rel="stylesheet" href="/CSS/index.css" />
 </head>
 <body>
-  <div class="container">
+  <header>
     <h1>MinerQuest</h1>
-
-    <div class="bloc">
+  </header>
+  <main>
+    <div class="select-container">
       <label for="compte">Choisir un compte :</label>
       <select id="compte">
-        <!-- Les options seront insérées dynamiquement -->
+        <option value="" disabled selected>— Sélectionnez —</option>
       </select>
+      <button id="delete-btn">✖</button>
     </div>
-
-    <div class="bloc">
+    <div class="buttons-container">
       <button onclick="lancerPartie()">🎮 Lancer la partie</button>
       <button onclick="window.location.href='/HTML/editeur.html'">🛠️ Éditeur de salles</button>
       <button onclick="window.location.href='/HTML/creer.html'">➕ Créer un compte</button>
     </div>
-  </div>
-
+    <div id="message"></div>
+  </main>
   <script src="/JS/index.js"></script>
 </body>
 </html>
