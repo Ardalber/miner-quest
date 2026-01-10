@@ -111,17 +111,17 @@ body {
 }
 
 #modal-chest .modal-content {
-    max-width: 500px;
-    padding: 20px;
+    max-width: 420px;
+    padding: 16px;
 }
 
 #modal-chest h2 {
-    font-size: 18px;
-    margin-bottom: 16px;
+    font-size: 16px;
+    margin-bottom: 12px;
 }
 
 #modal-chest .chest-grid {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .modal-content h2 {
@@ -283,35 +283,39 @@ body {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 6px;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 6px;
+    padding: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
     cursor: default;
     transition: all 0.2s;
-    border: 2px solid transparent;
-    flex-wrap: wrap;
+    border: 1px solid #ddd;
+    flex-wrap: nowrap;
 }
 
 .chest-item:hover {
-    background: #f8f9fa;
-    border-color: transparent;
+    background: #e8e8e8;
+    border-color: #bbb;
 }
 
-.chest-item-header {
-    display: none;
+.chest-item-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .chest-item-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    font-size: 13px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
 }
 
@@ -325,29 +329,31 @@ body {
 
 .chest-item-total {
     font-size: 10px;
-    color: #999;
+    color: #666;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .chest-item-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 2px;
     width: auto;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
 }
 
 .chest-btn-decrement,
 .chest-btn-increment {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     background: #667eea;
     color: white;
     border: none;
-    border-radius: 3px;
+    border-radius: 2px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     transition: background 0.2s;
     display: flex;
@@ -368,9 +374,9 @@ body {
 }
 
 .chest-quantity {
-    min-width: 24px;
+    min-width: 18px;
     text-align: center;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: bold;
     color: #667eea;
     flex-shrink: 0;
@@ -378,16 +384,16 @@ body {
 
 .chest-btn-take {
     flex: 0;
-    height: 20px;
+    height: 18px;
     background: #4caf50;
     color: white;
     border: none;
-    border-radius: 3px;
+    border-radius: 2px;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: bold;
     transition: background 0.2s;
-    padding: 0 8px;
+    padding: 0 6px;
     white-space: nowrap;
     flex-shrink: 0;
 }

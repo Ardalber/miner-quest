@@ -135,15 +135,17 @@ class Player {
                 itemDiv.dataset.takeQuantity = 1;
 
                 itemDiv.innerHTML = `
-                    <div class="chest-item-controls">
+                    <div class="chest-item-label">
                         <div class="chest-item-icon" style="background: ${color};">${icon}</div>
                         <div class="chest-item-name">${item.name}</div>
-                        <div class="chest-item-total">(${item.count})</div>
-                        <button class="chest-btn-decrement" data-index="${index}">-</button>
+                    </div>
+                    <span class="chest-item-total">${item.count}</span>
+                    <div class="chest-item-controls">
+                        <button class="chest-btn-decrement" data-index="${index}">−</button>
                         <span class="chest-quantity" data-index="${index}">1</span>
                         <button class="chest-btn-increment" data-index="${index}">+</button>
-                        <button class="chest-btn-take" data-index="${index}">Prendre</button>
                     </div>
+                    <button class="chest-btn-take" data-index="${index}">✋</button>
                 `;
 
                 // Événements des boutons
