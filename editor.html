@@ -119,6 +119,20 @@
         </div>
     </div>
 
+    <!-- Modal d'édition de warp -->
+    <div id="modal-edit-warp" class="modal-editor">
+        <div class="modal-editor-content">
+            <h2>🌀 Destination du warp</h2>
+            <p style="margin-bottom: 16px; color: #aaa;">Sélectionnez le niveau de destination</p>
+            <select id="warp-level-select" style="width: 100%; padding: 10px; background: #3c3c3c; border: 1px solid #3e3e42; color: #cccccc; border-radius: 4px; font-size: 14px;">
+            </select>
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <button id="btn-save-warp" class="btn-action" style="flex: 1;">Sauvegarder</button>
+                <button id="btn-cancel-warp" class="btn-danger" style="flex: 1;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/tiles.js"></script>
     <script src="js/level.js"></script>
     <script src="js/editor.js"></script>

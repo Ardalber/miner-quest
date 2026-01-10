@@ -27,6 +27,18 @@ function init() {
     // Initialiser l'inventaire UI
     player.updateInventoryUI();
 
+    // Gestionnaire de warp
+    window.onWarpActivated = function(targetLevel) {
+        levelManager.loadLevel(targetLevel);
+        if (levelManager.currentLevel) {
+            player.setPosition(
+                levelManager.currentLevel.startX,
+                levelManager.currentLevel.startY
+            );
+            showToast(`🌀 Téléporté vers ${targetLevel}`, 'info', 2000);
+        }
+    };
+
     // Événements clavier
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);

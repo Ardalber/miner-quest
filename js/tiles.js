@@ -7,7 +7,8 @@ const TileTypes = {
     GOLD: 4,
     WALL: 5,
     CHEST: 6,
-    SIGN: 7
+    SIGN: 7,
+    WARP: 8
 };
 
 // Configuration de chaque type de tuile
@@ -74,6 +75,16 @@ const TileConfig = {
         resource: null,
         interactive: true,
         message: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.'
+    },
+    [TileTypes.WARP]: {
+        name: 'Warp',
+        color: '#9370DB',
+        solid: false,
+        minable: false,
+        resource: null,
+        interactive: true,
+        warp: true,
+        targetLevel: null
     }
 };
 
@@ -123,6 +134,9 @@ class TileRenderer {
                 break;
             case TileTypes.SIGN:
                 this.drawSign(ctx);
+                break;
+            case TileTypes.WARP:
+                this.drawWarp(ctx);
                 break;
         }
 
@@ -275,6 +289,43 @@ class TileRenderer {
         ctx.moveTo(8, 18);
         ctx.lineTo(24, 18);
         ctx.stroke();
+    }
+
+    drawWarp(ctx) {
+        // Effet de portail avec cercles concentriques
+        const centerX = 16;
+        const centerY = 16;
+        
+        // Cercles externes
+        ctx.fillStyle = '#9370DB';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 14, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Cercle intermédiaire
+        ctx.fillStyle = '#BA55D3';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Cercle central
+        ctx.fillStyle = '#DDA0DD';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 6, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Point central brillant
+        ctx.fillStyle = '#FFF';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Étoiles autour
+        ctx.fillStyle = '#FFF';
+        const stars = [[8, 8], [24, 8], [8, 24], [24, 24]];
+        stars.forEach(([x, y]) => {
+            ctx.fillRect(x, y, 2, 2);
+        });
     }
 
     // Récupère l'image d'une tuile

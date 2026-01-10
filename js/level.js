@@ -149,6 +149,46 @@ class LevelManager {
         return null;
     }
 
+    // Vérifier si une tuile est un warp
+    isWarp(x, y) {
+        const tileType = this.getTile(x, y);
+        return tileType === TileTypes.WARP;
+    }
+
+    // Obtenir la destination d'un warp
+    getWarpDestination(x, y) {
+        if (!this.currentLevel || !this.currentLevel.warpData) return null;
+        const key = `${x}_${y}`;
+        return this.currentLevel.warpData[key] || null;
+    }
+
+    // Définir la destination d'un warp
+    setWarpDestination(x, y, targetLevel) {
+        if (!this.currentLevel) return;
+        if (!this.currentLevel.warpData) {
+            this.currentLevel.warpData = {};
+        }
+        const key = `${x}_${y}`;
+        this.currentLevel.warpData[key] = targetLevel;
+    }
+
+    // Obtenir le message d'un panneau
+    getSignMessage(x, y) {
+        if (!this.currentLevel || !this.currentLevel.signData) return '';
+        const key = `${x}_${y}`;
+        return this.currentLevel.signData[key] || '';
+    }
+
+    // Définir le message d'un panneau
+    setSignMessage(x, y, message) {
+        if (!this.currentLevel) return;
+        if (!this.currentLevel.signData) {
+            this.currentLevel.signData = {};
+        }
+        const key = `${x}_${y}`;
+        this.currentLevel.signData[key] = message;
+    }
+
     // Vérifier si une tuile est un panneau
     isSign(x, y) {
         const tileType = this.getTile(x, y);

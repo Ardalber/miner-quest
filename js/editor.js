@@ -79,6 +79,10 @@ function initEditor() {
     document.getElementById('btn-save-sign').addEventListener('click', saveSignMessage);
     document.getElementById('btn-cancel-sign').addEventListener('click', closeSignModal);
     
+    // Événements du modal warp
+    document.getElementById('btn-save-warp').addEventListener('click', saveWarpDestination);
+    document.getElementById('btn-cancel-warp').addEventListener('click', closeWarpModal);
+    
     // Événements des boutons +/-
     document.querySelectorAll('.btn-increment').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -411,6 +415,45 @@ function closeSignModal() {
     currentEditingSignPos = null;
 }
 
+let currentEditingWarpPos = null;
+
+// Ouvrir le modal d'édition de warp
+function openWarpEditModal(x, y) {
+    currentEditingWarpPos = { x, y };
+    const targetLevel = levelManager.getWarpDestination(x, y);
+    
+    const levelList = levelManager.getLevelList();
+    let options = '<option value="">-- Aucune destination --</option>';
+    levelList.forEach(levelName => {
+        const selected = targetLevel === levelName ? 'selected' : '';
+        options += `<option value="${levelName}" ${selected}>${levelName}</option>`;
+    });
+    
+    document.getElementById('warp-level-select').innerHTML = options;
+    document.getElementById('modal-edit-warp').classList.add('show');
+}
+
+// Sauvegarder la destination du warp
+function saveWarpDestination() {
+    if (!currentEditingWarpPos) return;
+    
+    const targetLevel = document.getElementById('warp-level-select').value;
+    
+    if (targetLevel) {
+        levelManager.setWarpDestination(currentEditingWarpPos.x, currentEditingWarpPos.y, targetLevel);
+        levelManager.saveLevelsToStorage();
+    }
+    
+    closeWarpModal();
+    renderEditor();
+}
+
+// Fermer le modal de warp
+function closeWarpModal() {
+    document.getElementById('modal-edit-warp').classList.remove('show');
+    currentEditingWarpPos = null;
+}
+
 // Gestion de la souris sur le canvas
 function handleCanvasMouseDown(e) {
     const rect = editorCanvas.getBoundingClientRect();
@@ -449,6 +492,16 @@ function handleCanvasMouseDown(e) {
                 return;
             }
             // Sinon, on remplace le panneau (suppression du message)
+        }
+        
+        // Vérifier si on clique sur un warp déjà placé
+        if (tileType === TileTypes.WARP) {
+            // Si la tuile sélectionnée est aussi un warp, ouvrir le sélecteur de niveau
+            if (selectedTile === TileTypes.WARP) {
+                openWarpEditModal(x, y);
+                return;
+            }
+            // Sinon, on remplace le warp (suppression de la destination)
         }
         
         // Mode dessin normal - vérifier si c'est sur les bords

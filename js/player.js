@@ -38,6 +38,15 @@ class Player {
         if (!levelManager.isSolid(newX, newY)) {
             this.x = newX;
             this.y = newY;
+            
+            // Vérifier si on marche sur un warp
+            if (levelManager.isWarp(newX, newY)) {
+                const targetLevel = levelManager.getWarpDestination(newX, newY);
+                if (targetLevel && window.onWarpActivated) {
+                    window.onWarpActivated(targetLevel);
+                }
+            }
+            
             return true;
         }
         return false;
