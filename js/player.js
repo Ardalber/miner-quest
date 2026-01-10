@@ -135,7 +135,7 @@ class Player {
                     <div class="chest-item-icon" style="background: ${color};">${icon}</div>
                     <span class="chest-item-name">${item.name}</span>
                     <span class="chest-item-value">${item.count}</span>
-                    <button class="chest-btn-take" data-index="${index}">Prendre</button>
+                    <button class="chest-btn-take" data-index="${index}">✋</button>
                 `;
 
                 const btnTake = itemDiv.querySelector('.chest-btn-take');
