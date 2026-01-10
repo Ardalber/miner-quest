@@ -347,14 +347,14 @@ body {
 
 .btn-decrement,
 .btn-increment {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     background: #0e639c;
     color: white;
     border: none;
     border-radius: 3px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     transition: background 0.2s;
     display: flex;
