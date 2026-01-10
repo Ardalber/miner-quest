@@ -381,12 +381,13 @@ body {
     text-align: center;
     font-size: 13px;
     font-weight: bold;
-    color: #ffd700;
+    color: #333;
     flex-shrink: 0;
 }
 
 .chest-btn-take,
 .btn-take-editor {
+    width: 25px;
     height: 28px;
     background: #4caf50;
     color: white;
@@ -399,7 +400,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 12px;
+    padding: 0;
     flex-shrink: 0;
     white-space: nowrap;
 }
