@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miner Quest</title>
+    <link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-wrapper">
+            <button id="btn-commands" class="btn-top-left">🎮 Commandes</button>
+            <button id="btn-inventory" class="btn-top-center">🎒 Inventaire</button>
+            <button id="btn-editor" class="btn-top-right">✏️ Éditeur</button>
+            <canvas id="gameCanvas" width="512" height="512"></canvas>
+        </div>
+    </div>
+
+    <!-- Modal des commandes -->
+    <div id="modal-commands" class="modal">
+        <div class="modal-content">
+            <h2>🎮 Commandes</h2>
+            <div class="control-item">
+                <span>Se déplacer vers le haut</span>
+                <span class="control-key">Z</span>
+            </div>
+            <div class="control-item">
+                <span>Se déplacer vers le bas</span>
+                <span class="control-key">S</span>
+            </div>
+            <div class="control-item">
+                <span>Se déplacer vers la gauche</span>
+                <span class="control-key">Q</span>
+            </div>
+            <div class="control-item">
+                <span>Se déplacer vers la droite</span>
+                <span class="control-key">D</span>
+            </div>
+            <div class="control-item">
+                <span>Miner un bloc</span>
+                <span class="control-key">ESPACE</span>
+            </div>
+            <button id="btn-close-modal">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Modal de l'inventaire -->
+    <div id="modal-inventory" class="modal">
+        <div class="modal-content">
+            <h2>🎒 Inventaire</h2>
+            <div class="inventory-grid">
+                <div class="inventory-item">
+                    <div class="item-icon" style="background: #7a7a7a;">🪨</div>
+                    <div class="item-info">
+                        <span class="item-name">Pierre</span>
+                        <span class="item-count" id="inv-stone-count">0</span>
+                    </div>
+                </div>
+                <div class="inventory-item">
+                    <div class="item-icon" style="background: #b87333;">⚙️</div>
+                    <div class="item-info">
+                        <span class="item-name">Fer</span>
+                        <span class="item-count" id="inv-iron-count">0</span>
+                    </div>
+                </div>
+                <div class="inventory-item">
+                    <div class="item-icon" style="background: #ffd700;">⭐</div>
+                    <div class="item-info">
+                        <span class="item-name">Or</span>
+                        <span class="item-count" id="inv-gold-count">0</span>
+                    </div>
+                </div>
+            </div>
+            <button id="btn-close-inventory">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Modal du coffre -->
+    <div id="modal-chest" class="modal">
+        <div class="modal-content">
+            <h2>📦 Contenu du coffre</h2>
+            <div id="chest-grid" class="chest-grid"></div>
+            <button id="btn-close-chest">Fermer</button>
+        </div>
+    </div>
+
+    <script src="js/tiles.js"></script>
+    <script src="js/level.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

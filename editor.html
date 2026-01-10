@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur de Niveaux - Miner Quest</title>
+    <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <h1>✏️ Éditeur de Niveaux</h1>
+            <div class="editor-actions">
+                <button id="btn-undo">↶ Annuler</button>
+                <button id="btn-new">Nouveau</button>
+                <button id="btn-load">Charger</button>
+                <button id="btn-save">Sauvegarder</button>
+                <button id="btn-test">Tester</button>
+                <button id="btn-back">Retour au jeu</button>
+            </div>
+        </div>
+
+        <div class="editor-content">
+            <div class="sidebar">
+                <h3>Palette de Tuiles</h3>
+                <div id="tile-palette" class="tile-palette"></div>
+                
+                <div class="level-properties">
+                    <h3>Propriétés du Niveau</h3>
+                    <label>
+                        Nom du niveau:
+                        <input type="text" id="level-name" value="level_1">
+                    </label>
+                    <label>
+                        Position X joueur:
+                        <input type="number" id="start-x" value="8" min="0" max="15">
+                    </label>
+                    <label>
+                        Position Y joueur:
+                        <input type="number" id="start-y" value="8" min="0" max="15">
+                    </label>
+                    <button id="btn-set-player-pos" class="btn-action">📍 Définir position du joueur</button>
+                </div>
+
+                <div class="level-list">
+                    <h3>Niveaux</h3>
+                    <select id="level-select" size="5"></select>
+                    <button id="btn-delete-level" class="btn-danger">🗑️ Supprimer niveau</button>
+                </div>
+            </div>
+
+            <div class="editor-main">
+                <canvas id="editorCanvas" width="512" height="512"></canvas>
+                <p class="editor-info">Cliquez sur une tuile dans la palette, puis sur la grille pour placer</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'édition de coffre -->
+    <div id="modal-edit-chest" class="modal-editor">
+        <div class="modal-editor-content">
+            <h2>📦 Contenu du coffre</h2>
+            <p style="margin-bottom: 16px; color: #aaa;">Ajustez les quantités d'items</p>
+            <div id="chest-editor-items">
+                <div class="chest-editor-item">
+                    <div class="chest-item-label">
+                        <span class="chest-item-icon" style="background: #7a7a7a;">🪨</span>
+                        <span>Pierre</span>
+                    </div>
+                    <div class="chest-item-controls">
+                        <button class="btn-decrement" data-type="stone">-</button>
+                        <span class="chest-item-value" id="chest-stone-value">0</span>
+                        <button class="btn-increment" data-type="stone">+</button>
+                    </div>
+                </div>
+                <div class="chest-editor-item">
+                    <div class="chest-item-label">
+                        <span class="chest-item-icon" style="background: #b87333;">⚙️</span>
+                        <span>Fer</span>
+                    </div>
+                    <div class="chest-item-controls">
+                        <button class="btn-decrement" data-type="iron">-</button>
+                        <span class="chest-item-value" id="chest-iron-value">0</span>
+                        <button class="btn-increment" data-type="iron">+</button>
+                    </div>
+                </div>
+                <div class="chest-editor-item">
+                    <div class="chest-item-label">
+                        <span class="chest-item-icon" style="background: #ffd700;">⭐</span>
+                        <span>Or</span>
+                    </div>
+                    <div class="chest-item-controls">
+                        <button class="btn-decrement" data-type="gold">-</button>
+                        <span class="chest-item-value" id="chest-gold-value">0</span>
+                        <button class="btn-increment" data-type="gold">+</button>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <button id="btn-save-chest" class="btn-action" style="flex: 1;">Sauvegarder</button>
+                <button id="btn-cancel-chest" class="btn-danger" style="flex: 1;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'édition de panneau -->
+    <div id="modal-edit-sign" class="modal-editor">
+        <div class="modal-editor-content">
+            <h2>🪧 Message du panneau</h2>
+            <p style="margin-bottom: 16px; color: #aaa;">Écrivez le message à afficher</p>
+            <textarea id="sign-message-input" rows="5" style="width: 100%; padding: 10px; background: #3c3c3c; border: 1px solid #3e3e42; color: #cccccc; border-radius: 4px; font-size: 14px; font-family: inherit; resize: vertical;"></textarea>
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <button id="btn-save-sign" class="btn-action" style="flex: 1;">Sauvegarder</button>
+                <button id="btn-cancel-sign" class="btn-danger" style="flex: 1;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/tiles.js"></script>
+    <script src="js/level.js"></script>
+    <script src="js/editor.js"></script>
+</body>
+</html>
