@@ -14,12 +14,7 @@ async function init() {
 
     // Charger les niveaux
     await levelManager.loadLevelsFromStorage();
-    
-    // Charger le premier niveau disponible
-    const levelList = levelManager.getLevelList();
-    if (levelList.length > 0) {
-        levelManager.loadLevel(levelList[0]);
-    }
+    levelManager.loadLevel('level-1');
 
     // Positionner le joueur
     if (levelManager.currentLevel) {
