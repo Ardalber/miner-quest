@@ -178,6 +178,9 @@ class Player {
         levelManager.setChestContent(x, y, content);
         levelManager.saveLevelsToStorage();
 
+        // Jouer un son de prise d'item
+        this.playPickupSound();
+
         // Rafraîchir l'affichage du coffre
         this.openChest(x, y, levelManager);
     }
@@ -201,6 +204,30 @@ class Player {
             this.isMining = false;
             this.miningProgress = 0;
             this.pickaxeAngle = 0;
+        }
+    }
+
+    // Jouer un son de prise d'item
+    playPickupSound() {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.15);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.15);
+        } catch (e) {
+            // Ignorer les erreurs audio
         }
     }
 

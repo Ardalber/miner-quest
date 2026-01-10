@@ -234,13 +234,12 @@ function undoLastAction() {
 
 // Créer un nouveau niveau
 function createNewLevel() {
-    const name = prompt('Nom du nouveau niveau:', 'level_' + (levelManager.getLevelList().length + 1));
-    if (name) {
-        const level = levelManager.createEmptyLevel(name);
-        levelManager.saveLevel(name, level);
-        updateLevelList();
-        loadEditorLevel(name);
-    }
+    const name = 'level_' + (levelManager.getLevelList().length + 1);
+    const level = levelManager.createEmptyLevel(name);
+    levelManager.saveLevel(name, level);
+    updateLevelList();
+    loadEditorLevel(name);
+    showEditorToast('✓ Nouveau niveau créé: ' + name, 'success', 2000);
 }
 
 // Charger le niveau sélectionné
