@@ -149,7 +149,7 @@ body {
 }
 
 .modal-content button {
-    width: 100%;
+    width: 25%;
     margin-top: 16px;
     background: #667eea;
     color: white;
@@ -162,7 +162,7 @@ body {
 }
 
 #btn-close-chest {
-    width: 100%;
+    width: 25%;
     margin-top: 16px;
     background: #667eea;
     color: white;
