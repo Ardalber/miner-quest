@@ -251,42 +251,6 @@ class LevelManager {
     }
 
     // Créer un niveau par défaut
-    createDefaultLevel() {
-        const level = this.createEmptyLevel('level_1');
-        
-        // Ajouter des murs autour
-        for (let x = 0; x < this.gridWidth; x++) {
-            level.tiles[0][x] = TileTypes.WALL;
-            level.tiles[this.gridHeight - 1][x] = TileTypes.WALL;
-        }
-        for (let y = 0; y < this.gridHeight; y++) {
-            level.tiles[y][0] = TileTypes.WALL;
-            level.tiles[y][this.gridWidth - 1] = TileTypes.WALL;
-        }
-
-        // Ajouter quelques ressources
-        for (let i = 0; i < 20; i++) {
-            const x = Math.floor(Math.random() * 14) + 1;
-            const y = Math.floor(Math.random() * 14) + 1;
-            level.tiles[y][x] = TileTypes.STONE;
-        }
-        
-        for (let i = 0; i < 10; i++) {
-            const x = Math.floor(Math.random() * 14) + 1;
-            const y = Math.floor(Math.random() * 14) + 1;
-            level.tiles[y][x] = TileTypes.IRON;
-        }
-        
-        for (let i = 0; i < 5; i++) {
-            const x = Math.floor(Math.random() * 14) + 1;
-            const y = Math.floor(Math.random() * 14) + 1;
-            level.tiles[y][x] = TileTypes.GOLD;
-        }
-
-        this.levels['level_1'] = level;
-        this.saveLevelsToStorage();
-    }
-
     // Obtenir la liste des niveaux
     getLevelList() {
         return Object.keys(this.levels);
