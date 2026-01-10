@@ -344,8 +344,8 @@ body {
     flex-shrink: 0;
 }
 
-.chest-btn-decrement,
-.chest-btn-increment {
+.btn-decrement,
+.btn-increment {
     width: 24px;
     height: 24px;
     background: #0e639c;
@@ -363,26 +363,27 @@ body {
     flex-shrink: 0;
 }
 
-.chest-btn-decrement:hover,
-.chest-btn-increment:hover {
+.btn-decrement:hover,
+.btn-increment:hover {
     background: #1177bb;
 }
 
-.chest-btn-decrement:active,
-.chest-btn-increment:active {
+.btn-decrement:active,
+.btn-increment:active {
     transform: scale(0.95);
 }
 
-.chest-quantity {
+.chest-item-value {
     min-width: 24px;
     text-align: center;
     font-size: 12px;
     font-weight: bold;
-    color: #0e639c;
+    color: #ffd700;
     flex-shrink: 0;
 }
 
-.chest-btn-take {
+.chest-btn-take,
+.btn-take-editor {
     flex: 0;
     height: 24px;
     background: #4caf50;
@@ -398,7 +399,8 @@ body {
     flex-shrink: 0;
 }
 
-.chest-btn-take:hover {
+.chest-btn-take:hover,
+.btn-take-editor:hover {
     background: #45a049;
 }
 

@@ -131,50 +131,36 @@ class Player {
                     case 'gold': icon = '⭐'; color = '#ffd700'; break;
                 }
 
-                // Initialiser la quantité à prendre
-                itemDiv.dataset.takeQuantity = 1;
-
                 itemDiv.innerHTML = `
                     <div class="chest-item-label">
                         <div class="chest-item-icon" style="background: ${color};">${icon}</div>
                         <div class="chest-item-name">${item.name}</div>
                     </div>
-                    <span class="chest-item-total">${item.count}</span>
+                    <span class="chest-item-value">${item.count}</span>
                     <div class="chest-item-controls">
-                        <button class="chest-btn-decrement" data-index="${index}">−</button>
-                        <span class="chest-quantity" data-index="${index}">1</span>
-                        <button class="chest-btn-increment" data-index="${index}">+</button>
+                        <button class="btn-decrement" data-index="${index}">−</button>
+                        <button class="btn-increment" data-index="${index}">+</button>
                     </div>
                     <button class="chest-btn-take" data-index="${index}">✋</button>
                 `;
 
                 // Événements des boutons
-                const btnDecrement = itemDiv.querySelector('.chest-btn-decrement');
-                const btnIncrement = itemDiv.querySelector('.chest-btn-increment');
+                const btnDecrement = itemDiv.querySelector('.btn-decrement');
+                const btnIncrement = itemDiv.querySelector('.btn-increment');
                 const btnTake = itemDiv.querySelector('.chest-btn-take');
-                const quantityDisplay = itemDiv.querySelector('.chest-quantity');
 
-                btnDecrement.addEventListener('click', () => {
-                    let quantity = parseInt(itemDiv.dataset.takeQuantity);
-                    if (quantity > 1) {
-                        quantity--;
-                        itemDiv.dataset.takeQuantity = quantity;
-                        quantityDisplay.textContent = quantity;
-                    }
+                // Les boutons -/+ ne font rien (juste pour l'affichage, comme l'éditeur)
+                btnDecrement.addEventListener('click', (e) => {
+                    e.preventDefault();
                 });
 
-                btnIncrement.addEventListener('click', () => {
-                    let quantity = parseInt(itemDiv.dataset.takeQuantity);
-                    if (quantity < item.count) {
-                        quantity++;
-                        itemDiv.dataset.takeQuantity = quantity;
-                        quantityDisplay.textContent = quantity;
-                    }
+                btnIncrement.addEventListener('click', (e) => {
+                    e.preventDefault();
                 });
 
                 btnTake.addEventListener('click', () => {
-                    const quantityToTake = parseInt(itemDiv.dataset.takeQuantity);
-                    this.takeItemsFromChest(index, quantityToTake, levelManager);
+                    // Prendre tout le contenu de l'item
+                    this.takeItemsFromChest(index, item.count, levelManager);
                 });
 
                 chestGrid.appendChild(itemDiv);
