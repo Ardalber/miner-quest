@@ -132,35 +132,15 @@ class Player {
                 }
 
                 itemDiv.innerHTML = `
-                    <div class="chest-item-label">
-                        <div class="chest-item-icon" style="background: ${color};">${icon}</div>
-                        <div class="chest-item-name">${item.name}</div>
-                    </div>
+                    <div class="chest-item-icon" style="background: ${color};">${icon}</div>
+                    <span class="chest-item-name">${item.name}</span>
                     <span class="chest-item-value">${item.count}</span>
-                    <div class="chest-item-controls">
-                        <button class="btn-decrement" data-index="${index}">−</button>
-                        <button class="btn-increment" data-index="${index}">+</button>
-                    </div>
-                    <button class="chest-btn-take" data-index="${index}">✋</button>
+                    <button class="chest-btn-take" data-index="${index}">Prendre</button>
                 `;
 
-                // Événements des boutons
-                const btnDecrement = itemDiv.querySelector('.btn-decrement');
-                const btnIncrement = itemDiv.querySelector('.btn-increment');
                 const btnTake = itemDiv.querySelector('.chest-btn-take');
-
-                // Les boutons -/+ ne font rien (juste pour l'affichage, comme l'éditeur)
-                btnDecrement.addEventListener('click', (e) => {
-                    e.preventDefault();
-                });
-
-                btnIncrement.addEventListener('click', (e) => {
-                    e.preventDefault();
-                });
-
                 btnTake.addEventListener('click', () => {
-                    // Prendre tout le contenu de l'item
-                    this.takeItemsFromChest(index, item.count, levelManager);
+                    this.takeOneItemFromChest(index, levelManager);
                 });
 
                 chestGrid.appendChild(itemDiv);
@@ -172,8 +152,8 @@ class Player {
         modal.classList.add('show');
     }
 
-    // Prendre des items du coffre
-    takeItemsFromChest(itemIndex, quantity, levelManager) {
+    // Prendre 1 item du coffre
+    takeOneItemFromChest(itemIndex, levelManager) {
         const modal = document.getElementById('modal-chest');
         const x = parseInt(modal.dataset.chestX);
         const y = parseInt(modal.dataset.chestY);
@@ -182,14 +162,13 @@ class Player {
         if (!content.items || !content.items[itemIndex]) return;
 
         const item = content.items[itemIndex];
-        const actualQuantity = Math.min(quantity, item.count);
 
-        // Ajouter à l'inventaire du joueur
-        this.inventory[item.type] += actualQuantity;
+        // Ajouter 1 à l'inventaire du joueur
+        this.inventory[item.type] += 1;
         this.updateInventoryUI();
 
-        // Réduire la quantité dans le coffre
-        item.count -= actualQuantity;
+        // Réduire de 1 dans le coffre
+        item.count -= 1;
         
         // Supprimer l'item s'il n'y en a plus
         if (item.count <= 0) {
