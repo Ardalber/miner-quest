@@ -135,12 +135,10 @@ class Player {
                 itemDiv.dataset.takeQuantity = 1;
 
                 itemDiv.innerHTML = `
-                    <div class="chest-item-header">
+                    <div class="chest-item-controls">
                         <div class="chest-item-icon" style="background: ${color};">${icon}</div>
                         <div class="chest-item-name">${item.name}</div>
                         <div class="chest-item-total">(${item.count})</div>
-                    </div>
-                    <div class="chest-item-controls">
                         <button class="chest-btn-decrement" data-index="${index}">-</button>
                         <span class="chest-quantity" data-index="${index}">1</span>
                         <button class="chest-btn-increment" data-index="${index}">+</button>

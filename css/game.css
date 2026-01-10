@@ -111,7 +111,7 @@ body {
 }
 
 #modal-chest .modal-content {
-    max-width: 280px;
+    max-width: 500px;
     padding: 20px;
 }
 
@@ -281,15 +281,17 @@ body {
 
 .chest-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 6px;
     padding: 10px;
     background: #f8f9fa;
     border-radius: 6px;
     cursor: default;
     transition: all 0.2s;
     border: 2px solid transparent;
+    flex-wrap: wrap;
 }
 
 .chest-item:hover {
@@ -298,20 +300,17 @@ body {
 }
 
 .chest-item-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
+    display: none;
 }
 
 .chest-item-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 14px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
 }
@@ -319,39 +318,43 @@ body {
 .chest-item-name {
     font-weight: 600;
     color: #333;
-    font-size: 12px;
-    flex: 1;
+    font-size: 11px;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .chest-item-total {
-    font-size: 11px;
+    font-size: 10px;
     color: #999;
+    white-space: nowrap;
 }
 
 .chest-item-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    width: 100%;
+    gap: 4px;
+    width: auto;
+    flex-wrap: wrap;
 }
 
 .chest-btn-decrement,
 .chest-btn-increment {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     background: #667eea;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     transition: background 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
+    flex-shrink: 0;
 }
 
 .chest-btn-decrement:hover,
@@ -365,24 +368,28 @@ body {
 }
 
 .chest-quantity {
-    min-width: 30px;
+    min-width: 24px;
     text-align: center;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     color: #667eea;
+    flex-shrink: 0;
 }
 
 .chest-btn-take {
-    flex: 1;
-    height: 24px;
+    flex: 0;
+    height: 20px;
     background: #4caf50;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: bold;
     transition: background 0.2s;
+    padding: 0 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .chest-btn-take:hover {
