@@ -161,7 +161,20 @@ body {
     font-weight: 600;
 }
 
-.modal-content button:hover {
+#btn-close-chest {
+    width: 100%;
+    margin-top: 16px;
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#btn-close-chest:hover {
     background: #5568d3;
 }
 
@@ -387,7 +400,7 @@ body {
 
 .chest-btn-take,
 .btn-take-editor {
-    width: 24px;
+    width: 25%;
     height: 24px;
     background: #4caf50;
     color: white;
