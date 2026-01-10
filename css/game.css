@@ -385,14 +385,14 @@ body {
 
 .chest-btn-take,
 .btn-take-editor {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     background: #2a9d2a;
     color: white;
     border: none;
     border-radius: 3px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     transition: background 0.2s;
     display: flex;
