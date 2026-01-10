@@ -247,8 +247,6 @@ class LevelManager {
             console.error('Erreur de chargement:', e);
         }
         
-        // Créer un niveau par défaut
-        this.createDefaultLevel();
         return false;
     }
 
