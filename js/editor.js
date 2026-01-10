@@ -1,3 +1,31 @@
+// Afficher une notification toast
+function showEditorToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('editor-toast-container') || createEditorToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    // Retirer la notification après la durée
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease-out forwards';
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+}
+
+function createEditorToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'editor-toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
+}
+
 // Variables de l'éditeur
 let editorCanvas, editorCtx;
 let selectedTile = TileTypes.GRASS;
@@ -193,7 +221,7 @@ function saveUndoState() {
 // Annuler la dernière action
 function undoLastAction() {
     if (undoStack.length === 0) {
-        alert('Aucune action à annuler');
+        showEditorToast('Aucune action à annuler', 'info', 2000);
         return;
     }
     
@@ -244,7 +272,7 @@ function saveCurrentLevel() {
     levelManager.saveLevel(name, levelManager.currentLevel);
     updateLevelList();
 
-    alert('Niveau sauvegardé avec succès!');
+    showEditorToast('✓ Niveau sauvegardé avec succès', 'success', 2000);
 }
 
 // Tester le niveau
@@ -272,7 +300,7 @@ function deleteCurrentLevel() {
     const levelList = levelManager.getLevelList();
     
     if (levelList.length <= 1) {
-        alert('Impossible de supprimer le dernier niveau!');
+        showEditorToast('Impossible de supprimer le dernier niveau!', 'error', 3000);
         return;
     }
     
@@ -288,6 +316,7 @@ function deleteCurrentLevel() {
     if (remainingLevels.length > 0) {
         updateLevelList();
         loadEditorLevel(remainingLevels[0]);
+        showEditorToast('Niveau supprimé avec succès', 'success', 2000);
     }
 }
 

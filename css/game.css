@@ -110,6 +110,20 @@ body {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
+#modal-chest .modal-content {
+    max-width: 280px;
+    padding: 20px;
+}
+
+#modal-chest h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+}
+
+#modal-chest .chest-grid {
+    margin-bottom: 16px;
+}
+
 .modal-content h2 {
     color: #667eea;
     margin-bottom: 20px;
@@ -267,20 +281,27 @@ body {
 
 .chest-item {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     padding: 10px;
     background: #f8f9fa;
     border-radius: 6px;
-    cursor: pointer;
+    cursor: default;
     transition: all 0.2s;
     border: 2px solid transparent;
 }
 
 .chest-item:hover {
-    background: #e9ecef;
-    transform: translateX(5px);
-    border-color: #667eea;
+    background: #f8f9fa;
+    border-color: transparent;
+}
+
+.chest-item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
 }
 
 .chest-item-icon {
@@ -295,21 +316,79 @@ body {
     flex-shrink: 0;
 }
 
-.chest-item-info {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
 .chest-item-name {
     font-weight: 600;
     color: #333;
-    font-size: 13px;
+    font-size: 12px;
+    flex: 1;
 }
 
-.chest-item-count {
-    font-size: 16px;
+.chest-item-total {
+    font-size: 11px;
+    color: #999;
+}
+
+.chest-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.chest-btn-decrement,
+.chest-btn-increment {
+    width: 24px;
+    height: 24px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.chest-btn-decrement:hover,
+.chest-btn-increment:hover {
+    background: #5568d3;
+}
+
+.chest-btn-decrement:active,
+.chest-btn-increment:active {
+    transform: scale(0.95);
+}
+
+.chest-quantity {
+    min-width: 30px;
+    text-align: center;
+    font-size: 14px;
     font-weight: bold;
     color: #667eea;
+}
+
+.chest-btn-take {
+    flex: 1;
+    height: 24px;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.chest-btn-take:hover {
+    background: #45a049;
+}
+
+.chest-btn-take:disabled {
+    background: #ccc;
+    cursor: not-allowed;
 }

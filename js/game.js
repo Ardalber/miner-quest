@@ -212,5 +212,27 @@ function drawLevel() {
     }
 }
 
+// Afficher une notification toast
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    // Retirer la notification après la durée
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease-out forwards';
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+}
+
 // Démarrer le jeu quand la page est chargée
 window.addEventListener('DOMContentLoaded', init);

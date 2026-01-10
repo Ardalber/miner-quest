@@ -131,16 +131,50 @@ class Player {
                     case 'gold': icon = '⭐'; color = '#ffd700'; break;
                 }
 
+                // Initialiser la quantité à prendre
+                itemDiv.dataset.takeQuantity = 1;
+
                 itemDiv.innerHTML = `
-                    <div class="chest-item-icon" style="background: ${color};">${icon}</div>
-                    <div class="chest-item-info">
-                        <span class="chest-item-name">${item.name}</span>
-                        <span class="chest-item-count">${item.count}</span>
+                    <div class="chest-item-header">
+                        <div class="chest-item-icon" style="background: ${color};">${icon}</div>
+                        <div class="chest-item-name">${item.name}</div>
+                        <div class="chest-item-total">(${item.count})</div>
+                    </div>
+                    <div class="chest-item-controls">
+                        <button class="chest-btn-decrement" data-index="${index}">-</button>
+                        <span class="chest-quantity" data-index="${index}">1</span>
+                        <button class="chest-btn-increment" data-index="${index}">+</button>
+                        <button class="chest-btn-take" data-index="${index}">Prendre</button>
                     </div>
                 `;
 
-                itemDiv.addEventListener('click', () => {
-                    this.takeItemFromChest(index, levelManager);
+                // Événements des boutons
+                const btnDecrement = itemDiv.querySelector('.chest-btn-decrement');
+                const btnIncrement = itemDiv.querySelector('.chest-btn-increment');
+                const btnTake = itemDiv.querySelector('.chest-btn-take');
+                const quantityDisplay = itemDiv.querySelector('.chest-quantity');
+
+                btnDecrement.addEventListener('click', () => {
+                    let quantity = parseInt(itemDiv.dataset.takeQuantity);
+                    if (quantity > 1) {
+                        quantity--;
+                        itemDiv.dataset.takeQuantity = quantity;
+                        quantityDisplay.textContent = quantity;
+                    }
+                });
+
+                btnIncrement.addEventListener('click', () => {
+                    let quantity = parseInt(itemDiv.dataset.takeQuantity);
+                    if (quantity < item.count) {
+                        quantity++;
+                        itemDiv.dataset.takeQuantity = quantity;
+                        quantityDisplay.textContent = quantity;
+                    }
+                });
+
+                btnTake.addEventListener('click', () => {
+                    const quantityToTake = parseInt(itemDiv.dataset.takeQuantity);
+                    this.takeItemsFromChest(index, quantityToTake, levelManager);
                 });
 
                 chestGrid.appendChild(itemDiv);
@@ -152,24 +186,35 @@ class Player {
         modal.classList.add('show');
     }
 
-    // Prendre un item du coffre
-    takeItemFromChest(itemIndex, levelManager) {
+    // Prendre des items du coffre
+    takeItemsFromChest(itemIndex, quantity, levelManager) {
         const modal = document.getElementById('modal-chest');
         const x = parseInt(modal.dataset.chestX);
         const y = parseInt(modal.dataset.chestY);
 
-        const item = levelManager.removeItemFromChest(x, y, itemIndex);
-        if (item) {
-            // Ajouter à l'inventaire du joueur
-            this.inventory[item.type] += item.count;
-            this.updateInventoryUI();
+        const content = levelManager.getChestContent(x, y);
+        if (!content.items || !content.items[itemIndex]) return;
 
-            // Sauvegarder les modifications
-            levelManager.saveLevelsToStorage();
+        const item = content.items[itemIndex];
+        const actualQuantity = Math.min(quantity, item.count);
 
-            // Rafraîchir l'affichage du coffre
-            this.openChest(x, y, levelManager);
+        // Ajouter à l'inventaire du joueur
+        this.inventory[item.type] += actualQuantity;
+        this.updateInventoryUI();
+
+        // Réduire la quantité dans le coffre
+        item.count -= actualQuantity;
+        
+        // Supprimer l'item s'il n'y en a plus
+        if (item.count <= 0) {
+            content.items.splice(itemIndex, 1);
         }
+
+        levelManager.setChestContent(x, y, content);
+        levelManager.saveLevelsToStorage();
+
+        // Rafraîchir l'affichage du coffre
+        this.openChest(x, y, levelManager);
     }
 
     // Mettre à jour l'animation de minage
