@@ -331,6 +331,7 @@ body {
 .chest-item-controls {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     width: 100%;
 }
