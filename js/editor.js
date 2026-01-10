@@ -126,6 +126,7 @@ function createTilePalette() {
         TileTypes.WALL,
         TileTypes.CHEST,
         TileTypes.SIGN,
+        TileTypes.WARP,
         TileTypes.EMPTY
     ];
 
