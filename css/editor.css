@@ -214,8 +214,10 @@ body {
     background: #2d2d30;
     padding: 24px;
     border-radius: 8px;
-    min-width: 350px;
+    min-width: 500px;
     border: 1px solid #3e3e42;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .modal-editor-content h2 {
@@ -223,61 +225,73 @@ body {
     margin-bottom: 16px;
 }
 
+#chest-editor-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
 .chest-editor-item {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
+    justify-content: flex-start;
+    gap: 8px;
     margin-bottom: 12px;
-    padding: 12px;
+    padding: 10px;
     background: #1e1e1e;
     border-radius: 6px;
+    flex-wrap: nowrap;
 }
 
 .chest-item-label {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     color: #cccccc;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .chest-item-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 14px;
+    flex-shrink: 0;
 }
 
 .chest-item-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 2px;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-increment,
 .btn-decrement {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     background: #0e639c;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
     transition: background 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
 }
 
 .btn-increment:hover {
@@ -293,12 +307,40 @@ body {
     transform: scale(0.95);
 }
 
+.btn-take-editor {
+    width: 24px;
+    height: 24px;
+    background: #2a9d2a;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+.btn-take-editor:hover {
+    background: #45a049;
+}
+
+.btn-take-editor:active {
+    transform: scale(0.95);
+}
+
 .chest-item-value {
-    min-width: 40px;
+    min-width: 32px;
     text-align: center;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
     color: #ffd700;
+    flex-shrink: 0;
 }
 
 .chest-editor-item label {
