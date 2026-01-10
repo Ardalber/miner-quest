@@ -222,7 +222,21 @@ class LevelManager {
     }
 
     // Charger depuis localStorage
-    loadLevelsFromStorage() {
+    async loadLevelsFromStorage() {
+        // Essayer de charger depuis levels.json en premier
+        try {
+            const response = await fetch('levels.json');
+            if (response.ok) {
+                const data = await response.json();
+                this.levels = data;
+                console.log('Niveaux chargés depuis levels.json');
+                return true;
+            }
+        } catch (e) {
+            console.log('Pas de fichier levels.json, chargement depuis localStorage');
+        }
+        
+        // Sinon charger depuis localStorage
         try {
             const data = localStorage.getItem('minerquest_levels');
             if (data) {

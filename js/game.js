@@ -5,7 +5,7 @@ let lastTime = 0;
 let keys = {};
 
 // Initialisation du jeu
-function init() {
+async function init() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
 
@@ -13,7 +13,7 @@ function init() {
     player = new Player();
 
     // Charger les niveaux
-    levelManager.loadLevelsFromStorage();
+    await levelManager.loadLevelsFromStorage();
     levelManager.loadLevel('level_1');
 
     // Positionner le joueur

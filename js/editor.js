@@ -64,6 +64,7 @@ function initEditor() {
     document.getElementById('btn-new').addEventListener('click', createNewLevel);
     document.getElementById('btn-load').addEventListener('click', loadSelectedLevel);
     document.getElementById('btn-save').addEventListener('click', saveCurrentLevel);
+    document.getElementById('btn-export').addEventListener('click', exportLevels);
     document.getElementById('btn-test').addEventListener('click', testLevel);
     document.getElementById('btn-set-player-pos').addEventListener('click', togglePlayerPosMode);
     document.getElementById('btn-delete-level').addEventListener('click', deleteCurrentLevel);
@@ -283,6 +284,19 @@ function saveCurrentLevel() {
 function testLevel() {
     saveCurrentLevel();
     window.location.href = 'index.html';
+}
+
+// Exporter tous les niveaux vers un fichier JSON
+function exportLevels() {
+    const json = levelManager.exportLevels();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'levels.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showEditorToast('✓ Niveaux exportés dans levels.json', 'success', 2000);
 }
 
 // Activer/désactiver le mode placement de position du joueur
