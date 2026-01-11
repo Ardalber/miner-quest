@@ -176,9 +176,9 @@
       1,
       4,
       1,
+      6,
       1,
-      1,
-      1,
+      7,
       1,
       1,
       1,
@@ -333,9 +333,30 @@
           "count": 2
         }
       ]
+    },
+    "7_9": {
+      "items": [
+        {
+          "type": "stone",
+          "name": "Pierre",
+          "count": 4
+        },
+        {
+          "type": "iron",
+          "name": "Fer",
+          "count": 4
+        },
+        {
+          "type": "gold",
+          "name": "Or",
+          "count": 4
+        }
+      ]
     }
   },
-  "signData": {},
+  "signData": {
+    "9_9": "Coucou noble !!!"
+  },
   "warpData": {
     "14_1": "level_2"
   }

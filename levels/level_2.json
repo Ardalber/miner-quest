@@ -126,8 +126,8 @@
       1,
       1,
       1,
-      1,
-      1,
+      6,
+      7,
       1,
       1,
       1
@@ -314,9 +314,30 @@
           "count": 3
         }
       ]
+    },
+    "11_6": {
+      "items": [
+        {
+          "type": "stone",
+          "name": "Pierre",
+          "count": 4
+        },
+        {
+          "type": "iron",
+          "name": "Fer",
+          "count": 2
+        },
+        {
+          "type": "gold",
+          "name": "Or",
+          "count": 2
+        }
+      ]
     }
   },
-  "signData": {},
+  "signData": {
+    "12_6": "Novice ?? ça dégage"
+  },
   "warpData": {
     "10_4": "level_1"
   }

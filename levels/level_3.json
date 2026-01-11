@@ -174,8 +174,8 @@
       1,
       1,
       1,
-      1,
-      1,
+      6,
+      7,
       1,
       1,
       1,
@@ -295,8 +295,30 @@
       1
     ]
   ],
-  "chestData": {},
-  "signData": {},
+  "chestData": {
+    "5_9": {
+      "items": [
+        {
+          "type": "stone",
+          "name": "Pierre",
+          "count": 4
+        },
+        {
+          "type": "iron",
+          "name": "Fer",
+          "count": 3
+        },
+        {
+          "type": "gold",
+          "name": "Or",
+          "count": 2
+        }
+      ]
+    }
+  },
+  "signData": {
+    "6_9": "pat en pls !!!"
+  },
   "warpData": {
     "10_6": "level_2"
   }
