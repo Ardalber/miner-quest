@@ -10,6 +10,7 @@ class LevelManager {
     // Synchroniser l'état courant vers la liste des niveaux et localStorage
     commitCurrentLevel() {
         if (!this.currentLevel || !this.currentLevel.name) return;
+        this.pruneMetadata(this.currentLevel);
         this.levels[this.currentLevel.name] = JSON.parse(JSON.stringify(this.currentLevel));
         this.saveLevelToStorage(this.currentLevel.name);
     }
@@ -70,8 +71,34 @@ class LevelManager {
             }
         }
     }
+
+    // Nettoyer les données orphelines (panneaux, coffres, warps) sans tuile correspondante
+    pruneMetadata(level) {
+        if (!level || !level.tiles) return;
+        const tiles = level.tiles;
+
+        const pruneMap = (data, keepPredicate) => {
+            if (!data) return false;
+            for (const key of Object.keys(data)) {
+                const [sx, sy] = key.split('_').map(n => parseInt(n, 10));
+                if (!keepPredicate(sx, sy, tiles)) {
+                    delete data[key];
+                }
+            }
+            return Object.keys(data).length > 0;
+        };
+
+        const hasSign = pruneMap(level.signData, (x, y, t) => t[y] && t[y][x] === TileTypes.SIGN);
+        const hasChest = pruneMap(level.chestData, (x, y, t) => t[y] && t[y][x] === TileTypes.CHEST);
+        const hasWarp = pruneMap(level.warpData, (x, y, t) => t[y] && t[y][x] === TileTypes.WARP);
+
+        if (!hasSign) level.signData = {};
+        if (!hasChest) level.chestData = {};
+        if (!hasWarp) level.warpData = {};
+    }
     // Sauvegarder un niveau
     saveLevel(levelName, levelData) {
+        this.pruneMetadata(levelData);
         this.levels[levelName] = JSON.parse(JSON.stringify(levelData));
         this.saveLevelToStorage(levelName);
         // Mettre à jour la liste des niveaux
