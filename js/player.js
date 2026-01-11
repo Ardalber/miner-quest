@@ -11,6 +11,8 @@ class Player {
         this.miningProgress = 0;
         this.miningTarget = { x: 0, y: 0 };
         this.pickaxeAngle = 0;
+        this.miningHits = 0; // Nombre de coups donnés
+        this.requiredHits = 1; // Nombre de coups nécessaires
         
         // Inventaire
         this.inventory = {
@@ -84,10 +86,15 @@ class Player {
 
         // Vérifier si la case est minable
         if (levelManager.isMinable(targetX, targetY)) {
+            const tileType = levelManager.getTile(targetX, targetY);
+            const durability = TileConfig[tileType].durability || 1;
+            
             this.isMining = true;
             this.miningProgress = 0;
             this.miningTarget = { x: targetX, y: targetY };
             this.pickaxeAngle = 0;
+            this.miningHits = 0;
+            this.requiredHits = durability;
         }
     }
 
@@ -122,6 +129,9 @@ class Player {
         // Stocker la position du coffre pour les interactions
         modal.dataset.chestX = x;
         modal.dataset.chestY = y;
+
+        // Mettre à jour l'affichage de l'inventaire du joueur dans le modal
+        this.updateChestInventoryDisplay();
 
         // Vider et remplir la grille
         chestGrid.innerHTML = '';
@@ -175,6 +185,7 @@ class Player {
         // Ajouter 1 à l'inventaire du joueur
         this.inventory[item.type] += 1;
         this.updateInventoryUI();
+        this.updateChestInventoryDisplay();
 
         // Réduire de 1 dans le coffre
         item.count -= 1;
@@ -198,21 +209,30 @@ class Player {
     updateMining(deltaTime, levelManager) {
         if (!this.isMining) return;
 
-        // Progression du minage (plus rapide pour tester)
-        this.miningProgress += deltaTime * 2; // 0.5 seconde par bloc
+        // Progression du minage (animation rapide pour chaque coup)
+        this.miningProgress += deltaTime * 3; // 0.33 seconde par coup
         this.pickaxeAngle = Math.sin(this.miningProgress * 10) * 30;
 
-        // Minage terminé
+        // Coup terminé
         if (this.miningProgress >= 1) {
-            const resource = levelManager.mineTile(this.miningTarget.x, this.miningTarget.y);
-            if (resource) {
-                this.inventory[resource]++;
-                this.updateInventoryUI();
-                this.playMiningSound();
+            this.miningHits++;
+            this.playMiningSound();
+            
+            // Vérifier si le bloc est détruit
+            if (this.miningHits >= this.requiredHits) {
+                const resource = levelManager.mineTile(this.miningTarget.x, this.miningTarget.y);
+                if (resource) {
+                    this.inventory[resource]++;
+                    this.updateInventoryUI();
+                }
+                this.isMining = false;
+                this.miningProgress = 0;
+                this.pickaxeAngle = 0;
+                this.miningHits = 0;
+            } else {
+                // Réinitialiser la progression pour le prochain coup
+                this.miningProgress = 0;
             }
-            this.isMining = false;
-            this.miningProgress = 0;
-            this.pickaxeAngle = 0;
         }
     }
 
@@ -274,6 +294,17 @@ class Player {
         if (invStoneElement) invStoneElement.textContent = this.inventory.stone;
         if (invIronElement) invIronElement.textContent = this.inventory.iron;
         if (invGoldElement) invGoldElement.textContent = this.inventory.gold;
+    }
+
+    // Mettre à jour l'affichage de l'inventaire dans le modal du coffre
+    updateChestInventoryDisplay() {
+        const playerStoneElement = document.getElementById('player-stone-count');
+        const playerIronElement = document.getElementById('player-iron-count');
+        const playerGoldElement = document.getElementById('player-gold-count');
+
+        if (playerStoneElement) playerStoneElement.textContent = this.inventory.stone;
+        if (playerIronElement) playerIronElement.textContent = this.inventory.iron;
+        if (playerGoldElement) playerGoldElement.textContent = this.inventory.gold;
     }
 
     // Dessiner le joueur

@@ -8,7 +8,9 @@ const TileTypes = {
     WALL: 5,
     CHEST: 6,
     SIGN: 7,
-    WARP: 8
+    WARP: 8,
+    CHEST_GRASS: 9,
+    SIGN_GRASS: 10
 };
 
 // Configuration de chaque type de tuile
@@ -33,7 +35,7 @@ const TileConfig = {
         solid: true,
         minable: true,
         resource: 'stone',
-        durability: 3
+        durability: 1
     },
     [TileTypes.IRON]: {
         name: 'Fer',
@@ -41,7 +43,7 @@ const TileConfig = {
         solid: true,
         minable: true,
         resource: 'iron',
-        durability: 5
+        durability: 2
     },
     [TileTypes.GOLD]: {
         name: 'Or',
@@ -49,7 +51,7 @@ const TileConfig = {
         solid: true,
         minable: true,
         resource: 'gold',
-        durability: 7
+        durability: 3
     },
     [TileTypes.WALL]: {
         name: 'Mur',
@@ -85,6 +87,26 @@ const TileConfig = {
         interactive: true,
         warp: true,
         targetLevel: null
+    },
+    [TileTypes.CHEST_GRASS]: {
+        name: 'Coffre (Herbe)',
+        color: '#8B4513',
+        backgroundColor: '#4a9d4e',
+        solid: true,
+        minable: false,
+        resource: null,
+        interactive: true,
+        openable: true
+    },
+    [TileTypes.SIGN_GRASS]: {
+        name: 'Panneau (Herbe)',
+        color: '#D2691E',
+        backgroundColor: '#4a9d4e',
+        solid: true,
+        minable: false,
+        resource: null,
+        interactive: true,
+        message: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.'
     }
 };
 
@@ -137,6 +159,12 @@ class TileRenderer {
                 break;
             case TileTypes.WARP:
                 this.drawWarp(ctx);
+                break;
+            case TileTypes.CHEST_GRASS:
+                this.drawChestGrass(ctx);
+                break;
+            case TileTypes.SIGN_GRASS:
+                this.drawSignGrass(ctx);
                 break;
         }
 
@@ -326,6 +354,48 @@ class TileRenderer {
         stars.forEach(([x, y]) => {
             ctx.fillRect(x, y, 2, 2);
         });
+    }
+
+    drawChestGrass(ctx) {
+        // Fond herbe
+        this.drawGrass(ctx);
+        
+        // Coffre par dessus
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(8, 12, 16, 12);
+        
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(8, 18, 16, 2);
+        
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(14, 16, 4, 4);
+    }
+
+    drawSignGrass(ctx) {
+        // Fond herbe
+        this.drawGrass(ctx);
+        
+        // Poteau
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(14, 20, 4, 8);
+        
+        // Panneau
+        ctx.fillStyle = '#D2691E';
+        ctx.fillRect(6, 8, 20, 12);
+        
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(6, 8, 20, 2);
+        ctx.fillRect(6, 18, 20, 2);
+        
+        // Lignes de texte
+        ctx.strokeStyle = '#654321';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(8, 12);
+        ctx.lineTo(24, 12);
+        ctx.moveTo(8, 15);
+        ctx.lineTo(22, 15);
+        ctx.stroke();
     }
 
     // Récupère l'image d'une tuile

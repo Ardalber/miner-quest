@@ -3,6 +3,50 @@ let canvas, ctx;
 let player;
 let lastTime = 0;
 let keys = {};
+let playerName = '';
+
+// Afficher le modal de prénom au démarrage
+function showNameModal() {
+    const modal = document.getElementById('modal-name');
+    const input = document.getElementById('player-name-input');
+    const btnStart = document.getElementById('btn-start-game');
+    
+    if (modal && input && btnStart) {
+        // Vérifier si un nom est déjà sauvegardé
+        const savedName = localStorage.getItem('minerquest_player_name');
+        if (savedName) {
+            playerName = savedName;
+            modal.style.display = 'none';
+            init();
+        } else {
+            modal.style.display = 'flex';
+            input.focus();
+            
+            // Gérer le bouton commencer
+            btnStart.addEventListener('click', () => {
+                const name = input.value.trim();
+                if (name) {
+                    playerName = name;
+                    localStorage.setItem('minerquest_player_name', name);
+                    modal.style.display = 'none';
+                    init();
+                } else {
+                    input.style.borderColor = '#f44336';
+                    setTimeout(() => {
+                        input.style.borderColor = '#667eea';
+                    }, 500);
+                }
+            });
+            
+            // Gérer la touche Entrée
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    btnStart.click();
+                }
+            });
+        }
+    }
+}
 
 // Initialisation du jeu
 async function init() {
@@ -269,4 +313,4 @@ function showToast(message, type = 'info', duration = 3000) {
 }
 
 // Démarrer le jeu quand la page est chargée
-window.addEventListener('DOMContentLoaded', init);
+window.addEventListener('DOMContentLoaded', showNameModal);

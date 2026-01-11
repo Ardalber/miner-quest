@@ -14,6 +14,7 @@
         <div class="editor-header">
             <h1>✒️ Éditeur de Niveaux</h1>
             <div class="editor-actions">
+                <div id="editor-status" class="editor-status"></div>
                 <button id="btn-undo">↶ Annuler</button>
                 <button id="btn-new">Nouveau</button>
                 <button id="btn-load">📁 Charger fichier</button>
@@ -75,7 +76,6 @@
                         <button class="btn-decrement" data-type="stone">-</button>
                         <button class="btn-increment" data-type="stone">+</button>
                     </div>
-                    <button class="btn-take-editor" data-type="stone">✋</button>
                 </div>
                 <div class="chest-editor-item">
                     <div class="chest-item-label">
@@ -87,7 +87,6 @@
                         <button class="btn-decrement" data-type="iron">-</button>
                         <button class="btn-increment" data-type="iron">+</button>
                     </div>
-                    <button class="btn-take-editor" data-type="iron">✋</button>
                 </div>
                 <div class="chest-editor-item">
                     <div class="chest-item-label">
@@ -99,7 +98,6 @@
                         <button class="btn-decrement" data-type="gold">-</button>
                         <button class="btn-increment" data-type="gold">+</button>
                     </div>
-                    <button class="btn-take-editor" data-type="gold">✋</button>
                 </div>
             </div>
             <div style="display: flex; gap: 8px; margin-top: 16px;">

@@ -1,9 +1,9 @@
 {
-  "name": "level_1",
+  "name": "level_3",
   "width": 16,
   "height": 16,
-  "startX": 1,
-  "startY": 14,
+  "startX": 8,
+  "startY": 8,
   "exits": [],
   "tiles": [
     [
@@ -39,24 +39,6 @@
       1,
       1,
       1,
-      8,
-      1
-    ],
-    [
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
       1,
       1
     ],
@@ -66,6 +48,24 @@
       1,
       1,
       1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      2,
       1,
       1,
       1,
@@ -295,29 +295,7 @@
       1
     ]
   ],
-  "chestData": {
-    "8_5": {
-      "items": [
-        {
-          "type": "stone",
-          "name": "Pierre",
-          "count": 4
-        },
-        {
-          "type": "iron",
-          "name": "Fer",
-          "count": 5
-        },
-        {
-          "type": "gold",
-          "name": "Or",
-          "count": 4
-        }
-      ]
-    }
-  },
+  "chestData": {},
   "signData": {},
-  "warpData": {
-    "14_1": "level_2"
-  }
+  "warpData": {}
 }

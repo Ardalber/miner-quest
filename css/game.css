@@ -65,8 +65,9 @@ body {
 /* Affichage du niveau actuel */
 .level-display {
     position: absolute;
-    top: 80px;
+    top: 50%;
     left: 20px;
+    transform: translateY(-50%);
     z-index: 100;
     background: rgba(26, 26, 26, 0.9);
     color: #ffffff;
@@ -117,6 +118,53 @@ body {
 
 .modal.show {
     display: flex;
+}
+
+/* Modal de prénom */
+.modal-name-content {
+    max-width: 450px;
+    text-align: center;
+    animation: slideInDown 0.5s ease-out;
+}
+
+.modal-name-content h2 {
+    color: #667eea;
+    margin-bottom: 16px;
+    font-size: 28px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    width: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .modal-content {
@@ -298,6 +346,28 @@ body {
 .dialog-bubble.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+}
+
+/* Container pour le layout côte à côte */
+.modal-chest-content {
+    max-width: 900px !important;
+    width: 90vw;
+}
+
+.chest-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.chest-section {
+    flex: 1;
+    min-width: 0;
+}
+
+.chest-section h2 {
+    margin-bottom: 12px;
+    font-size: 18px;
 }
 
 /* Grille du coffre */

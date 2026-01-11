@@ -3,32 +3,27 @@ function formatLevelName(levelName) {
     return levelName.replace(/^level_?(\d+)$/i, 'Level $1');
 }
 
-// Afficher une notification toast
+// Afficher une notification dans la barre d'actions
 function showEditorToast(message, type = 'info', duration = 3000) {
-    const container = document.getElementById('editor-toast-container') || createEditorToastContainer();
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
+    const statusElement = document.getElementById('editor-status');
+    if (!statusElement) return;
     
-    container.appendChild(toast);
+    // Supprimer les classes précédentes
+    statusElement.className = 'editor-status';
     
-    // Retirer la notification après la durée
+    // Ajouter le message et le type
+    statusElement.textContent = message;
+    statusElement.classList.add('show', type);
+    
+    // Masquer après la durée
     setTimeout(() => {
-        toast.style.animation = 'slideOutRight 0.3s ease-out forwards';
-        setTimeout(() => {
-            if (container.contains(toast)) {
-                container.removeChild(toast);
-            }
-        }, 300);
+        statusElement.classList.remove('show');
     }, duration);
 }
 
 function createEditorToastContainer() {
-    const container = document.createElement('div');
-    container.id = 'editor-toast-container';
-    container.className = 'toast-container';
-    document.body.appendChild(container);
-    return container;
+    // Fonction vide pour compatibilité
+    return document.getElementById('editor-status');
 }
 
 // Variables de l'éditeur
@@ -40,6 +35,7 @@ let isSettingPlayerPos = false;
 let undoStack = [];
 const MAX_UNDO = 20;
 let chestItemCounts = { stone: 0, iron: 0, gold: 0 };
+let initialLevelState = null; // Pour détecter les changements
 
 // Initialisation de l'éditeur
 async function initEditor() {
@@ -141,7 +137,9 @@ function createTilePalette() {
         TileTypes.GOLD,
         TileTypes.WALL,
         TileTypes.CHEST,
+        TileTypes.CHEST_GRASS,
         TileTypes.SIGN,
+        TileTypes.SIGN_GRASS,
         TileTypes.WARP,
         TileTypes.EMPTY
     ];
@@ -217,6 +215,9 @@ function loadEditorLevel(levelName) {
         document.getElementById('level-name').value = levelName;
         document.getElementById('start-x').value = levelManager.currentLevel.startX;
         document.getElementById('start-y').value = levelManager.currentLevel.startY;
+        
+        // Sauvegarder l'état initial pour détecter les changements
+        initialLevelState = JSON.stringify(levelManager.currentLevel);
     }
     
     // Réinitialiser l'undo stack
@@ -314,6 +315,13 @@ function saveCurrentLevel() {
     levelManager.currentLevel.startX = startX;
     levelManager.currentLevel.startY = startY;
 
+    // Vérifier s'il y a des changements
+    const currentState = JSON.stringify(levelManager.currentLevel);
+    if (currentState === initialLevelState && name === currentLevelName) {
+        showEditorToast('ℹ️ Aucun changement à sauvegarder', 'info', 2000);
+        return;
+    }
+
     // Si le nom a changé, supprimer l'ancien et créer le nouveau
     if (name !== currentLevelName) {
         delete levelManager.levels[currentLevelName];
@@ -322,8 +330,11 @@ function saveCurrentLevel() {
 
     levelManager.saveLevel(name, levelManager.currentLevel);
     updateLevelList();
+    
+    // Mettre à jour l'état initial
+    initialLevelState = JSON.stringify(levelManager.currentLevel);
 
-    // Télécharger automatiquement le fichier du niveau individuel
+    // Télécharger automatiquement le fichier JSON
     const json = levelManager.exportLevel(name);
     if (json) {
         const blob = new Blob([json], { type: 'application/json' });
@@ -335,7 +346,7 @@ function saveCurrentLevel() {
         URL.revokeObjectURL(url);
     }
 
-    showEditorToast(`✓ Niveau sauvegardé: ${name}.json téléchargé`, 'success', 2000);
+    showEditorToast(`✓ Niveau sauvegardé: ${formatLevelName(name)}`, 'success', 2000);
 }
 
 // Tester le niveau
@@ -368,10 +379,12 @@ function deleteCurrentLevel() {
         return;
     }
     
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer le niveau "${currentLevelName}" ?`)) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le niveau "${currentLevelName}" ?\n\nN'oubliez pas de supprimer manuellement le fichier ${currentLevelName}.json du dossier levels/`)) {
         return;
     }
     
+    // Supprimer du localStorage
+    localStorage.removeItem(`minerquest_level_${currentLevelName}`);
     delete levelManager.levels[currentLevelName];
     levelManager.saveLevelsToStorage();
     
@@ -380,7 +393,7 @@ function deleteCurrentLevel() {
     if (remainingLevels.length > 0) {
         updateLevelList();
         loadEditorLevel(remainingLevels[0]);
-        showEditorToast('Niveau supprimé avec succès', 'success', 2000);
+        showEditorToast(`✓ Niveau supprimé. Supprimez ${currentLevelName}.json manuellement`, 'info', 4000);
     }
 }
 

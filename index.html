@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="css/game.css">
 </head>
 <body>
+    <!-- Modal de prénom au démarrage -->
+    <div id="modal-name" class="modal" style="display: flex;">
+        <div class="modal-content modal-name-content">
+            <h2>🎮 Bienvenue dans Miner Quest!</h2>
+            <p style="margin-bottom: 20px; color: #666;">Entrez votre prénom pour commencer l'aventure</p>
+            <input type="text" id="player-name-input" placeholder="Votre prénom" maxlength="20" style="width: 100%; padding: 12px; font-size: 16px; border: 2px solid #667eea; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+            <button id="btn-start-game" class="btn-primary">▶️ Commencer</button>
+        </div>
+    </div>
+
     <!-- Conteneur des notifications -->
     <div id="toast-container" class="toast-container"></div>
     
@@ -81,9 +91,39 @@
 
     <!-- Modal du coffre -->
     <div id="modal-chest" class="modal">
-        <div class="modal-content">
-            <h2>📦 Contenu du coffre</h2>
-            <div id="chest-grid" class="chest-grid"></div>
+        <div class="modal-content modal-chest-content">
+            <div class="chest-container">
+                <div class="chest-section">
+                    <h2>🎒 Votre inventaire</h2>
+                    <div id="player-inventory-display" class="inventory-grid">
+                        <div class="inventory-item">
+                            <div class="item-icon" style="background: #7a7a7a;">🪨</div>
+                            <div class="item-info">
+                                <span class="item-name">Pierre</span>
+                                <span class="item-count" id="player-stone-count">0</span>
+                            </div>
+                        </div>
+                        <div class="inventory-item">
+                            <div class="item-icon" style="background: #b87333;">⚙️</div>
+                            <div class="item-info">
+                                <span class="item-name">Fer</span>
+                                <span class="item-count" id="player-iron-count">0</span>
+                            </div>
+                        </div>
+                        <div class="inventory-item">
+                            <div class="item-icon" style="background: #ffd700;">⭐</div>
+                            <div class="item-info">
+                                <span class="item-name">Or</span>
+                                <span class="item-count" id="player-gold-count">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chest-section">
+                    <h2>📦 Contenu du coffre</h2>
+                    <div id="chest-grid" class="chest-grid"></div>
+                </div>
+            </div>
             <button id="btn-close-chest">Fermer</button>
         </div>
     </div>
