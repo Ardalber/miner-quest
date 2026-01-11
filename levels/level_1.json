@@ -82,8 +82,8 @@
       1,
       1,
       1,
-      1,
-      1,
+      6,
+      6,
       1,
       1,
       1,
@@ -312,6 +312,25 @@
           "type": "gold",
           "name": "Or",
           "count": 4
+        }
+      ]
+    },
+    "3_4": {
+      "items": [
+        {
+          "type": "stone",
+          "name": "Pierre",
+          "count": 20
+        },
+        {
+          "type": "iron",
+          "name": "Fer",
+          "count": 3
+        },
+        {
+          "type": "gold",
+          "name": "Or",
+          "count": 2
         }
       ]
     }

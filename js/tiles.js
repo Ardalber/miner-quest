@@ -357,8 +357,9 @@ class TileRenderer {
     }
 
     drawChestGrass(ctx) {
-        // Fond herbe
-        this.drawGrass(ctx);
+        // Fond vert pelouse (même couleur que GRASS)
+        ctx.fillStyle = '#4a9d4e';
+        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
         
         // Coffre par dessus
         ctx.fillStyle = '#8B4513';
@@ -372,8 +373,9 @@ class TileRenderer {
     }
 
     drawSignGrass(ctx) {
-        // Fond herbe
-        this.drawGrass(ctx);
+        // Fond vert pelouse (même couleur que GRASS)
+        ctx.fillStyle = '#4a9d4e';
+        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
         
         // Poteau
         ctx.fillStyle = '#654321';
