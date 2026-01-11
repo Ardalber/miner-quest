@@ -27,7 +27,8 @@ class LevelManager {
             exits: [],
             tiles: tiles,
             chestData: {}, // Stocke le contenu des coffres {"x_y": {items: [...]}}
-            signData: {} // Stocke les messages des panneaux {"x_y": "message"}
+            signData: {}, // Stocke les messages des panneaux {"x_y": "message"}
+            warpData: {} // Stocke les destinations des warps {"x_y": "level_name"}
         };
     }
 
@@ -47,7 +48,9 @@ class LevelManager {
     // Sauvegarder un niveau
     saveLevel(levelName, levelData) {
         this.levels[levelName] = JSON.parse(JSON.stringify(levelData));
-        this.saveLevelsToStorage();
+        this.saveLevelToStorage(levelName);
+        // Mettre à jour la liste des niveaux
+        localStorage.setItem('minerquest_level_list', JSON.stringify(Object.keys(this.levels)));
     }
 
     // Obtenir une tuile à une position
@@ -179,16 +182,6 @@ class LevelManager {
         return this.currentLevel.signData[key] || '';
     }
 
-    // Définir le message d'un panneau
-    setSignMessage(x, y, message) {
-        if (!this.currentLevel) return;
-        if (!this.currentLevel.signData) {
-            this.currentLevel.signData = {};
-        }
-        const key = `${x}_${y}`;
-        this.currentLevel.signData[key] = message;
-    }
-
     // Vérifier si une tuile est un panneau
     isSign(x, y) {
         const tileType = this.getTile(x, y);
@@ -212,35 +205,53 @@ class LevelManager {
         return this.currentLevel.signData[key] || '';
     }
 
-    // Sauvegarder dans localStorage
-    saveLevelsToStorage() {
+    // Sauvegarder un niveau individuel dans localStorage
+    saveLevelToStorage(levelName) {
         try {
-            localStorage.setItem('minerquest_levels', JSON.stringify(this.levels));
+            const levelData = this.levels[levelName];
+            if (levelData) {
+                localStorage.setItem(`minerquest_level_${levelName}`, JSON.stringify(levelData));
+            }
         } catch (e) {
             console.error('Erreur de sauvegarde:', e);
         }
     }
 
-    // Charger depuis localStorage
-    async loadLevelsFromStorage() {
-        // Essayer de charger depuis levels.json en premier
+    // Sauvegarder tous les niveaux dans localStorage (pour compatibilité)
+    saveLevelsToStorage() {
         try {
-            const response = await fetch('levels.json');
+            // Sauvegarder chaque niveau individuellement
+            Object.keys(this.levels).forEach(levelName => {
+                this.saveLevelToStorage(levelName);
+            });
+            // Sauvegarder aussi la liste des niveaux
+            localStorage.setItem('minerquest_level_list', JSON.stringify(Object.keys(this.levels)));
+        } catch (e) {
+            console.error('Erreur de sauvegarde:', e);
+        }
+    }
+
+    // Charger un niveau individuel depuis localStorage ou fichier
+    async loadLevelFromStorage(levelName) {
+        // Essayer de charger depuis un fichier individuel
+        try {
+            const response = await fetch(`levels/${levelName}.json`);
             if (response.ok) {
                 const data = await response.json();
-                this.levels = data;
-                console.log('Niveaux chargés depuis levels.json');
+                this.levels[levelName] = data;
+                console.log(`Niveau ${levelName} chargé depuis fichier`);
                 return true;
             }
         } catch (e) {
-            console.log('Pas de fichier levels.json, chargement depuis localStorage');
+            // Fichier non trouvé, continuer
         }
         
-        // Sinon charger depuis localStorage
+        // Essayer depuis localStorage
         try {
-            const data = localStorage.getItem('minerquest_levels');
+            const data = localStorage.getItem(`minerquest_level_${levelName}`);
             if (data) {
-                this.levels = JSON.parse(data);
+                this.levels[levelName] = JSON.parse(data);
+                console.log(`Niveau ${levelName} chargé depuis localStorage`);
                 return true;
             }
         } catch (e) {
@@ -250,10 +261,54 @@ class LevelManager {
         return false;
     }
 
+    // Charger la liste des niveaux disponibles
+    async loadLevelsFromStorage() {
+        // D'abord, essayer de charger automatiquement les fichiers level_1.json, level_2.json, etc.
+        let levelIndex = 1;
+        let foundLevels = false;
+        
+        // Essayer de charger jusqu'à 20 niveaux (level_1 à level_20)
+        while (levelIndex <= 20) {
+            const levelName = `level_${levelIndex}`;
+            const loaded = await this.loadLevelFromStorage(levelName);
+            if (loaded) {
+                foundLevels = true;
+            }
+            levelIndex++;
+        }
+        
+        // Ensuite, charger les niveaux supplémentaires depuis localStorage
+        try {
+            const levelList = localStorage.getItem('minerquest_level_list');
+            if (levelList) {
+                const levels = JSON.parse(levelList);
+                for (const levelName of levels) {
+                    // Charger seulement s'il n'est pas déjà chargé
+                    if (!this.levels[levelName]) {
+                        await this.loadLevelFromStorage(levelName);
+                        foundLevels = true;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Erreur de chargement de la liste:', e);
+        }
+        
+        return foundLevels;
+    }
+
     // Créer un niveau par défaut
     // Obtenir la liste des niveaux
     getLevelList() {
         return Object.keys(this.levels);
+    }
+
+    // Exporter un niveau individuel en JSON
+    exportLevel(levelName) {
+        if (this.levels[levelName]) {
+            return JSON.stringify(this.levels[levelName], null, 2);
+        }
+        return null;
     }
 
     // Exporter tous les niveaux en JSON

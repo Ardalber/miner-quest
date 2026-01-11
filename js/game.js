@@ -14,18 +14,29 @@ async function init() {
 
     // Charger les niveaux
     await levelManager.loadLevelsFromStorage();
-    levelManager.loadLevel('level-1');
-
-    // Positionner le joueur
-    if (levelManager.currentLevel) {
-        player.setPosition(
-            levelManager.currentLevel.startX,
-            levelManager.currentLevel.startY
-        );
+    
+    // Charger le niveau level_1 en priorité, sinon le premier disponible
+    const levelList = levelManager.getLevelList();
+    if (levelList.length > 0) {
+        const defaultLevel = levelList.includes('level_1') ? 'level_1' : levelList[0];
+        levelManager.loadLevel(defaultLevel);
+        // Positionner le joueur
+        if (levelManager.currentLevel) {
+            player.setPosition(
+                levelManager.currentLevel.startX,
+                levelManager.currentLevel.startY
+            );
+        }
+    } else {
+        // Aucun niveau disponible
+        showToast('Aucun niveau disponible. Créez-en un dans l\'éditeur!', 'info', 5000);
     }
 
     // Initialiser l'inventaire UI
     player.updateInventoryUI();
+
+    // Mettre à jour l'affichage du niveau au démarrage
+    updateLevelDisplay();
 
     // Gestionnaire de warp
     window.onWarpActivated = function(targetLevel) {
@@ -35,7 +46,7 @@ async function init() {
                 levelManager.currentLevel.startX,
                 levelManager.currentLevel.startY
             );
-            showToast(`🌀 Téléporté vers ${targetLevel}`, 'info', 2000);
+            updateLevelDisplay();
         }
     };
 
@@ -221,6 +232,17 @@ function drawLevel() {
                 32
             );
         }
+    }
+}
+
+// Mettre à jour l'affichage du niveau actuel
+function updateLevelDisplay() {
+    const levelDisplay = document.getElementById('level-display');
+    if (levelDisplay && levelManager.currentLevel) {
+        const levelName = levelManager.currentLevel.name;
+        // Convertir level_1 en Level 1, level_2 en Level 2, etc.
+        const formattedName = levelName.replace(/^level_?(\d+)$/i, 'Level $1');
+        levelDisplay.textContent = formattedName;
     }
 }
 

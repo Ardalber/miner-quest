@@ -1,3 +1,8 @@
+// Formater le nom du niveau pour l'affichage (level_1 -> Level 1)
+function formatLevelName(levelName) {
+    return levelName.replace(/^level_?(\d+)$/i, 'Level $1');
+}
+
 // Afficher une notification toast
 function showEditorToast(message, type = 'info', duration = 3000) {
     const container = document.getElementById('editor-toast-container') || createEditorToastContainer();
@@ -37,12 +42,12 @@ const MAX_UNDO = 20;
 let chestItemCounts = { stone: 0, iron: 0, gold: 0 };
 
 // Initialisation de l'éditeur
-function initEditor() {
+async function initEditor() {
     editorCanvas = document.getElementById('editorCanvas');
     editorCtx = editorCanvas.getContext('2d');
 
-    // Charger les niveaux
-    levelManager.loadLevelsFromStorage();
+    // Charger les niveaux depuis les fichiers et localStorage
+    await levelManager.loadLevelsFromStorage();
 
     // Créer la palette de tuiles
     createTilePalette();
@@ -50,8 +55,18 @@ function initEditor() {
     // Charger la liste des niveaux
     updateLevelList();
 
-    // Charger le niveau par défaut
-    loadEditorLevel('level_1');
+    // Charger le niveau par défaut ou créer un nouveau
+    const levelList = levelManager.getLevelList();
+    if (levelList.length > 0) {
+        const defaultLevel = levelList.includes('level_1') ? 'level_1' : levelList[0];
+        loadEditorLevel(defaultLevel);
+    } else {
+        // Créer un premier niveau si aucun n'existe
+        const level = levelManager.createEmptyLevel('level_1');
+        levelManager.saveLevel('level_1', level);
+        updateLevelList();
+        loadEditorLevel('level_1');
+    }
 
     // Événements du canvas
     editorCanvas.addEventListener('mousedown', handleCanvasMouseDown);
@@ -62,7 +77,8 @@ function initEditor() {
     // Événements des boutons
     document.getElementById('btn-undo').addEventListener('click', undoLastAction);
     document.getElementById('btn-new').addEventListener('click', createNewLevel);
-    document.getElementById('btn-load').addEventListener('click', loadSelectedLevel);
+    document.getElementById('btn-load').addEventListener('click', loadFromFile);
+    document.getElementById('file-input').addEventListener('change', handleFileLoad);
     document.getElementById('btn-save').addEventListener('click', saveCurrentLevel);
     document.getElementById('btn-test').addEventListener('click', testLevel);
     document.getElementById('btn-set-player-pos').addEventListener('click', togglePlayerPosMode);
@@ -184,7 +200,7 @@ function updateLevelList() {
     levels.forEach(levelName => {
         const option = document.createElement('option');
         option.value = levelName;
-        option.textContent = levelName;
+        option.textContent = formatLevelName(levelName);
         if (levelName === currentLevelName) {
             option.selected = true;
         }
@@ -242,17 +258,48 @@ function createNewLevel() {
     const name = 'level_' + (levelManager.getLevelList().length + 1);
     const level = levelManager.createEmptyLevel(name);
     levelManager.saveLevel(name, level);
+    currentLevelName = name;
     updateLevelList();
     loadEditorLevel(name);
-    showEditorToast('✓ Nouveau niveau créé: ' + name, 'success', 2000);
+    showEditorToast('✓ Nouveau niveau créé: ' + formatLevelName(name), 'success', 2000);
 }
 
-// Charger le niveau sélectionné
-function loadSelectedLevel() {
-    const levelSelect = document.getElementById('level-select');
-    if (levelSelect.value) {
-        loadEditorLevel(levelSelect.value);
-    }
+// Charger un fichier depuis l'ordinateur
+function loadFromFile() {
+    const fileInput = document.getElementById('file-input');
+    fileInput.click();
+}
+
+// Gérer le chargement du fichier sélectionné
+function handleFileLoad(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const levelData = JSON.parse(e.target.result);
+            
+            // Vérifier que c'est un niveau valide
+            if (!levelData.name || !levelData.tiles) {
+                showEditorToast('✗ Fichier invalide: format de niveau incorrect', 'error', 3000);
+                return;
+            }
+            
+            // Sauvegarder et charger le niveau
+            const levelName = levelData.name;
+            levelManager.saveLevel(levelName, levelData);
+            updateLevelList();
+            loadEditorLevel(levelName);
+            showEditorToast('✓ Niveau chargé: ' + formatLevelName(levelName), 'success', 2000);
+        } catch (error) {
+            showEditorToast('✗ Erreur de lecture du fichier: ' + error.message, 'error', 3000);
+        }
+    };
+    reader.readAsText(file);
+    
+    // Réinitialiser l'input pour permettre de recharger le même fichier
+    event.target.value = '';
 }
 
 // Sauvegarder le niveau actuel
@@ -276,17 +323,19 @@ function saveCurrentLevel() {
     levelManager.saveLevel(name, levelManager.currentLevel);
     updateLevelList();
 
-    // Télécharger automatiquement le fichier levels.json
-    const json = levelManager.exportLevels();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'levels.json';
-    a.click();
-    URL.revokeObjectURL(url);
+    // Télécharger automatiquement le fichier du niveau individuel
+    const json = levelManager.exportLevel(name);
+    if (json) {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${name}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
 
-    showEditorToast('✓ Niveau sauvegardé et levels.json téléchargé', 'success', 2000);
+    showEditorToast(`✓ Niveau sauvegardé: ${name}.json téléchargé`, 'success', 2000);
 }
 
 // Tester le niveau

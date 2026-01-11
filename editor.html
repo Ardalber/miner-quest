@@ -7,13 +7,16 @@
     <link rel="stylesheet" href="css/editor.css">
 </head>
 <body>
+    <!-- Input caché pour charger des fichiers -->
+    <input type="file" id="file-input" accept=".json" style="display: none;">
+
     <div class="editor-container">
         <div class="editor-header">
-            <h1>✏️ Éditeur de Niveaux</h1>
+            <h1>✒️ Éditeur de Niveaux</h1>
             <div class="editor-actions">
                 <button id="btn-undo">↶ Annuler</button>
                 <button id="btn-new">Nouveau</button>
-                <button id="btn-load">Charger</button>
+                <button id="btn-load">📁 Charger fichier</button>
                 <button id="btn-save">Sauvegarder</button>
                 <button id="btn-test">Tester</button>
                 <button id="btn-back">Retour au jeu</button>
