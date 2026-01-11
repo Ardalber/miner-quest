@@ -3,6 +3,50 @@ function formatLevelName(levelName) {
     return levelName.replace(/^level_?(\d+)$/i, 'Level $1');
 }
 
+// Demander l'accès au dossier levels
+async function requestLevelsFolderAccess() {
+    try {
+        if ('showDirectoryPicker' in window) {
+            levelsFolderHandle = await window.showDirectoryPicker({
+                id: 'miner-quest-levels',
+                mode: 'readwrite',
+                startIn: 'downloads'
+            });
+            showEditorToast('✓ Accès au dossier levels autorisé', 'success', 2000);
+            return true;
+        } else {
+            showEditorToast('✗ Votre navigateur ne supporte pas cette fonctionnalité. Utilisez Chrome/Edge récent.', 'error', 5000);
+            return false;
+        }
+    } catch (err) {
+        if (err.name !== 'AbortError') {
+            showEditorToast('✗ Accès au dossier refusé', 'error', 3000);
+        }
+        return false;
+    }
+}
+
+// Sauvegarder directement dans le dossier levels
+async function saveToLevelsFolder(levelName, jsonContent) {
+    if (!levelsFolderHandle) {
+        const granted = await requestLevelsFolderAccess();
+        if (!granted) return false;
+    }
+    
+    try {
+        const fileName = `${levelName}.json`;
+        const fileHandle = await levelsFolderHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(jsonContent);
+        await writable.close();
+        return true;
+    } catch (err) {
+        console.error('Erreur d\'écriture:', err);
+        showEditorToast('✗ Erreur d\'écriture du fichier', 'error', 3000);
+        return false;
+    }
+}
+
 // Afficher une notification dans la barre d'actions
 function showEditorToast(message, type = 'info', duration = 3000) {
     const statusElement = document.getElementById('editor-status');
@@ -36,6 +80,7 @@ let undoStack = [];
 const MAX_UNDO = 20;
 let chestItemCounts = { stone: 0, iron: 0, gold: 0 };
 let initialLevelState = null; // Pour détecter les changements
+let levelsFolderHandle = null; // Handle du dossier levels pour l'API File System Access
 
 // Initialisation de l'éditeur
 async function initEditor() {
@@ -137,16 +182,19 @@ function createTilePalette() {
         TileTypes.GOLD,
         TileTypes.WALL,
         TileTypes.CHEST,
-        TileTypes.CHEST_GRASS,
         TileTypes.SIGN,
-        TileTypes.SIGN_GRASS,
         TileTypes.WARP,
+        TileTypes.BARRIER_H,
+        TileTypes.BARRIER_V,
+        TileTypes.BARRIER_L_NE,
+        TileTypes.TREE,
         TileTypes.EMPTY
     ];
 
     tileTypes.forEach(tileType => {
         const tileItem = document.createElement('div');
         tileItem.className = 'tile-item';
+        tileItem.dataset.type = String(tileType);
         if (tileType === selectedTile) {
             tileItem.classList.add('selected');
         }
@@ -180,13 +228,13 @@ function createTilePalette() {
 // Mettre à jour la sélection de la palette
 function updatePaletteSelection() {
     const items = document.querySelectorAll('.tile-item');
-    items.forEach(item => item.classList.remove('selected'));
-
-    const tileTypes = [TileTypes.GRASS, TileTypes.STONE, TileTypes.IRON, TileTypes.GOLD, TileTypes.WALL, TileTypes.EMPTY];
-    const index = tileTypes.indexOf(selectedTile);
-    if (index >= 0 && items[index]) {
-        items[index].classList.add('selected');
-    }
+    items.forEach(item => {
+        if (item.dataset.type === String(selectedTile)) {
+            item.classList.add('selected');
+        } else {
+            item.classList.remove('selected');
+        }
+    });
 }
 
 // Mettre à jour la liste des niveaux
@@ -304,7 +352,7 @@ function handleFileLoad(event) {
 }
 
 // Sauvegarder le niveau actuel
-function saveCurrentLevel() {
+async function saveCurrentLevel() {
     if (!levelManager.currentLevel) return;
 
     const name = document.getElementById('level-name').value;
@@ -334,19 +382,14 @@ function saveCurrentLevel() {
     // Mettre à jour l'état initial
     initialLevelState = JSON.stringify(levelManager.currentLevel);
 
-    // Télécharger automatiquement le fichier JSON
+    // Sauvegarder dans le dossier levels
     const json = levelManager.exportLevel(name);
     if (json) {
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${name}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        const success = await saveToLevelsFolder(name, json);
+        if (success) {
+            showEditorToast(`✓ Sauvegardé dans ${name}.json`, 'success', 2000);
+        }
     }
-
-    showEditorToast(`✓ Niveau sauvegardé: ${formatLevelName(name)}`, 'success', 2000);
 }
 
 // Tester le niveau
@@ -547,6 +590,21 @@ function handleCanvasMouseDown(e) {
         }
         
         const tileType = levelManager.getTile(x, y);
+        
+        // Rotation de barrière L: si on clique sur une barrière L avec une barrière L sélectionnée
+        const lBarriers = [TileTypes.BARRIER_L_NE, TileTypes.BARRIER_L_SE, TileTypes.BARRIER_L_SW, TileTypes.BARRIER_L_NW];
+        if (lBarriers.includes(tileType) && lBarriers.includes(selectedTile)) {
+            saveUndoState();
+            // Rotation 90° sens horaire: NE -> SE -> SW -> NW -> NE
+            let newTile;
+            if (tileType === TileTypes.BARRIER_L_NE) newTile = TileTypes.BARRIER_L_SE;
+            else if (tileType === TileTypes.BARRIER_L_SE) newTile = TileTypes.BARRIER_L_SW;
+            else if (tileType === TileTypes.BARRIER_L_SW) newTile = TileTypes.BARRIER_L_NW;
+            else if (tileType === TileTypes.BARRIER_L_NW) newTile = TileTypes.BARRIER_L_NE;
+            levelManager.setTile(x, y, newTile);
+            renderEditor();
+            return;
+        }
         
         // Vérifier si on clique sur un coffre déjà placé
         if (tileType === TileTypes.CHEST) {

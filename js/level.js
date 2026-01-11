@@ -120,7 +120,7 @@ class LevelManager {
     // Vérifier si une tuile est un coffre
     isChest(x, y) {
         const tileType = this.getTile(x, y);
-        return tileType === TileTypes.CHEST || tileType === TileTypes.CHEST_GRASS;
+        return tileType === TileTypes.CHEST;
     }
 
     // Obtenir le contenu d'un coffre
@@ -185,7 +185,7 @@ class LevelManager {
     // Vérifier si une tuile est un panneau
     isSign(x, y) {
         const tileType = this.getTile(x, y);
-        return tileType === TileTypes.SIGN || tileType === TileTypes.SIGN_GRASS;
+        return tileType === TileTypes.SIGN;
     }
 
     // Définir le message d'un panneau

@@ -9,8 +9,13 @@ const TileTypes = {
     CHEST: 6,
     SIGN: 7,
     WARP: 8,
-    CHEST_GRASS: 9,
-    SIGN_GRASS: 10
+    BARRIER_H: 11,
+    BARRIER_V: 12,
+    TREE: 13,
+    BARRIER_L_NE: 14,
+    BARRIER_L_SE: 15,
+    BARRIER_L_SW: 16,
+    BARRIER_L_NW: 17
 };
 
 // Configuration de chaque type de tuile
@@ -63,6 +68,7 @@ const TileConfig = {
     [TileTypes.CHEST]: {
         name: 'Coffre',
         color: '#8B4513',
+        backgroundColor: '#4a9d4e',
         solid: true,
         minable: false,
         resource: null,
@@ -72,6 +78,7 @@ const TileConfig = {
     [TileTypes.SIGN]: {
         name: 'Panneau',
         color: '#D2691E',
+        backgroundColor: '#4a9d4e',
         solid: true,
         minable: false,
         resource: null,
@@ -88,25 +95,61 @@ const TileConfig = {
         warp: true,
         targetLevel: null
     },
-    [TileTypes.CHEST_GRASS]: {
-        name: 'Coffre (Herbe)',
+    [TileTypes.BARRIER_H]: {
+        name: 'Barrière (H)',
         color: '#8B4513',
         backgroundColor: '#4a9d4e',
         solid: true,
         minable: false,
-        resource: null,
-        interactive: true,
-        openable: true
+        resource: null
     },
-    [TileTypes.SIGN_GRASS]: {
-        name: 'Panneau (Herbe)',
-        color: '#D2691E',
+    [TileTypes.BARRIER_V]: {
+        name: 'Barrière (V)',
+        color: '#8B4513',
         backgroundColor: '#4a9d4e',
         solid: true,
         minable: false,
-        resource: null,
-        interactive: true,
-        message: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.'
+        resource: null
+    },
+    [TileTypes.TREE]: {
+        name: 'Arbre',
+        color: '#2e8b57',
+        backgroundColor: '#4a9d4e',
+        solid: true,
+        minable: false,
+        resource: null
+    },
+    [TileTypes.BARRIER_L_NE]: {
+        name: 'Barrière (L)',
+        color: '#8B4513',
+        backgroundColor: '#4a9d4e',
+        solid: true,
+        minable: false,
+        resource: null
+    },
+    [TileTypes.BARRIER_L_SE]: {
+        name: 'Barrière (L)',
+        color: '#8B4513',
+        backgroundColor: '#4a9d4e',
+        solid: true,
+        minable: false,
+        resource: null
+    },
+    [TileTypes.BARRIER_L_SW]: {
+        name: 'Barrière (L)',
+        color: '#8B4513',
+        backgroundColor: '#4a9d4e',
+        solid: true,
+        minable: false,
+        resource: null
+    },
+    [TileTypes.BARRIER_L_NW]: {
+        name: 'Barrière (L)',
+        color: '#8B4513',
+        backgroundColor: '#4a9d4e',
+        solid: true,
+        minable: false,
+        resource: null
     }
 };
 
@@ -160,11 +203,26 @@ class TileRenderer {
             case TileTypes.WARP:
                 this.drawWarp(ctx);
                 break;
-            case TileTypes.CHEST_GRASS:
-                this.drawChestGrass(ctx);
+            case TileTypes.BARRIER_H:
+                this.drawBarrierH(ctx);
                 break;
-            case TileTypes.SIGN_GRASS:
-                this.drawSignGrass(ctx);
+            case TileTypes.BARRIER_V:
+                this.drawBarrierV(ctx);
+                break;
+            case TileTypes.TREE:
+                this.drawTree(ctx);
+                break;
+            case TileTypes.BARRIER_L_NE:
+                this.drawBarrierL_NE(ctx);
+                break;
+            case TileTypes.BARRIER_L_SE:
+                this.drawBarrierL_SE(ctx);
+                break;
+            case TileTypes.BARRIER_L_SW:
+                this.drawBarrierL_SW(ctx);
+                break;
+            case TileTypes.BARRIER_L_NW:
+                this.drawBarrierL_NW(ctx);
                 break;
         }
 
@@ -261,52 +319,39 @@ class TileRenderer {
     }
 
     drawChest(ctx) {
-        // Coffre au trésor
+        // Fond herbe
+        ctx.fillStyle = '#4a9d4e';
+        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+        
+        // Coffre simplifié
         ctx.fillStyle = '#8B4513';
-        ctx.fillRect(0, 0, 32, 32);
+        ctx.fillRect(8, 12, 16, 12);
         
-        // Corps du coffre
-        ctx.fillStyle = '#A0522D';
-        ctx.fillRect(4, 12, 24, 16);
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(8, 18, 16, 2);
         
-        // Couvercle
-        ctx.fillStyle = '#8B4513';
-        ctx.fillRect(4, 6, 24, 8);
-        ctx.arc(16, 6, 12, Math.PI, 0, false);
-        ctx.fill();
-        
-        // Serrure
         ctx.fillStyle = '#FFD700';
-        ctx.fillRect(14, 16, 4, 6);
-        ctx.beginPath();
-        ctx.arc(16, 16, 2, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Détails
-        ctx.strokeStyle = '#654321';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(4, 12, 24, 16);
+        ctx.fillRect(14, 16, 4, 4);
     }
 
     drawSign(ctx) {
-        // Panneau en bois
-        ctx.fillStyle = '#D2691E';
-        ctx.fillRect(0, 0, 32, 32);
+        // Fond herbe
+        ctx.fillStyle = '#4a9d4e';
+        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
         
         // Poteau
-        ctx.fillStyle = '#8B4513';
-        ctx.fillRect(14, 20, 4, 12);
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(14, 20, 4, 8);
         
-        // Planche
+        // Panneau
         ctx.fillStyle = '#D2691E';
-        ctx.fillRect(4, 8, 24, 14);
+        ctx.fillRect(6, 8, 20, 12);
         
-        // Bordure de la planche
-        ctx.strokeStyle = '#8B4513';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(4, 8, 24, 14);
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(6, 8, 20, 2);
+        ctx.fillRect(6, 18, 20, 2);
         
-        // Lignes de texte simulées
+        // Lignes de texte
         ctx.strokeStyle = '#654321';
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -314,8 +359,6 @@ class TileRenderer {
         ctx.lineTo(24, 12);
         ctx.moveTo(8, 15);
         ctx.lineTo(22, 15);
-        ctx.moveTo(8, 18);
-        ctx.lineTo(24, 18);
         ctx.stroke();
     }
 
@@ -356,48 +399,174 @@ class TileRenderer {
         });
     }
 
-    drawChestGrass(ctx) {
-        // Fond vert pelouse (même couleur que GRASS)
+    drawBarrierH(ctx) {
+        // Fond herbe
         ctx.fillStyle = '#4a9d4e';
         ctx.fillRect(0, 0, this.tileSize, this.tileSize);
-        
-        // Coffre par dessus
+
+        // Deux lattes horizontales qui vont jusqu'aux bords pour connecter
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(0, 11, 32, 4);
+        ctx.fillRect(0, 17, 32, 4);
+
+        // Montants à gauche et droite (touchent les bords)
         ctx.fillStyle = '#8B4513';
-        ctx.fillRect(8, 12, 16, 12);
-        
-        ctx.fillStyle = '#654321';
-        ctx.fillRect(8, 18, 16, 2);
-        
-        ctx.fillStyle = '#FFD700';
-        ctx.fillRect(14, 16, 4, 4);
+        ctx.fillRect(0, 8, 3, 16);
+        ctx.fillRect(29, 8, 3, 16);
+
+        // Détails d'ombre
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillRect(0, 21, 32, 1);
     }
 
-    drawSignGrass(ctx) {
-        // Fond vert pelouse (même couleur que GRASS)
+    drawBarrierV(ctx) {
+        // Fond herbe
         ctx.fillStyle = '#4a9d4e';
         ctx.fillRect(0, 0, this.tileSize, this.tileSize);
-        
-        // Poteau
-        ctx.fillStyle = '#654321';
-        ctx.fillRect(14, 20, 4, 8);
-        
-        // Panneau
-        ctx.fillStyle = '#D2691E';
-        ctx.fillRect(6, 8, 20, 12);
-        
+
+        // Deux lattes verticales qui vont jusqu'aux bords pour connecter
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(11, 0, 4, 32);
+        ctx.fillRect(17, 0, 4, 32);
+
+        // Montants haut et bas (touchent les bords)
         ctx.fillStyle = '#8B4513';
-        ctx.fillRect(6, 8, 20, 2);
-        ctx.fillRect(6, 18, 20, 2);
-        
-        // Lignes de texte
-        ctx.strokeStyle = '#654321';
-        ctx.lineWidth = 1;
+        ctx.fillRect(8, 0, 16, 3);
+        ctx.fillRect(8, 29, 16, 3);
+
+        // Détails d'ombre
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillRect(21, 0, 1, 32);
+    }
+
+    drawTree(ctx) {
+        // Fond herbe
+        ctx.fillStyle = '#4a9d4e';
+        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+
+        // Tronc
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(14, 18, 4, 10);
+
+        // Feuillage (vert différent de l'herbe)
+        ctx.fillStyle = '#2e8b57';
         ctx.beginPath();
-        ctx.moveTo(8, 12);
-        ctx.lineTo(24, 12);
-        ctx.moveTo(8, 15);
-        ctx.lineTo(22, 15);
-        ctx.stroke();
+        ctx.arc(16, 14, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Légères nuances
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.beginPath();
+        ctx.arc(12, 10, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    drawBarrierL_NE(ctx) {
+        // Coin haut-droit: barre horizontale à gauche + barre verticale en bas
+        ctx.fillStyle = '#4a9d4e';
+        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+
+        // Barre horizontale (va de gauche vers centre-droit)
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(0, 11, 21, 4);
+        ctx.fillRect(0, 17, 21, 4);
+
+        // Barre verticale (va du centre vers bas)
+        ctx.fillRect(11, 11, 4, 21);
+        ctx.fillRect(17, 11, 4, 21);
+
+        // Montants
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(0, 8, 3, 16);
+        ctx.fillRect(17, 8, 3, 16);
+        ctx.fillRect(8, 17, 16, 3);
+        ctx.fillRect(8, 29, 16, 3);
+
+        // Ombre
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillRect(0, 21, 21, 1);
+        ctx.fillRect(21, 11, 1, 21);
+    }
+
+    drawBarrierL_SE(ctx) {
+        // Coin bas-droit: barre horizontale à gauche + barre verticale en haut
+        ctx.fillStyle = '#4a9d4e';
+        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+
+        // Barre horizontale (va de gauche vers centre-droit)
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(0, 11, 21, 4);
+        ctx.fillRect(0, 17, 21, 4);
+
+        // Barre verticale (va du haut vers centre)
+        ctx.fillRect(11, 0, 4, 21);
+        ctx.fillRect(17, 0, 4, 21);
+
+        // Montants
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(0, 8, 3, 16);
+        ctx.fillRect(17, 8, 3, 16);
+        ctx.fillRect(8, 0, 16, 3);
+        ctx.fillRect(8, 17, 16, 3);
+
+        // Ombre
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillRect(0, 21, 21, 1);
+        ctx.fillRect(21, 0, 1, 21);
+    }
+
+    drawBarrierL_SW(ctx) {
+        // Coin bas-gauche: barre horizontale à droite + barre verticale en haut
+        ctx.fillStyle = '#4a9d4e';
+        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+
+        // Barre horizontale (va du centre vers droite)
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(11, 11, 21, 4);
+        ctx.fillRect(11, 17, 21, 4);
+
+        // Barre verticale (va du haut vers centre)
+        ctx.fillRect(11, 0, 4, 21);
+        ctx.fillRect(17, 0, 4, 21);
+
+        // Montants
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(11, 8, 3, 16);
+        ctx.fillRect(29, 8, 3, 16);
+        ctx.fillRect(8, 0, 16, 3);
+        ctx.fillRect(8, 17, 16, 3);
+
+        // Ombre
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillRect(11, 21, 21, 1);
+        ctx.fillRect(11, 0, 1, 21);
+    }
+
+    drawBarrierL_NW(ctx) {
+        // Coin haut-gauche: barre horizontale à droite + barre verticale en bas
+        ctx.fillStyle = '#4a9d4e';
+        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+
+        // Barre horizontale (va du centre vers droite)
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(11, 11, 21, 4);
+        ctx.fillRect(11, 17, 21, 4);
+
+        // Barre verticale (va du centre vers bas)
+        ctx.fillRect(11, 11, 4, 21);
+        ctx.fillRect(17, 11, 4, 21);
+
+        // Montants
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(11, 8, 3, 16);
+        ctx.fillRect(29, 8, 3, 16);
+        ctx.fillRect(8, 17, 16, 3);
+        ctx.fillRect(8, 29, 16, 3);
+
+        // Ombre
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.fillRect(11, 21, 21, 1);
+        ctx.fillRect(21, 11, 1, 21);
     }
 
     // Récupère l'image d'une tuile
