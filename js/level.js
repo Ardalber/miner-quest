@@ -20,7 +20,12 @@ class LevelManager {
         for (let y = 0; y < this.gridHeight; y++) {
             const row = [];
             for (let x = 0; x < this.gridWidth; x++) {
-                row.push(TileTypes.GRASS);
+                // Bords extérieurs en WALL, intérieur en GRASS
+                if (x === 0 || y === 0 || x === this.gridWidth - 1 || y === this.gridHeight - 1) {
+                    row.push(TileTypes.WALL);
+                } else {
+                    row.push(TileTypes.GRASS);
+                }
             }
             tiles.push(row);
         }
@@ -43,6 +48,8 @@ class LevelManager {
     loadLevel(levelName) {
         if (this.levels[levelName]) {
             this.currentLevel = JSON.parse(JSON.stringify(this.levels[levelName]));
+            // S'assurer que les bords sont des murs
+            this.ensureBorderWalls(this.currentLevel);
             return this.currentLevel;
         }
         
@@ -52,6 +59,17 @@ class LevelManager {
         return this.currentLevel;
     }
 
+    // Forcer les murs sur le contour
+    ensureBorderWalls(level) {
+        if (!level) return;
+        for (let y = 0; y < level.height; y++) {
+            for (let x = 0; x < level.width; x++) {
+                if (x === 0 || y === 0 || x === this.gridWidth - 1 || y === this.gridHeight - 1) {
+                    level.tiles[y][x] = TileTypes.WALL;
+                }
+            }
+        }
+    }
     // Sauvegarder un niveau
     saveLevel(levelName, levelData) {
         this.levels[levelName] = JSON.parse(JSON.stringify(levelData));
