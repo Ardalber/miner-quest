@@ -3,7 +3,7 @@
   "width": 16,
   "height": 16,
   "startX": 1,
-  "startY": 14,
+  "startY": 13,
   "exits": [],
   "tiles": [
     [
@@ -154,7 +154,7 @@
       1,
       1,
       1,
-      6,
+      1,
       1,
       1,
       1,
@@ -369,6 +369,25 @@
           "type": "gold",
           "name": "Or",
           "count": 3
+        }
+      ]
+    },
+    "2_12": {
+      "items": [
+        {
+          "type": "stone",
+          "name": "Pierre",
+          "count": 5
+        },
+        {
+          "type": "iron",
+          "name": "Fer",
+          "count": 6
+        },
+        {
+          "type": "gold",
+          "name": "Or",
+          "count": 7
         }
       ]
     }

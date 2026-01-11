@@ -689,7 +689,31 @@ function paintTile(e) {
         if (x === 0 || x === 15 || y === 0 || y === 15) {
             return; // Ne rien faire sur les bords
         }
-        
+        // Si on remplace un coffre, supprimer son contenu associé
+        const existingTile = levelManager.getTile(x, y);
+        if (existingTile === TileTypes.CHEST && selectedTile !== TileTypes.CHEST) {
+            const key = `${x}_${y}`;
+            if (levelManager.currentLevel.chestData && levelManager.currentLevel.chestData[key]) {
+                delete levelManager.currentLevel.chestData[key];
+            }
+        }
+
+        // Si on remplace un panneau, supprimer son message associé
+        if (existingTile === TileTypes.SIGN && selectedTile !== TileTypes.SIGN) {
+            const key = `${x}_${y}`;
+            if (levelManager.currentLevel.signData && levelManager.currentLevel.signData[key]) {
+                delete levelManager.currentLevel.signData[key];
+            }
+        }
+
+        // Si on remplace un warp, supprimer sa destination associée
+        if (existingTile === TileTypes.WARP && selectedTile !== TileTypes.WARP) {
+            const key = `${x}_${y}`;
+            if (levelManager.currentLevel.warpData && levelManager.currentLevel.warpData[key]) {
+                delete levelManager.currentLevel.warpData[key];
+            }
+        }
+
         levelManager.setTile(x, y, selectedTile);
         renderEditor();
     }

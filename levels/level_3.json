@@ -134,7 +134,7 @@
     ],
     [
       1,
-      1,
+      6,
       1,
       1,
       1,
@@ -314,10 +314,29 @@
           "count": 2
         }
       ]
+    },
+    "1_7": {
+      "items": [
+        {
+          "type": "stone",
+          "name": "Pierre",
+          "count": 6
+        },
+        {
+          "type": "iron",
+          "name": "Fer",
+          "count": 3
+        },
+        {
+          "type": "gold",
+          "name": "Or",
+          "count": 3
+        }
+      ]
     }
   },
   "signData": {
-    "6_9": "pat en pls !!!"
+    "6_9": "pat sssssen pls !!!"
   },
   "warpData": {
     "10_6": "level_2",
