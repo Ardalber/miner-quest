@@ -213,9 +213,8 @@ body {
     font-family: monospace;
 }
 
-.modal-content button {
+.modal-close-btn {
     width: 100%;
-    margin-top: 16px;
     background: #667eea;
     color: white;
     border: none;
@@ -224,6 +223,10 @@ body {
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
+}
+
+.modal-close-btn:hover {
+    background: #5568d3;
 }
 
 #btn-close-chest {
@@ -485,7 +488,34 @@ body {
     flex-shrink: 0;
 }
 
-.chest-btn-take,
+.chest-btn-take {
+    width: 25%;
+    height: 24px;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.chest-btn-take:hover {
+    background: #45a049;
+}
+
+.chest-btn-take:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
 .btn-take-editor {
     width: 25%;
     height: 24px;
@@ -505,12 +535,6 @@ body {
     white-space: nowrap;
 }
 
-.chest-btn-take:hover,
 .btn-take-editor:hover {
     background: #45a049;
-}
-
-.chest-btn-take:disabled {
-    background: #ccc;
-    cursor: not-allowed;
 }
