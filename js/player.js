@@ -95,6 +95,8 @@ class Player {
             this.pickaxeAngle = 0;
             this.miningHits = 0;
             this.requiredHits = durability;
+            // Mémoriser le type pour actions spéciales (warp)
+            this.miningTileType = tileType;
         }
     }
 
@@ -225,10 +227,18 @@ class Player {
                     this.inventory[resource]++;
                     this.updateInventoryUI();
                 }
+                // Si on vient de miner un warp, activer la téléportation
+                if (this.miningTileType === TileTypes.WARP) {
+                    const dest = levelManager.getWarpDestination(this.miningTarget.x, this.miningTarget.y);
+                    if (dest && window.onWarpActivated) {
+                        window.onWarpActivated(dest);
+                    }
+                }
                 this.isMining = false;
                 this.miningProgress = 0;
                 this.pickaxeAngle = 0;
                 this.miningHits = 0;
+                this.miningTileType = null;
             } else {
                 // Réinitialiser la progression pour le prochain coup
                 this.miningProgress = 0;

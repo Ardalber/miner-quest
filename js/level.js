@@ -6,6 +6,13 @@ class LevelManager {
         this.gridWidth = 16;
         this.gridHeight = 16;
     }
+    
+    // Synchroniser l'état courant vers la liste des niveaux et localStorage
+    commitCurrentLevel() {
+        if (!this.currentLevel || !this.currentLevel.name) return;
+        this.levels[this.currentLevel.name] = JSON.parse(JSON.stringify(this.currentLevel));
+        this.saveLevelToStorage(this.currentLevel.name);
+    }
 
     // Créer un niveau vide
     createEmptyLevel(name = 'level_1') {
@@ -67,6 +74,7 @@ class LevelManager {
         if (!this.currentLevel) return;
         if (x < 0 || x >= this.gridWidth || y < 0 || y >= this.gridHeight) return;
         this.currentLevel.tiles[y][x] = tileType;
+        this.commitCurrentLevel();
     }
 
     // Vérifier si une tuile est solide
@@ -87,8 +95,20 @@ class LevelManager {
         const config = TileConfig[tileType];
         
         if (config.minable) {
-            // Remplacer par de l'herbe
+            // Warp: ne pas faire disparaître, juste activer la téléportation côté joueur
+            if (tileType === TileTypes.WARP) {
+                return null;
+            }
+            // Autres blocs: les remplacer par de l'herbe et nettoyer les métadonnées
             this.setTile(x, y, TileTypes.GRASS);
+            const key = `${x}_${y}`;
+            if (tileType === TileTypes.CHEST && this.currentLevel.chestData) {
+                delete this.currentLevel.chestData[key];
+            }
+            if (tileType === TileTypes.SIGN && this.currentLevel.signData) {
+                delete this.currentLevel.signData[key];
+            }
+            this.commitCurrentLevel();
             return config.resource;
         }
         return null;
@@ -138,6 +158,7 @@ class LevelManager {
         }
         const key = `${x}_${y}`;
         this.currentLevel.chestData[key] = content;
+        this.commitCurrentLevel();
     }
 
     // Retirer un item d'un coffre
@@ -173,6 +194,7 @@ class LevelManager {
         }
         const key = `${x}_${y}`;
         this.currentLevel.warpData[key] = targetLevel;
+        this.commitCurrentLevel();
     }
 
     // Obtenir le message d'un panneau
@@ -196,6 +218,7 @@ class LevelManager {
         }
         const key = `${x}_${y}`;
         this.currentLevel.signData[key] = message;
+        this.commitCurrentLevel();
     }
 
     // Obtenir le message d'un panneau

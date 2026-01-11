@@ -88,12 +88,13 @@ const TileConfig = {
     [TileTypes.WARP]: {
         name: 'Warp',
         color: '#9370DB',
-        solid: false,
-        minable: false,
+        solid: true,
+        minable: true,
         resource: null,
-        interactive: true,
+        interactive: false,
         warp: true,
-        targetLevel: null
+        targetLevel: null,
+        durability: 1
     },
     [TileTypes.BARRIER_H]: {
         name: 'Barrière (H)',
