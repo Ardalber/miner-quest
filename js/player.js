@@ -228,7 +228,8 @@ class Player {
                     this.updateInventoryUI();
                 }
                 // Si on vient de miner un warp, activer la téléportation
-                if (this.miningTileType === TileTypes.WARP) {
+                const tileConfig = TileConfig[this.miningTileType];
+                if (this.miningTileType === TileTypes.WARP || (tileConfig && (tileConfig.warp || tileConfig.isWarp))) {
                     const dest = levelManager.getWarpDestination(this.miningTarget.x, this.miningTarget.y);
                     if (dest && window.onWarpActivated) {
                         window.onWarpActivated(dest);

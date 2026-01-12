@@ -386,19 +386,75 @@ class TileRenderer {
     }
 
     drawChest(ctx) {
-        // Fond herbe
-        ctx.fillStyle = '#4a9d4e';
-        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+        ctx.imageSmoothingEnabled = false;
         
-        // Coffre simplifié
-        ctx.fillStyle = '#8B4513';
-        ctx.fillRect(8, 12, 16, 12);
+        // Contour noir du coffre
+        ctx.fillStyle = '#000000';
+        // Contour supérieur
+        ctx.fillRect(4, 3, 24, 1);
+        // Contours latéraux
+        ctx.fillRect(3, 4, 1, 17);
+        ctx.fillRect(28, 4, 1, 17);
+        // Contour inférieur
+        ctx.fillRect(4, 21, 24, 1);
         
-        ctx.fillStyle = '#654321';
-        ctx.fillRect(8, 18, 16, 2);
+        // Bois marron foncé (planches horizontales)
+        ctx.fillStyle = '#5c3317';
+        ctx.fillRect(4, 4, 24, 3);
+        ctx.fillRect(4, 8, 24, 3);
+        ctx.fillRect(4, 12, 24, 3);
+        ctx.fillRect(4, 16, 24, 3);
         
-        ctx.fillStyle = '#FFD700';
-        ctx.fillRect(14, 16, 4, 4);
+        // Bois marron moyen
+        ctx.fillStyle = '#8b5a2b';
+        ctx.fillRect(4, 7, 24, 1);
+        ctx.fillRect(4, 11, 24, 1);
+        ctx.fillRect(4, 15, 24, 1);
+        ctx.fillRect(4, 19, 24, 1);
+        
+        // Bandes dorées verticales (gauche)
+        ctx.fillStyle = '#ffaa00';
+        ctx.fillRect(6, 4, 2, 17);
+        ctx.fillRect(8, 3, 1, 1);
+        ctx.fillRect(8, 21, 1, 1);
+        
+        // Bandes dorées verticales (droite)
+        ctx.fillRect(24, 4, 2, 17);
+        ctx.fillRect(23, 3, 1, 1);
+        ctx.fillRect(23, 21, 1, 1);
+        
+        // Highlights dorés clairs
+        ctx.fillStyle = '#ffdd00';
+        ctx.fillRect(7, 5, 1, 15);
+        ctx.fillRect(25, 5, 1, 15);
+        
+        // Serrure centrale dorée (fond)
+        ctx.fillStyle = '#ffaa00';
+        ctx.fillRect(13, 10, 6, 6);
+        
+        // Serrure centrale (highlight)
+        ctx.fillStyle = '#ffdd00';
+        ctx.fillRect(13, 10, 5, 5);
+        
+        // Trou de serrure noir
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(15, 11, 2, 2);
+        ctx.fillRect(15, 13, 2, 1);
+        
+        // Bande horizontale dorée centrale
+        ctx.fillStyle = '#ffaa00';
+        ctx.fillRect(4, 10, 9, 2);
+        ctx.fillRect(19, 10, 9, 2);
+        
+        // Highlights bande horizontale
+        ctx.fillStyle = '#ffdd00';
+        ctx.fillRect(4, 10, 9, 1);
+        ctx.fillRect(19, 10, 9, 1);
+        
+        // Ombres pour profondeur
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(4, 20, 24, 1);
+        ctx.fillRect(27, 5, 1, 15);
     }
 
     drawSign(ctx) {

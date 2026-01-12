@@ -219,6 +219,7 @@ class CustomTileManager {
 
 const customTileManager = new CustomTileManager();
 let pixelCanvas = null;
+let currentEditingTileId = null; // Tuile actuellement en cours d'édition
 const recentColors = new Set(); // Tracker des couleurs récentes
 const MAX_RECENT_COLORS = 8;
 
@@ -236,7 +237,10 @@ function restoreCustomTilesToConfig() {
                     minable: config.minable,
                     resource: config.resource,
                     durability: config.durability,
-                    interactive: config.interactive,
+                    interactive: config.interactive || config.isChest || config.isSign || config.isWarp,
+                    isChest: config.isChest,
+                    isSign: config.isSign,
+                    isWarp: config.isWarp,
                     isCustom: true,
                     isDrawn: true,
                     imageData: config.imageData,
@@ -279,10 +283,20 @@ function saveRecentColors() {
 
 // Ajouter une couleur aux récentes et mettre à jour l'affichage
 function addRecentColor(color) {
-    recentColors.delete(color); // Retirer si déjà présente (pour la remettre au début)
-    const colors = [color, ...Array.from(recentColors)];
-    recentColors.clear();
-    colors.slice(0, MAX_RECENT_COLORS).forEach(c => recentColors.add(c));
+    // Si la couleur existe déjà, ne rien faire (garder l'ordre actuel)
+    if (recentColors.has(color)) {
+        return;
+    }
+    
+    // Ajouter la nouvelle couleur à la fin
+    recentColors.add(color);
+    
+    // Si on dépasse la limite, supprimer la première (la plus ancienne)
+    if (recentColors.size > MAX_RECENT_COLORS) {
+        const colors = Array.from(recentColors);
+        recentColors.delete(colors[0]);
+    }
+    
     saveRecentColors();
     renderRecentColors();
 }
@@ -522,10 +536,24 @@ function addNewTile() {
         durability: document.getElementById('tile-minable').checked ? 
                    parseInt(document.getElementById('tile-durability').value) : 1,
         interactive: document.getElementById('tile-interactive').checked,
+        isChest: document.getElementById('tile-is-chest').checked,
+        isSign: document.getElementById('tile-is-sign').checked,
+        isWarp: document.getElementById('tile-is-warp').checked,
         icon: generateTileIcon(name),
         imageData: imageData // Sauvegarde de l'image PNG
     };
     
+    // Vérifier si on édite une tuile existante
+    if (currentEditingTileId !== null) {
+        updateExistingTile(currentEditingTileId, tileData, imageData);
+    } else {
+        // Créer une nouvelle tuile
+        createNewTile(tileData, imageData);
+    }
+}
+
+// Créer une nouvelle tuile
+function createNewTile(tileData, imageData) {
     const tileId = customTileManager.addTile(tileData);
     
     // Ajouter au TileConfig global avec le rendu du canvas
@@ -536,7 +564,10 @@ function addNewTile() {
         minable: tileData.minable,
         resource: tileData.resource,
         durability: tileData.durability,
-        interactive: tileData.interactive,
+        interactive: tileData.interactive || tileData.isChest || tileData.isSign,
+        isChest: tileData.isChest,
+        isSign: tileData.isSign,
+        isWarp: tileData.isWarp,
         isCustom: true,
         isDrawn: true,
         imageData: imageData // Image PNG
@@ -562,9 +593,92 @@ function addNewTile() {
     }
     
     // Message de succès
-    showNotification(`✅ Tuile "${name}" créée et ajoutée!`);
+    showNotification(`✅ Tuile "${tileData.name}" créée et ajoutée!`);
     
     // Réinitialiser le formulaire
+    resetTileForm();
+    
+    // Rafraîchir la liste des tuiles
+    renderTilesList();
+    
+    // Si on est dans l'éditeur de niveau, rafraîchir aussi la palette là-bas
+    if (typeof createTilePalette === 'function') {
+        try {
+            createTilePalette();
+        } catch (e) {
+            console.log('Éditeur de niveau non chargé');
+        }
+    }
+}
+
+// Mettre à jour une tuile existante
+function updateExistingTile(tileId, tileData, imageData) {
+    // Mettre à jour dans customTileManager
+    const existingTile = customTileManager.getTile(tileId);
+    if (!existingTile) {
+        showNotification('❌ Tuile introuvable');
+        return;
+    }
+    
+    // Mettre à jour les données
+    customTileManager.customTiles[tileId] = {
+        ...existingTile,
+        name: tileData.name,
+        pixelData: tileData.pixelData,
+        backgroundColor: tileData.backgroundColor,
+        solid: tileData.solid,
+        minable: tileData.minable,
+        resource: tileData.resource,
+        durability: tileData.durability,
+        interactive: tileData.interactive,
+        isChest: tileData.isChest,
+        isSign: tileData.isSign,
+        isWarp: tileData.isWarp,
+        icon: tileData.icon,
+        imageData: imageData,
+        updatedAt: new Date().toISOString()
+    };
+    customTileManager.saveCustomTiles();
+    
+    // Mettre à jour TileConfig
+    const tileConfig = {
+        name: tileData.name,
+        backgroundColor: tileData.backgroundColor,
+        solid: tileData.solid,
+        minable: tileData.minable,
+        resource: tileData.resource,
+        durability: tileData.durability,
+        interactive: tileData.interactive || tileData.isChest || tileData.isSign,
+        isChest: tileData.isChest,
+        isSign: tileData.isSign,
+        isWarp: tileData.isWarp,
+        isCustom: true,
+        isDrawn: true,
+        imageData: imageData,
+        pixelData: tileData.pixelData
+    };
+    TileConfig[tileId] = tileConfig;
+    
+    // Mettre à jour le TileRenderer
+    if (typeof tileRenderer !== 'undefined') {
+        tileRenderer.invalidateCache(tileId);
+        const cacheCanvas = document.createElement('canvas');
+        cacheCanvas.width = 32; cacheCanvas.height = 32;
+        const cctx = cacheCanvas.getContext('2d');
+        const img = new Image();
+        img.onload = function() {
+            cctx.imageSmoothingEnabled = false;
+            cctx.drawImage(img, 0, 0, 32, 32);
+            tileRenderer.cache[tileId] = cacheCanvas;
+        };
+        img.src = imageData;
+    }
+    
+    // Message de succès
+    showNotification(`✅ Tuile "${tileData.name}" modifiée et sauvegardée!`);
+    
+    // Réinitialiser
+    currentEditingTileId = null;
     resetTileForm();
     
     // Rafraîchir la liste des tuiles
@@ -587,9 +701,15 @@ function resetTileForm() {
     document.getElementById('tile-resource').value = '';
     document.getElementById('tile-durability').value = '1';
     document.getElementById('tile-interactive').checked = false;
+    document.getElementById('tile-is-chest').checked = false;
+    document.getElementById('tile-is-sign').checked = false;
+    document.getElementById('tile-is-warp').checked = false;
     document.getElementById('brush-color').value = '#ffffff';
     toggleMineableOptions();
     pixelCanvas.clear();
+    
+    // Réinitialiser l'édition
+    currentEditingTileId = null;
 }
 
 // ========== AFFICHAGE DE LA LISTE DES TUILES ==========
@@ -710,6 +830,28 @@ function createTileItemElement(id, config, isCustom) {
     
     div.addEventListener('click', () => {
         loadTileIntoCanvas(id, config, isCustom);
+        
+        // Tracker la tuile en cours d'édition (seulement pour les tuiles personnalisées)
+        if (isCustom) {
+            currentEditingTileId = id;
+        } else {
+            currentEditingTileId = null;
+        }
+        
+        // Charger les propriétés si c'est une tuile personnalisée
+        if (isCustom) {
+            document.getElementById('tile-name').value = config.name || '';
+            document.getElementById('tile-solid').checked = config.solid || false;
+            document.getElementById('tile-minable').checked = config.minable || false;
+            document.getElementById('tile-resource').value = config.resource || '';
+            document.getElementById('tile-durability').value = config.durability || 1;
+            document.getElementById('tile-interactive').checked = config.interactive || false;
+            document.getElementById('tile-is-chest').checked = config.isChest || false;
+            document.getElementById('tile-is-sign').checked = config.isSign || false;
+            document.getElementById('tile-is-warp').checked = config.isWarp || false;
+            toggleMineableOptions();
+        }
+        
         showNotification(`Tuile "${config.name}" chargée dans le canevas`);
     });
     

@@ -141,16 +141,16 @@ class LevelManager {
         
         if (config.minable) {
             // Warp: ne pas faire disparaître, juste activer la téléportation côté joueur
-            if (tileType === TileTypes.WARP) {
+            if (tileType === TileTypes.WARP || config.warp || config.isWarp) {
                 return null;
             }
             // Autres blocs: les remplacer par de l'herbe et nettoyer les métadonnées
             this.setTile(x, y, TileTypes.GRASS);
             const key = `${x}_${y}`;
-            if (tileType === TileTypes.CHEST && this.currentLevel.chestData) {
+            if ((tileType === TileTypes.CHEST || config.isChest) && this.currentLevel.chestData) {
                 delete this.currentLevel.chestData[key];
             }
-            if (tileType === TileTypes.SIGN && this.currentLevel.signData) {
+            if ((tileType === TileTypes.SIGN || config.isSign) && this.currentLevel.signData) {
                 delete this.currentLevel.signData[key];
             }
             this.commitCurrentLevel();
@@ -185,7 +185,11 @@ class LevelManager {
     // Vérifier si une tuile est un coffre
     isChest(x, y) {
         const tileType = this.getTile(x, y);
-        return tileType === TileTypes.CHEST;
+        if (tileType === TileTypes.CHEST) return true;
+        
+        // Vérifier si c'est une tuile personnalisée avec isChest
+        const tileConfig = TileConfig[tileType];
+        return tileConfig && tileConfig.isChest;
     }
 
     // Obtenir le contenu d'un coffre
@@ -221,7 +225,11 @@ class LevelManager {
     // Vérifier si une tuile est un warp
     isWarp(x, y) {
         const tileType = this.getTile(x, y);
-        return tileType === TileTypes.WARP;
+        if (tileType === TileTypes.WARP) return true;
+        
+        // Vérifier si c'est une tuile personnalisée avec isWarp
+        const tileConfig = TileConfig[tileType];
+        return tileConfig && (tileConfig.warp || tileConfig.isWarp);
     }
 
     // Obtenir la destination d'un warp

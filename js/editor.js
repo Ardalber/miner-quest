@@ -703,9 +703,9 @@ function handleCanvasMouseDown(e) {
         }
         
         // Vérifier si on clique sur un coffre déjà placé
-        if (tileType === TileTypes.CHEST) {
+        if (tileType === TileTypes.CHEST || (TileConfig[tileType] && TileConfig[tileType].isChest)) {
             // Si la tuile sélectionnée est aussi un coffre, ouvrir le modal d'édition
-            if (selectedTile === TileTypes.CHEST) {
+            if (selectedTile === TileTypes.CHEST || (TileConfig[selectedTile] && TileConfig[selectedTile].isChest)) {
                 openChestEditModal(x, y);
                 return;
             }
@@ -713,9 +713,9 @@ function handleCanvasMouseDown(e) {
         }
         
         // Vérifier si on clique sur un panneau déjà placé
-        if (tileType === TileTypes.SIGN) {
+        if (tileType === TileTypes.SIGN || (TileConfig[tileType] && TileConfig[tileType].isSign)) {
             // Si la tuile sélectionnée est aussi un panneau, ouvrir le modal d'édition
-            if (selectedTile === TileTypes.SIGN) {
+            if (selectedTile === TileTypes.SIGN || (TileConfig[selectedTile] && TileConfig[selectedTile].isSign)) {
                 openSignEditModal(x, y);
                 return;
             }
@@ -723,9 +723,9 @@ function handleCanvasMouseDown(e) {
         }
         
         // Vérifier si on clique sur un warp déjà placé
-        if (tileType === TileTypes.WARP) {
+        if (tileType === TileTypes.WARP || (TileConfig[tileType] && TileConfig[tileType].isWarp)) {
             // Si la tuile sélectionnée est aussi un warp, ouvrir le sélecteur de niveau
-            if (selectedTile === TileTypes.WARP) {
+            if (selectedTile === TileTypes.WARP || (TileConfig[selectedTile] && TileConfig[selectedTile].isWarp)) {
                 openWarpEditModal(x, y);
                 return;
             }
@@ -741,7 +741,8 @@ function handleCanvasMouseDown(e) {
         saveUndoState();
         
         // Si on remplace un coffre, supprimer son contenu
-        if (tileType === TileTypes.CHEST && selectedTile !== TileTypes.CHEST) {
+        if ((tileType === TileTypes.CHEST || (TileConfig[tileType] && TileConfig[tileType].isChest)) && 
+            selectedTile !== TileTypes.CHEST && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isChest)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.chestData && levelManager.currentLevel.chestData[key]) {
                 delete levelManager.currentLevel.chestData[key];
@@ -749,10 +750,20 @@ function handleCanvasMouseDown(e) {
         }
         
         // Si on remplace un panneau, supprimer son message
-        if (tileType === TileTypes.SIGN && selectedTile !== TileTypes.SIGN) {
+        if ((tileType === TileTypes.SIGN || (TileConfig[tileType] && TileConfig[tileType].isSign)) && 
+            selectedTile !== TileTypes.SIGN && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isSign)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.signData && levelManager.currentLevel.signData[key]) {
                 delete levelManager.currentLevel.signData[key];
+            }
+        }
+        
+        // Si on remplace un warp, supprimer sa destination
+        if ((tileType === TileTypes.WARP || (TileConfig[tileType] && TileConfig[tileType].isWarp)) && 
+            selectedTile !== TileTypes.WARP && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isWarp)) {
+            const key = `${x}_${y}`;
+            if (levelManager.currentLevel.warpData && levelManager.currentLevel.warpData[key]) {
+                delete levelManager.currentLevel.warpData[key];
             }
         }
         
@@ -787,7 +798,8 @@ function paintTile(e) {
         }
         // Si on remplace un coffre, supprimer son contenu associé
         const existingTile = levelManager.getTile(x, y);
-        if (existingTile === TileTypes.CHEST && selectedTile !== TileTypes.CHEST) {
+        if ((existingTile === TileTypes.CHEST || (TileConfig[existingTile] && TileConfig[existingTile].isChest)) && 
+            selectedTile !== TileTypes.CHEST && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isChest)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.chestData && levelManager.currentLevel.chestData[key]) {
                 delete levelManager.currentLevel.chestData[key];
@@ -795,7 +807,8 @@ function paintTile(e) {
         }
 
         // Si on remplace un panneau, supprimer son message associé
-        if (existingTile === TileTypes.SIGN && selectedTile !== TileTypes.SIGN) {
+        if ((existingTile === TileTypes.SIGN || (TileConfig[existingTile] && TileConfig[existingTile].isSign)) && 
+            selectedTile !== TileTypes.SIGN && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isSign)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.signData && levelManager.currentLevel.signData[key]) {
                 delete levelManager.currentLevel.signData[key];
@@ -803,7 +816,8 @@ function paintTile(e) {
         }
 
         // Si on remplace un warp, supprimer sa destination associée
-        if (existingTile === TileTypes.WARP && selectedTile !== TileTypes.WARP) {
+        if ((existingTile === TileTypes.WARP || (TileConfig[existingTile] && TileConfig[existingTile].isWarp)) && 
+            selectedTile !== TileTypes.WARP && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isWarp)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.warpData && levelManager.currentLevel.warpData[key]) {
                 delete levelManager.currentLevel.warpData[key];
