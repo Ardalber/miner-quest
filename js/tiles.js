@@ -173,6 +173,72 @@ class TileRenderer {
         const ctx = canvas.getContext('2d');
 
         const config = TileConfig[type];
+
+        // Si la tuile est inconnue ou mal définie, retourner un placeholder
+        if (!config) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, 0, this.tileSize, this.tileSize);
+            this.cache[type] = canvas;
+            return canvas;
+        }
+
+        // Support des tuiles personnalisées dessinées (PNG base64)
+        if (config.imageData) {
+            const img = new Image();
+            img.onload = () => {
+                ctx.imageSmoothingEnabled = false;
+                ctx.clearRect(0, 0, this.tileSize, this.tileSize);
+                ctx.drawImage(img, 0, 0, this.tileSize, this.tileSize);
+                // Bordure légère pour rester cohérent visuellement
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(0, 0, this.tileSize, this.tileSize);
+            };
+            img.src = config.imageData;
+            this.cache[type] = canvas;
+            return canvas;
+        }
+
+        // Fallback: essayer de récupérer depuis localStorage (anciennes tuiles sans imageData)
+        try {
+            const stored = localStorage.getItem('customTiles');
+            if (stored) {
+                const all = JSON.parse(stored);
+                const t = all[type];
+                if (t) {
+                    if (t.imageData) {
+                        const img = new Image();
+                        img.onload = () => {
+                            ctx.imageSmoothingEnabled = false;
+                            ctx.clearRect(0, 0, this.tileSize, this.tileSize);
+                            ctx.drawImage(img, 0, 0, this.tileSize, this.tileSize);
+                            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                            ctx.lineWidth = 1;
+                            ctx.strokeRect(0, 0, this.tileSize, this.tileSize);
+                        };
+                        img.src = t.imageData;
+                        this.cache[type] = canvas;
+                        return canvas;
+                    } else if (Array.isArray(t.pixelData) && t.pixelData.length === 32*32) {
+                        for (let i = 0; i < t.pixelData.length; i++) {
+                            const x = i % 32, y = Math.floor(i / 32);
+                            ctx.fillStyle = t.pixelData[i] || '#ffffff';
+                            ctx.fillRect(x, y, 1, 1);
+                        }
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(0, 0, this.tileSize, this.tileSize);
+                        this.cache[type] = canvas;
+                        return canvas;
+                    }
+                }
+            }
+        } catch (e) {
+            // ignorer silencieusement
+        }
         
         // Couleur de base
         ctx.fillStyle = config.color;

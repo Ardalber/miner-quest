@@ -170,6 +170,19 @@ body {
     background: #094771;
 }
 
+.tile-item.custom-tile {
+    border-color: #4a9d4e;
+}
+
+.tile-item.custom-tile:hover {
+    border-color: #5aad5e;
+}
+
+.tile-item.custom-tile.selected {
+    border-color: #3a8d3e;
+    background: #1e4d20;
+}
+
 .tile-item span {
     font-size: 10px;
     color: #999;

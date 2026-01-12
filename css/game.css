@@ -34,7 +34,8 @@ body {
 /* Boutons positionnés autour de la zone de jeu */
 .btn-top-left,
 .btn-top-center,
-.btn-top-right {
+.btn-top-right,
+.btn-top-right-2 {
     position: absolute;
     top: 20px;
     z-index: 100;
@@ -52,7 +53,8 @@ body {
 
 .btn-top-left:hover,
 .btn-top-center:hover,
-.btn-top-right:hover {
+.btn-top-right:hover,
+.btn-top-right-2:hover {
     background: rgba(85, 104, 211, 0.95);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
@@ -90,6 +92,10 @@ body {
 }
 
 .btn-top-right {
+    right: 80px;
+}
+
+.btn-top-right-2 {
     right: 20px;
 }
 

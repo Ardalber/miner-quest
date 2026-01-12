@@ -99,3 +99,5 @@ faire un système de niveaux souterrains
 
     - enigme en surface
     - combat ou pnj en sous-sol
+    - ajouter le choix du skin au début?
+    

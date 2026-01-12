@@ -124,6 +124,10 @@ async function initEditor() {
     document.getElementById('btn-test').addEventListener('click', testLevel);
     document.getElementById('btn-set-player-pos').addEventListener('click', togglePlayerPosMode);
     document.getElementById('btn-delete-level').addEventListener('click', deleteCurrentLevel);
+    document.getElementById('btn-tiles').addEventListener('click', () => {
+        sessionStorage.setItem('tileEditorSource', 'editor');
+        window.location.href = 'tile_editor.html';
+    });
     document.getElementById('btn-back').addEventListener('click', () => {
         window.location.href = 'index.html';
     });
@@ -223,6 +227,69 @@ function createTilePalette() {
 
         palette.appendChild(tileItem);
     });
+
+    // Ajouter les tuiles personnalisées
+    const customTiles = customTileManager.getAllTiles();
+    for (const [customId, customConfig] of Object.entries(customTiles)) {
+        const tileType = parseInt(customId);
+        const tileItem = document.createElement('div');
+        tileItem.className = 'tile-item custom-tile';
+        tileItem.dataset.type = String(tileType);
+        if (tileType === selectedTile) {
+            tileItem.classList.add('selected');
+        }
+
+        // Créer un mini canvas pour la tuile personnalisée
+        const miniCanvas = document.createElement('canvas');
+        miniCanvas.width = 32;
+        miniCanvas.height = 32;
+        const miniCtx = miniCanvas.getContext('2d');
+        // Si une image PNG est disponible (tuile dessinée), l'utiliser
+        if (customConfig.imageData) {
+            const img = new Image();
+            img.onload = () => {
+                miniCtx.imageSmoothingEnabled = false;
+                miniCtx.clearRect(0, 0, 32, 32);
+                miniCtx.drawImage(img, 0, 0, 32, 32);
+                miniCtx.strokeStyle = 'rgba(74, 157, 78, 0.5)';
+                miniCtx.lineWidth = 1;
+                miniCtx.strokeRect(0, 0, 32, 32);
+            };
+            img.src = customConfig.imageData;
+        } else {
+            // Ancien mode basé sur les couleurs
+            miniCtx.fillStyle = customConfig.color || '#2a2a2a';
+            miniCtx.fillRect(0, 0, 32, 32);
+            if (customConfig.backgroundColor && customConfig.backgroundColor !== customConfig.color) {
+                miniCtx.fillStyle = customConfig.backgroundColor;
+                miniCtx.fillRect(8, 8, 16, 16);
+            }
+            if (customConfig.icon) {
+                miniCtx.font = 'bold 16px Arial';
+                miniCtx.textAlign = 'center';
+                miniCtx.textBaseline = 'middle';
+                miniCtx.fillStyle = '#fff';
+                miniCtx.fillText(customConfig.icon, 16, 16);
+            }
+            miniCtx.strokeStyle = 'rgba(74, 157, 78, 0.5)';
+            miniCtx.lineWidth = 1;
+            miniCtx.strokeRect(0, 0, 32, 32);
+        }
+
+        tileItem.appendChild(miniCanvas);
+
+        // Ajouter le nom
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = customConfig.name;
+        tileItem.appendChild(nameSpan);
+
+        tileItem.addEventListener('click', () => {
+            selectedTile = tileType;
+            updatePaletteSelection();
+        });
+
+        palette.appendChild(tileItem);
+    }
 }
 
 // Mettre à jour la sélection de la palette

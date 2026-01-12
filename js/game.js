@@ -106,6 +106,15 @@ async function init() {
         });
     }
 
+    // Bouton éditeur de tuiles
+    const tilesBtn = document.getElementById('btn-tiles');
+    if (tilesBtn) {
+        tilesBtn.addEventListener('click', () => {
+            sessionStorage.setItem('tileEditorSource', 'game');
+            window.location.href = 'tile_editor.html';
+        });
+    }
+
     // Modal des commandes
     const modalCommands = document.getElementById('modal-commands');
     const btnCommands = document.getElementById('btn-commands');
