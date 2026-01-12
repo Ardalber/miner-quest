@@ -103,14 +103,27 @@ body {
     display: flex;
     flex: 1;
     overflow: hidden;
+    gap: 0;
 }
 
 .sidebar {
-    width: 280px;
     background: #252526;
     border-right: 1px solid #3e3e42;
+    border-left: 1px solid #3e3e42;
     padding: 16px;
     overflow-y: auto;
+}
+
+.sidebar-left {
+    width: 200px;
+    border-right: 1px solid #3e3e42;
+    border-left: none;
+}
+
+.sidebar-right {
+    width: 280px;
+    border-left: 1px solid #3e3e42;
+    border-right: none;
 }
 
 .sidebar h3 {
@@ -123,7 +136,7 @@ body {
 
 .tile-palette {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     margin-bottom: 24px;
 }

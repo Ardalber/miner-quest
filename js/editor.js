@@ -487,7 +487,16 @@ function saveChestContent() {
     if (iron > 0) items.push({ type: 'iron', name: 'Fer', count: iron });
     if (gold > 0) items.push({ type: 'gold', name: 'Or', count: gold });
     
-    levelManager.setChestContent(currentEditingChestPos.x, currentEditingChestPos.y, { items });
+    // Si aucun item n'est présent, supprimer les données du coffre
+    const key = `${currentEditingChestPos.x}_${currentEditingChestPos.y}`;
+    if (items.length === 0) {
+        if (levelManager.currentLevel.chestData && levelManager.currentLevel.chestData[key]) {
+            delete levelManager.currentLevel.chestData[key];
+        }
+    } else {
+        levelManager.setChestContent(currentEditingChestPos.x, currentEditingChestPos.y, { items });
+    }
+    
     levelManager.saveLevelsToStorage();
     
     closeChestModal();
@@ -516,11 +525,18 @@ function saveSignMessage() {
     if (!currentEditingSignPos) return;
     
     const message = document.getElementById('sign-message-input').value.trim();
+    const key = `${currentEditingSignPos.x}_${currentEditingSignPos.y}`;
     
     if (message) {
         levelManager.setSignMessage(currentEditingSignPos.x, currentEditingSignPos.y, message);
-        levelManager.saveLevelsToStorage();
+    } else {
+        // Si le message est vide, supprimer les données du panneau
+        if (levelManager.currentLevel.signData && levelManager.currentLevel.signData[key]) {
+            delete levelManager.currentLevel.signData[key];
+        }
     }
+    
+    levelManager.saveLevelsToStorage();
     
     closeSignModal();
     renderEditor();

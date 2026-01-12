@@ -295,51 +295,9 @@
       5
     ]
   ],
-  "chestData": {
-    "5_7": {
-      "items": [
-        {
-          "type": "stone",
-          "name": "Pierre",
-          "count": 3
-        },
-        {
-          "type": "iron",
-          "name": "Fer",
-          "count": 3
-        },
-        {
-          "type": "gold",
-          "name": "Or",
-          "count": 3
-        }
-      ]
-    },
-    "11_6": {
-      "items": [
-        {
-          "type": "stone",
-          "name": "Pierre",
-          "count": 4
-        },
-        {
-          "type": "iron",
-          "name": "Fer",
-          "count": 2
-        },
-        {
-          "type": "gold",
-          "name": "Or",
-          "count": 2
-        }
-      ]
-    }
-  },
-  "signData": {
-    "12_6": "Novice ?? ça dégage"
-  },
+  "chestData": {},
+  "signData": {},
   "warpData": {
-    "10_4": "level_3",
     "4_11": "level_3"
   }
 }

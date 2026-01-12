@@ -94,3 +94,8 @@
 3. ✅ Mini-map basique
 4. ✅ Compteur de ressources totales
 5. ✅ Mode plein écran
+
+faire un système de niveaux souterrains
+
+    - enigme en surface
+    - combat ou pnj en sous-sol
