@@ -632,8 +632,16 @@ let currentEditingWarpPos = null;
 
 // Ouvrir le modal d'édition de warp
 function openWarpEditModal(x, y) {
+    console.log('🌀 openWarpEditModal CALLED with x=' + x + ', y=' + y);
     currentEditingWarpPos = { x, y };
+    console.log('🌀 currentEditingWarpPos SET to:', currentEditingWarpPos);
     const targetLevel = levelManager.getWarpDestination(x, y);
+    
+    console.log('🌀 DEBUG Open Warp Modal:', {
+        position: { x, y },
+        currentDest: targetLevel,
+        levelName: levelManager.currentLevel?.name
+    });
     
     const levelList = levelManager.getLevelList();
     let options = '<option value="">-- Aucune destination --</option>';
@@ -648,13 +656,38 @@ function openWarpEditModal(x, y) {
 
 // Sauvegarder la destination du warp
 function saveWarpDestination() {
-    if (!currentEditingWarpPos) return;
+    console.log('💾 SAVE WARP CALLED with currentEditingWarpPos:', currentEditingWarpPos);
+    
+    if (!currentEditingWarpPos) {
+        console.log('⚠️ currentEditingWarpPos is null!');
+        return;
+    }
     
     const targetLevel = document.getElementById('warp-level-select').value;
     
+    console.log('💾 DEBUG Save Warp:', {
+        position: currentEditingWarpPos,
+        selectedLevel: targetLevel,
+        currentLevelName: levelManager.currentLevel?.name
+    });
+    
     if (targetLevel) {
         levelManager.setWarpDestination(currentEditingWarpPos.x, currentEditingWarpPos.y, targetLevel);
+        const key = `${currentEditingWarpPos.x}_${currentEditingWarpPos.y}`;
+        const dest = levelManager.getWarpDestination(currentEditingWarpPos.x, currentEditingWarpPos.y);
+        const warpData = levelManager.currentLevel?.warpData || {};
+        
+        console.log('🔍 WARP DATA CHECK:');
+        console.log('  Key we just set: "' + key + '"');
+        console.log('  Value retrieved: "' + dest + '"');
+        console.log('  All warp data:', warpData);
+        console.log('  Key exists in warpData: ' + (key in warpData));
+        console.log('  Value at key: "' + warpData[key] + '"');
+        
         levelManager.saveLevelsToStorage();
+        console.log('💾 Levels saved to storage');
+    } else {
+        console.log('⚠️ No level selected');
     }
     
     closeWarpModal();
@@ -724,11 +757,9 @@ function handleCanvasMouseDown(e) {
         
         // Vérifier si on clique sur un warp déjà placé
         if (tileType === TileTypes.WARP || (TileConfig[tileType] && TileConfig[tileType].isWarp)) {
-            // Si la tuile sélectionnée est aussi un warp, ouvrir le sélecteur de niveau
-            if (selectedTile === TileTypes.WARP || (TileConfig[selectedTile] && TileConfig[selectedTile].isWarp)) {
-                openWarpEditModal(x, y);
-                return;
-            }
+            // Toujours ouvrir le modal de warp, peu importe la tuile sélectionnée
+            openWarpEditModal(x, y);
+            return;
             // Sinon, on remplace le warp (suppression de la destination)
         }
         

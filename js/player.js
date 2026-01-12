@@ -69,6 +69,26 @@ class Player {
             case 'right': targetX++; break;
         }
 
+        const tileType = levelManager.getTile(targetX, targetY);
+        const tileConfig = TileConfig[tileType];
+        
+        // DEBUG: Log pour comprendre ce qui se passe
+        console.log('🔍 DEBUG Warp:', {
+            targetPos: { x: targetX, y: targetY },
+            tileType: tileType,
+            tileName: tileConfig?.name,
+            isChest: levelManager.isChest(targetX, targetY),
+            isInteractive: levelManager.isInteractive(targetX, targetY),
+            isMinable: levelManager.isMinable(targetX, targetY),
+            isWarp: levelManager.isWarp(targetX, targetY),
+            tileConfig: {
+                interactive: tileConfig?.interactive,
+                minable: tileConfig?.minable,
+                isWarp: tileConfig?.isWarp,
+                warp: tileConfig?.warp
+            }
+        });
+
         // Vérifier si c'est un coffre
         if (levelManager.isChest(targetX, targetY)) {
             this.openChest(targetX, targetY, levelManager);
@@ -86,7 +106,6 @@ class Player {
 
         // Vérifier si la case est minable
         if (levelManager.isMinable(targetX, targetY)) {
-            const tileType = levelManager.getTile(targetX, targetY);
             const durability = TileConfig[tileType].durability || 1;
             
             this.isMining = true;
@@ -229,8 +248,19 @@ class Player {
                 }
                 // Si on vient de miner un warp, activer la téléportation
                 const tileConfig = TileConfig[this.miningTileType];
+                console.log('⛏️ DEBUG Mining Complete:', {
+                    miningTileType: this.miningTileType,
+                    tileName: tileConfig?.name,
+                    tileWarp: tileConfig?.warp,
+                    tileIsWarp: tileConfig?.isWarp,
+                    isWarp: this.miningTileType === TileTypes.WARP || (tileConfig && (tileConfig.warp || tileConfig.isWarp)),
+                    miningTarget: this.miningTarget,
+                    warpDest: levelManager.getWarpDestination(this.miningTarget.x, this.miningTarget.y)
+                });
+                
                 if (this.miningTileType === TileTypes.WARP || (tileConfig && (tileConfig.warp || tileConfig.isWarp))) {
                     const dest = levelManager.getWarpDestination(this.miningTarget.x, this.miningTarget.y);
+                    console.log('🌀 WARP ACTIVATION:', { dest, hasCallback: !!window.onWarpActivated });
                     if (dest && window.onWarpActivated) {
                         window.onWarpActivated(dest);
                     }

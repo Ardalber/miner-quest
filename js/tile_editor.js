@@ -230,6 +230,12 @@ function restoreCustomTilesToConfig() {
         for (const [id, config] of Object.entries(customTiles)) {
             const tileId = parseInt(id);
             if (!TileConfig[tileId]) {
+                // Pour les Warps, forcer interactive à false (correction des anciennes tuiles)
+                let interactive = config.interactive || config.isChest || config.isSign;
+                if (config.isWarp) {
+                    interactive = false;
+                }
+                
                 TileConfig[tileId] = {
                     name: config.name,
                     backgroundColor: config.backgroundColor,
@@ -237,7 +243,7 @@ function restoreCustomTilesToConfig() {
                     minable: config.minable,
                     resource: config.resource,
                     durability: config.durability,
-                    interactive: config.interactive || config.isChest || config.isSign || config.isWarp,
+                    interactive: interactive,
                     isChest: config.isChest,
                     isSign: config.isSign,
                     isWarp: config.isWarp,
@@ -304,6 +310,8 @@ function addRecentColor(color) {
 // Afficher les couleurs récentes
 function renderRecentColors() {
     const container = document.getElementById('recent-colors');
+    if (!container) return; // Élément n'existe pas (ex: sur la page du jeu)
+    
     container.innerHTML = '';
     
     Array.from(recentColors).forEach(color => {
@@ -360,6 +368,8 @@ function initTileEditor() {
     
     // Initialiser le canvas de dessin (scale auto depuis la taille du canvas)
     const canvasEl = document.getElementById('pixel-canvas');
+    if (!canvasEl) return; // Pas sur la page de l'éditeur de tuiles
+    
     const scale = Math.floor(canvasEl.width / 32) || 16;
     pixelCanvas = new PixelCanvas('pixel-canvas', 32, 32, scale);
     

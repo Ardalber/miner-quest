@@ -88,9 +88,23 @@ class LevelManager {
             return Object.keys(data).length > 0;
         };
 
-        const hasSign = pruneMap(level.signData, (x, y, t) => t[y] && t[y][x] === TileTypes.SIGN);
-        const hasChest = pruneMap(level.chestData, (x, y, t) => t[y] && t[y][x] === TileTypes.CHEST);
-        const hasWarp = pruneMap(level.warpData, (x, y, t) => t[y] && t[y][x] === TileTypes.WARP);
+        const hasSign = pruneMap(level.signData, (x, y, t) => {
+            const tileType = t[y] && t[y][x];
+            const config = TileConfig[tileType];
+            return tileType === TileTypes.SIGN || (config && config.isSign);
+        });
+        
+        const hasChest = pruneMap(level.chestData, (x, y, t) => {
+            const tileType = t[y] && t[y][x];
+            const config = TileConfig[tileType];
+            return tileType === TileTypes.CHEST || (config && config.isChest);
+        });
+        
+        const hasWarp = pruneMap(level.warpData, (x, y, t) => {
+            const tileType = t[y] && t[y][x];
+            const config = TileConfig[tileType];
+            return tileType === TileTypes.WARP || (config && (config.warp || config.isWarp));
+        });
 
         if (!hasSign) level.signData = {};
         if (!hasChest) level.chestData = {};
