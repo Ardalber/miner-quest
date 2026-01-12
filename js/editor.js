@@ -286,6 +286,19 @@ function createTilePalette() {
         tileItem.addEventListener('click', () => {
             selectedTile = tileType;
             updatePaletteSelection();
+            // Rafraîchir le rendu du mini canvas
+            if (customConfig.imageData) {
+                const img = new Image();
+                img.onload = () => {
+                    miniCtx.clearRect(0, 0, 32, 32);
+                    miniCtx.imageSmoothingEnabled = false;
+                    miniCtx.drawImage(img, 0, 0, 32, 32);
+                    miniCtx.strokeStyle = 'rgba(74, 157, 78, 0.5)';
+                    miniCtx.lineWidth = 1;
+                    miniCtx.strokeRect(0, 0, 32, 32);
+                };
+                img.src = customConfig.imageData;
+            }
         });
 
         palette.appendChild(tileItem);

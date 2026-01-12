@@ -640,6 +640,15 @@ class TileRenderer {
     getTile(type) {
         return this.generateTile(type);
     }
+
+    // Invalider le cache pour forcer un rerendu
+    invalidateCache(type) {
+        if (type !== undefined) {
+            delete this.cache[type];
+        } else {
+            this.cache = {};
+        }
+    }
 }
 
 // Instance globale

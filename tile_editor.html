@@ -13,7 +13,6 @@
             <h1>🎨 Éditeur de Tuiles</h1>
             <div class="tile-editor-actions">
                 <button id="btn-back-from-tile" class="btn-back">← Retour</button>
-                <button id="btn-new-tile" class="btn-back">➕ Créer nouvelle tuile</button>
             </div>
         </div>
 
@@ -44,30 +43,30 @@
 
                 <!-- Outils de dessin -->
                 <div class="drawing-tools">
-                    <h3>🖌️ Outils de dessin</h3>
+                    <h3>🖌️ Outils</h3>
                     <div class="tools-row">
-                        <label for="brush-color">Couleur:</label>
-                        <input type="color" id="brush-color" value="#ffffff">
-                    </div>
-                    
-                    <div class="tools-row">
-                        <label for="brush-size">Taille du pinceau:</label>
-                        <select id="brush-size">
-                            <option value="1">1x1</option>
-                            <option value="2" selected>2x2</option>
-                            <option value="4">4x4</option>
-                        </select>
+                        <label>Taille du pinceau:</label>
+                        <div class="brush-size-selector">
+                            <div class="brush-size-box" data-size="1" title="1x1">
+                                <div class="brush-preview size-1"></div>
+                            </div>
+                            <div class="brush-size-box active" data-size="2" title="2x2">
+                                <div class="brush-preview size-2"></div>
+                            </div>
+                            <div class="brush-size-box" data-size="4" title="4x4">
+                                <div class="brush-preview size-4"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="tools-buttons">
-                        <button id="btn-clear-canvas" class="btn-secondary">🗑️ Effacer</button>
-                        <button id="btn-fill-canvas" class="btn-secondary">🪣 Remplir</button>
                         <button id="btn-undo-draw" class="btn-secondary">↶ Annuler</button>
-                        <button id="btn-clear-recent-colors" class="btn-secondary" title="Supprimer l'historique des couleurs">🎨 Clear</button>
+                        <button id="btn-new-tile" class="btn-secondary">➕ Nouvelle</button>
+                        <button id="btn-add-tile" class="btn-success">💾 Sauvegarder</button>
                     </div>
                 </div>
 
-                <!-- Canvas de dessin avec palette récente -->
+                <!-- Canvas de dessin avec palette récente et picker -->
                 <div class="canvas-wrapper">
                     <div class="recent-colors-sidebar">
                         <h4>Couleurs récentes</h4>
@@ -78,55 +77,49 @@
                         <canvas id="pixel-canvas" width="512" height="512"></canvas>
                         <div class="canvas-info">Cliquez pour dessiner (x16 agrandissement)</div>
                     </div>
-                </div>
+                    <div class="color-picker-sidebar">
+                        <h4>🎨 Palette</h4>
+                        <input type="color" id="brush-color" value="#ffffff">
+                        
+                        <!-- Propriétés -->
+                        <div class="tile-properties">
+                            <h3>⚙️ Propriétés</h3>
+                            
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="tile-solid"> Solide
+                                </label>
+                            </div>
 
-                <!-- Aperçu et propriétés -->
-                <div class="tile-properties">
-                    <h3>⚙️ Propriétés</h3>
-                    
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="tile-solid"> Tuile solide (bloque le joueur)
-                        </label>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="tile-minable"> Mineable
+                                </label>
+                            </div>
+
+                            <div class="form-group" id="resource-group" style="display: none;">
+                                <label for="tile-resource">Ressource:</label>
+                                <select id="tile-resource">
+                                    <option value="">Aucune</option>
+                                    <option value="stone">Pierre</option>
+                                    <option value="iron">Fer</option>
+                                    <option value="gold">Or</option>
+                                    <option value="custom">Personnalisée</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="durability-group" style="display: none;">
+                                <label for="tile-durability">Durabilité:</label>
+                                <input type="number" id="tile-durability" min="1" max="10" value="1">
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="tile-interactive"> Interactive
+                                </label>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="tile-minable"> Tuile mineable
-                        </label>
-                    </div>
-
-                    <div class="form-group" id="resource-group" style="display: none;">
-                        <label for="tile-resource">Type de ressource:</label>
-                        <select id="tile-resource">
-                            <option value="">Aucune ressource</option>
-                            <option value="stone">Pierre</option>
-                            <option value="iron">Fer</option>
-                            <option value="gold">Or</option>
-                            <option value="custom">Personnalisée</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="durability-group" style="display: none;">
-                        <label for="tile-durability">Durabilité (coups pour miner):</label>
-                        <input type="number" id="tile-durability" min="1" max="10" value="1">
-                    </div>
-
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="tile-interactive"> Tuile interactive
-                        </label>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="tile-bg-color">Couleur de fond de la grille (optionnel):</label>
-                        <input type="color" id="tile-bg-color" value="#2a2a2a">
-                    </div>
-                </div>
-
-                <div class="tile-actions">
-                    <button id="btn-preview-tile" class="btn-primary">👁️ Aperçu</button>
-                    <button id="btn-add-tile" class="btn-success">💾 Sauvegarder</button>
                 </div>
             </div>
 

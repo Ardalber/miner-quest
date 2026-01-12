@@ -11,6 +11,7 @@ class PixelCanvas {
         this.scale = scale;       // 10x
         this.pixels = [];
         this.history = [];
+        this.brushSize = 2;       // Taille par défaut
         
         // Initialiser la grille
         this.initPixels();
@@ -60,7 +61,7 @@ class PixelCanvas {
         const pixel = this.getPixelAt(x, y);
         if (!pixel) return;
 
-        const brushSize = parseInt(document.getElementById('brush-size').value);
+        const brushSize = this.brushSize || 2;
         const color = document.getElementById('brush-color').value;
 
         // Dessiner avec la taille du pinceau
@@ -296,6 +297,20 @@ function renderRecentColors() {
         swatch.className = 'recent-color-swatch';
         swatch.style.background = color;
         swatch.title = color;
+        
+        // Bouton de suppression
+        const removeBtn = document.createElement('span');
+        removeBtn.className = 'remove-color';
+        removeBtn.textContent = '×';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            recentColors.delete(color);
+            saveRecentColors();
+            renderRecentColors();
+            showNotification(`🗑️ Couleur supprimée`);
+        });
+        
+        swatch.appendChild(removeBtn);
         swatch.addEventListener('click', () => {
             document.getElementById('brush-color').value = color;
             updateActiveSwatch();
@@ -385,22 +400,41 @@ function initTileEditor() {
 
 function setupEventListeners() {
     // Outils de dessin
-    document.getElementById('btn-clear-canvas').addEventListener('click', () => {
-        pixelCanvas.clear();
-        showNotification('🗑️ Canvas effacé');
-    });
-
-    document.getElementById('btn-fill-canvas').addEventListener('click', () => {
-        const color = document.getElementById('brush-color').value;
-        pixelCanvas.fill(color);
-        addRecentColor(color);
-        showNotification('🪣 Canvas rempli');
-    });
+    const btnClearCanvas = document.getElementById('btn-clear-canvas');
+    if (btnClearCanvas) {
+        btnClearCanvas.addEventListener('click', () => {
+            pixelCanvas.clear();
+            showNotification('🗑️ Canvas effacé');
+        });
+    }
 
     document.getElementById('btn-undo-draw').addEventListener('click', () => {
         pixelCanvas.undo();
         showNotification('↶ Action annulée');
     });
+
+    // Sélecteur de taille de pinceau (carrés visuels)
+    document.querySelectorAll('.brush-size-box').forEach(box => {
+        box.addEventListener('click', () => {
+            // Retirer l'état actif de tous les carrés
+            document.querySelectorAll('.brush-size-box').forEach(b => b.classList.remove('active'));
+            // Activer le carré cliqué
+            box.classList.add('active');
+            // Mettre à jour la taille du pinceau
+            const size = parseInt(box.dataset.size);
+            pixelCanvas.brushSize = size;
+            showNotification(`🖌️ Taille du pinceau: ${size}x${size}`);
+        });
+    });
+
+    // Bouton pour créer une nouvelle tuile (réinitialiser)
+    const btnNewTile = document.getElementById('btn-new-tile');
+    if (btnNewTile) {
+        btnNewTile.addEventListener('click', () => {
+            resetTileForm();
+            showNotification('🆕 Nouvelle tuile: grille réinitialisée');
+        });
+    }
 
     // Bouton pour supprimer les couleurs récentes
     const btnClearColors = document.getElementById('btn-clear-recent-colors');
@@ -420,15 +454,13 @@ function setupEventListeners() {
 
     // Création de tuile
     document.getElementById('tile-minable').addEventListener('change', toggleMineableOptions);
-    document.getElementById('btn-preview-tile').addEventListener('click', showTilePreview);
-    document.getElementById('btn-add-tile').addEventListener('click', addNewTile);
-    const btnNewTile = document.getElementById('btn-new-tile');
-    if (btnNewTile) {
-        btnNewTile.addEventListener('click', () => {
-            resetTileForm();
-            showNotification('🆕 Nouvelle tuile: grille réinitialisée');
-        });
+    
+    const btnPreviewTile = document.getElementById('btn-preview-tile');
+    if (btnPreviewTile) {
+        btnPreviewTile.addEventListener('click', showTilePreview);
     }
+    
+    document.getElementById('btn-add-tile').addEventListener('click', addNewTile);
     
     // Aperçu
     document.getElementById('btn-close-preview').addEventListener('click', closeTilePreview);
@@ -482,7 +514,7 @@ function addNewTile() {
     const tileData = {
         name: name,
         pixelData: pixelCanvas.getPixelData(), // Les pixels en hex
-        backgroundColor: document.getElementById('tile-bg-color').value,
+        backgroundColor: '#2a2a2a',
         solid: document.getElementById('tile-solid').checked,
         minable: document.getElementById('tile-minable').checked,
         resource: document.getElementById('tile-minable').checked ? 
@@ -514,6 +546,9 @@ function addNewTile() {
     
     // Mettre à jour le TileRenderer si disponible
     if (typeof tileRenderer !== 'undefined') {
+        // Invalider le cache pour cette tuile pour forcer un rerendu
+        tileRenderer.invalidateCache(tileId);
+        // Générer la nouvelle image en cache
         const cacheCanvas = document.createElement('canvas');
         cacheCanvas.width = 32; cacheCanvas.height = 32;
         const cctx = cacheCanvas.getContext('2d');
@@ -532,13 +567,21 @@ function addNewTile() {
     // Réinitialiser le formulaire
     resetTileForm();
     
-    // Rafraîchir la liste
+    // Rafraîchir la liste des tuiles
     renderTilesList();
+    
+    // Si on est dans l'éditeur de niveau, rafraîchir aussi la palette là-bas
+    if (typeof createTilePalette === 'function') {
+        try {
+            createTilePalette();
+        } catch (e) {
+            console.log('Éditeur de niveau non chargé');
+        }
+    }
 }
 
 function resetTileForm() {
     document.getElementById('tile-name').value = '';
-    document.getElementById('tile-bg-color').value = '#2a2a2a';
     document.getElementById('tile-solid').checked = true;
     document.getElementById('tile-minable').checked = false;
     document.getElementById('tile-resource').value = '';
@@ -568,7 +611,8 @@ function renderTilesList(filter = 'all') {
     
     // Ajouter les tuiles personnalisées
     if (filter === 'all' || filter === 'custom') {
-        for (const [id, tileData] of Object.entries(customTileManager.customTiles)) {
+        const customTiles = customTileManager.getAllTiles();
+        for (const [id, tileData] of Object.entries(customTiles)) {
             const element = createTileItemElement(parseInt(id), tileData, true);
             container.appendChild(element);
         }
@@ -620,9 +664,19 @@ function createTileItemElement(id, config, isCustom) {
         const actions = document.createElement('div');
         actions.className = 'tile-item-actions';
         
+        const previewBtn = document.createElement('button');
+        previewBtn.className = 'tile-item-action-btn preview';
+        previewBtn.textContent = '👁️';
+        previewBtn.title = 'Aperçu';
+        previewBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showTileInfo(id, config, isCustom);
+        });
+        
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'tile-item-action-btn delete';
         deleteBtn.textContent = '✕';
+        deleteBtn.title = 'Supprimer';
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             if (confirm(`❌ Êtes-vous sûr de vouloir supprimer la tuile "${config.name}"?`)) {
@@ -633,13 +687,29 @@ function createTileItemElement(id, config, isCustom) {
             }
         });
         
+        actions.appendChild(previewBtn);
         actions.appendChild(deleteBtn);
+        div.appendChild(actions);
+    } else {
+        // Bouton aperçu pour les tuiles par défaut aussi
+        const actions = document.createElement('div');
+        actions.className = 'tile-item-actions';
+        
+        const previewBtn = document.createElement('button');
+        previewBtn.className = 'tile-item-action-btn preview';
+        previewBtn.textContent = '👁️';
+        previewBtn.title = 'Aperçu';
+        previewBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showTileInfo(id, config, isCustom);
+        });
+        
+        actions.appendChild(previewBtn);
         div.appendChild(actions);
     }
     
     div.addEventListener('click', () => {
         loadTileIntoCanvas(id, config, isCustom);
-        showTileInfo(id, config, isCustom);
         showNotification(`Tuile "${config.name}" chargée dans le canevas`);
     });
     
