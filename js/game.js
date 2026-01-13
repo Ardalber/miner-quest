@@ -53,6 +53,11 @@ async function init() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
 
+    // Restaurer les tuiles personnalisées dans TileConfig (si pas déjà fait)
+    if (typeof restoreCustomTilesToConfig === 'function') {
+        restoreCustomTilesToConfig();
+    }
+
     // Créer le joueur
     player = new Player();
 
@@ -183,6 +188,25 @@ async function init() {
         modalChest.addEventListener('click', (e) => {
             if (e.target === modalChest) {
                 modalChest.classList.remove('show');
+            }
+        });
+    }
+
+    // Modal du panneau
+    const modalSign = document.getElementById('modal-sign');
+    const btnCloseSign = document.getElementById('btn-close-sign');
+
+    if (btnCloseSign && modalSign) {
+        btnCloseSign.addEventListener('click', () => {
+            modalSign.classList.remove('show');
+        });
+    }
+
+    // Fermer le modal panneau en cliquant en dehors
+    if (modalSign) {
+        modalSign.addEventListener('click', (e) => {
+            if (e.target === modalSign) {
+                modalSign.classList.remove('show');
             }
         });
     }

@@ -1,154 +1,14 @@
 // Définition des types de tuiles
 const TileTypes = {
-    EMPTY: 0,
-    GRASS: 1,
-    STONE: 2,
-    IRON: 3,
-    GOLD: 4,
-    WALL: 5,
-    CHEST: 6,
-    SIGN: 7,
-    WARP: 8,
-    BARRIER_H: 11,
-    BARRIER_V: 12,
-    TREE: 13,
-    BARRIER_L_NE: 14,
-    BARRIER_L_SE: 15,
-    BARRIER_L_SW: 16,
-    BARRIER_L_NW: 17
+    EMPTY: 0
 };
 
 // Configuration de chaque type de tuile
 const TileConfig = {
     [TileTypes.EMPTY]: {
         name: 'Vide',
-        color: '#2a2a2a',
+        color: 'transparent',
         solid: false,
-        minable: false,
-        resource: null
-    },
-    [TileTypes.GRASS]: {
-        name: 'Herbe',
-        color: '#4a9d4e',
-        solid: false,
-        minable: false,
-        resource: null
-    },
-    [TileTypes.STONE]: {
-        name: 'Pierre',
-        color: '#7a7a7a',
-        solid: true,
-        minable: true,
-        resource: 'stone',
-        durability: 1
-    },
-    [TileTypes.IRON]: {
-        name: 'Fer',
-        color: '#b87333',
-        solid: true,
-        minable: true,
-        resource: 'iron',
-        durability: 2
-    },
-    [TileTypes.GOLD]: {
-        name: 'Or',
-        color: '#ffd700',
-        solid: true,
-        minable: true,
-        resource: 'gold',
-        durability: 3
-    },
-    [TileTypes.WALL]: {
-        name: 'Mur',
-        color: '#3a3a3a',
-        solid: true,
-        minable: false,
-        resource: null
-    },
-    [TileTypes.CHEST]: {
-        name: 'Coffre',
-        color: '#8B4513',
-        backgroundColor: '#4a9d4e',
-        solid: true,
-        minable: false,
-        resource: null,
-        interactive: true,
-        openable: true
-    },
-    [TileTypes.SIGN]: {
-        name: 'Panneau',
-        color: '#D2691E',
-        backgroundColor: '#4a9d4e',
-        solid: true,
-        minable: false,
-        resource: null,
-        interactive: true,
-        message: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.'
-    },
-    [TileTypes.WARP]: {
-        name: 'Warp',
-        color: '#9370DB',
-        solid: true,
-        minable: true,
-        resource: null,
-        interactive: false,
-        warp: true,
-        targetLevel: null,
-        durability: 1
-    },
-    [TileTypes.BARRIER_H]: {
-        name: 'Barrière (H)',
-        color: '#8B4513',
-        backgroundColor: '#4a9d4e',
-        solid: true,
-        minable: false,
-        resource: null
-    },
-    [TileTypes.BARRIER_V]: {
-        name: 'Barrière (V)',
-        color: '#8B4513',
-        backgroundColor: '#4a9d4e',
-        solid: true,
-        minable: false,
-        resource: null
-    },
-    [TileTypes.TREE]: {
-        name: 'Arbre',
-        color: '#2e8b57',
-        backgroundColor: '#4a9d4e',
-        solid: true,
-        minable: false,
-        resource: null
-    },
-    [TileTypes.BARRIER_L_NE]: {
-        name: 'Barrière (L)',
-        color: '#8B4513',
-        backgroundColor: '#4a9d4e',
-        solid: true,
-        minable: false,
-        resource: null
-    },
-    [TileTypes.BARRIER_L_SE]: {
-        name: 'Barrière (L)',
-        color: '#8B4513',
-        backgroundColor: '#4a9d4e',
-        solid: true,
-        minable: false,
-        resource: null
-    },
-    [TileTypes.BARRIER_L_SW]: {
-        name: 'Barrière (L)',
-        color: '#8B4513',
-        backgroundColor: '#4a9d4e',
-        solid: true,
-        minable: false,
-        resource: null
-    },
-    [TileTypes.BARRIER_L_NW]: {
-        name: 'Barrière (L)',
-        color: '#8B4513',
-        backgroundColor: '#4a9d4e',
-        solid: true,
         minable: false,
         resource: null
     }
@@ -158,6 +18,11 @@ const TileConfig = {
 class TileRenderer {
     constructor() {
         this.tileSize = 32;
+        this.cache = {};
+    }
+
+    // Vider le cache pour forcer le rechargement des tuiles
+    clearCache() {
         this.cache = {};
     }
 
@@ -176,11 +41,17 @@ class TileRenderer {
 
         // Si la tuile est inconnue ou mal définie, retourner un placeholder
         if (!config) {
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = '#ff0000';
             ctx.fillRect(0, 0, this.tileSize, this.tileSize);
-            ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(0, 0, this.tileSize, this.tileSize);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(2, 2, this.tileSize - 4, this.tileSize - 4);
+            // Ajouter un "?" au centre
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('?', this.tileSize / 2, this.tileSize / 2);
             this.cache[type] = canvas;
             return canvas;
         }
@@ -196,9 +67,23 @@ class TileRenderer {
                 ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(0, 0, this.tileSize, this.tileSize);
+                // Mettre à jour le cache une fois chargé
+                this.cache[type] = canvas;
+                // Appeler le callback de redraw
+                if (typeof onTileImageLoaded === 'function') {
+                    onTileImageLoaded(type);
+                }
+            };
+            img.onerror = () => {
+                console.warn('Erreur chargement image pour tuile:', type);
+                ctx.fillStyle = '#888';
+                ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+                this.cache[type] = canvas;
             };
             img.src = config.imageData;
-            this.cache[type] = canvas;
+            // Retourner un canvas blanc en attendant le chargement
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, this.tileSize, this.tileSize);
             return canvas;
         }
 
@@ -218,9 +103,21 @@ class TileRenderer {
                             ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
                             ctx.lineWidth = 1;
                             ctx.strokeRect(0, 0, this.tileSize, this.tileSize);
+                            this.cache[type] = canvas;
+                            // Appeler le callback de redraw
+                            if (typeof onTileImageLoaded === 'function') {
+                                onTileImageLoaded(type);
+                            }
+                        };
+                        img.onerror = () => {
+                            ctx.fillStyle = '#888';
+                            ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+                            this.cache[type] = canvas;
                         };
                         img.src = t.imageData;
-                        this.cache[type] = canvas;
+                        // Retourner un canvas blanc en attendant le chargement
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
                         return canvas;
                     } else if (Array.isArray(t.pixelData) && t.pixelData.length === 32*32) {
                         for (let i = 0; i < t.pixelData.length; i++) {
@@ -241,57 +138,15 @@ class TileRenderer {
         }
         
         // Couleur de base
-        ctx.fillStyle = config.color;
-        ctx.fillRect(0, 0, this.tileSize, this.tileSize);
-
-        // Ajouter des détails selon le type
-        switch(type) {
-            case TileTypes.GRASS:
-                this.drawGrass(ctx);
-                break;
-            case TileTypes.STONE:
-                this.drawStone(ctx);
-                break;
-            case TileTypes.IRON:
-                this.drawIron(ctx);
-                break;
-            case TileTypes.GOLD:
-                this.drawGold(ctx);
-                break;
-            case TileTypes.WALL:
-                this.drawWall(ctx);
-                break;
-            case TileTypes.CHEST:
-                this.drawChest(ctx);
-                break;
-            case TileTypes.SIGN:
-                this.drawSign(ctx);
-                break;
-            case TileTypes.WARP:
-                this.drawWarp(ctx);
-                break;
-            case TileTypes.BARRIER_H:
-                this.drawBarrierH(ctx);
-                break;
-            case TileTypes.BARRIER_V:
-                this.drawBarrierV(ctx);
-                break;
-            case TileTypes.TREE:
-                this.drawTree(ctx);
-                break;
-            case TileTypes.BARRIER_L_NE:
-                this.drawBarrierL_NE(ctx);
-                break;
-            case TileTypes.BARRIER_L_SE:
-                this.drawBarrierL_SE(ctx);
-                break;
-            case TileTypes.BARRIER_L_SW:
-                this.drawBarrierL_SW(ctx);
-                break;
-            case TileTypes.BARRIER_L_NW:
-                this.drawBarrierL_NW(ctx);
-                break;
+        if (config.color && config.color !== 'transparent') {
+            ctx.fillStyle = config.color;
+            ctx.fillRect(0, 0, this.tileSize, this.tileSize);
+        } else {
+            // Pour les tuiles transparentes, ne rien dessiner
+            // (laisser le canvas transparent)
         }
+
+        // Ajouter des détails selon le type - plus de types de base
 
         // Bordure pour tous les types sauf vide
         if (type !== TileTypes.EMPTY) {
@@ -709,3 +564,6 @@ class TileRenderer {
 
 // Instance globale
 const tileRenderer = new TileRenderer();
+
+// Callback global pour redraw après chargement d'images
+let onTileImageLoaded = null;

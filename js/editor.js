@@ -72,7 +72,7 @@ function createEditorToastContainer() {
 
 // Variables de l'éditeur
 let editorCanvas, editorCtx;
-let selectedTile = TileTypes.GRASS;
+let selectedTile = 0; // EMPTY par défaut
 let currentLevelName = 'level_1';
 let isDrawing = false;
 let isSettingPlayerPos = false;
@@ -86,6 +86,23 @@ let levelsFolderHandle = null; // Handle du dossier levels pour l'API File Syste
 async function initEditor() {
     editorCanvas = document.getElementById('editorCanvas');
     editorCtx = editorCanvas.getContext('2d');
+
+    // IMPORTANT: Restaurer les tuiles personnalisées AVANT de charger les niveaux
+    if (typeof restoreCustomTilesToConfig === 'function') {
+        restoreCustomTilesToConfig();
+        // Vider le cache du renderer pour forcer le rechargement
+        if (tileRenderer && typeof tileRenderer.clearCache === 'function') {
+            tileRenderer.clearCache();
+        }
+    }
+
+    // Mettre en place un callback pour redraw quand les images se chargent
+    onTileImageLoaded = (tileId) => {
+        console.log('Image chargée pour tuile:', tileId);
+        if (typeof renderEditor === 'function') {
+            renderEditor();
+        }
+    };
 
     // Charger les niveaux depuis les fichiers et localStorage
     await levelManager.loadLevelsFromStorage();
@@ -179,21 +196,17 @@ function createTilePalette() {
     const palette = document.getElementById('tile-palette');
     palette.innerHTML = '';
 
-    const tileTypes = [
-        TileTypes.GRASS,
-        TileTypes.STONE,
-        TileTypes.IRON,
-        TileTypes.GOLD,
-        TileTypes.WALL,
-        TileTypes.CHEST,
-        TileTypes.SIGN,
-        TileTypes.WARP,
-        TileTypes.BARRIER_H,
-        TileTypes.BARRIER_V,
-        TileTypes.BARRIER_L_NE,
-        TileTypes.TREE,
-        TileTypes.EMPTY
-    ];
+    // Commencer avec la tuile EMPTY seulement
+    const tileTypes = [TileTypes.EMPTY];
+    
+    // Ajouter les tuiles personnalisées depuis TileConfig
+    for (const typeId in TileConfig) {
+        const id = parseInt(typeId);
+        // Ajouter seulement les tuiles personnalisées (ID >= 100)
+        if (id >= 100) {
+            tileTypes.push(id);
+        }
+    }
 
     tileTypes.forEach(tileType => {
         const tileItem = document.createElement('div');
@@ -202,11 +215,12 @@ function createTilePalette() {
         if (tileType === selectedTile) {
             tileItem.classList.add('selected');
         }
-
-        // Créer un mini canvas pour la tuile
+        
+        // Créer un mini canvas pour cette tuile
         const miniCanvas = document.createElement('canvas');
         miniCanvas.width = 32;
         miniCanvas.height = 32;
+        miniCanvas.className = 'tile-preview-canvas';
         const miniCtx = miniCanvas.getContext('2d');
         
         const tileImage = tileRenderer.getTile(tileType);
@@ -217,7 +231,7 @@ function createTilePalette() {
 
         // Ajouter le nom
         const nameSpan = document.createElement('span');
-        nameSpan.textContent = TileConfig[tileType].name;
+        nameSpan.textContent = TileConfig[tileType]?.name || '?';
         tileItem.appendChild(nameSpan);
 
         tileItem.addEventListener('click', () => {
@@ -227,82 +241,21 @@ function createTilePalette() {
 
         palette.appendChild(tileItem);
     });
-
-    // Ajouter les tuiles personnalisées
-    const customTiles = customTileManager.getAllTiles();
-    for (const [customId, customConfig] of Object.entries(customTiles)) {
-        const tileType = parseInt(customId);
-        const tileItem = document.createElement('div');
-        tileItem.className = 'tile-item custom-tile';
-        tileItem.dataset.type = String(tileType);
-        if (tileType === selectedTile) {
-            tileItem.classList.add('selected');
+    
+    // Mettre en place un callback pour redraw les miniatures quand les images se chargent
+    onTileImageLoaded = (tileId) => {
+        const tileItem = document.querySelector(`[data-type="${tileId}"]`);
+        if (tileItem) {
+            const canvas = tileItem.querySelector('canvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                const tileImage = tileRenderer.getTile(tileId);
+                ctx.clearRect(0, 0, 32, 32);
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(tileImage, 0, 0, 32, 32);
+            }
         }
-
-        // Créer un mini canvas pour la tuile personnalisée
-        const miniCanvas = document.createElement('canvas');
-        miniCanvas.width = 32;
-        miniCanvas.height = 32;
-        const miniCtx = miniCanvas.getContext('2d');
-        // Si une image PNG est disponible (tuile dessinée), l'utiliser
-        if (customConfig.imageData) {
-            const img = new Image();
-            img.onload = () => {
-                miniCtx.imageSmoothingEnabled = false;
-                miniCtx.clearRect(0, 0, 32, 32);
-                miniCtx.drawImage(img, 0, 0, 32, 32);
-                miniCtx.strokeStyle = 'rgba(74, 157, 78, 0.5)';
-                miniCtx.lineWidth = 1;
-                miniCtx.strokeRect(0, 0, 32, 32);
-            };
-            img.src = customConfig.imageData;
-        } else {
-            // Ancien mode basé sur les couleurs
-            miniCtx.fillStyle = customConfig.color || '#2a2a2a';
-            miniCtx.fillRect(0, 0, 32, 32);
-            if (customConfig.backgroundColor && customConfig.backgroundColor !== customConfig.color) {
-                miniCtx.fillStyle = customConfig.backgroundColor;
-                miniCtx.fillRect(8, 8, 16, 16);
-            }
-            if (customConfig.icon) {
-                miniCtx.font = 'bold 16px Arial';
-                miniCtx.textAlign = 'center';
-                miniCtx.textBaseline = 'middle';
-                miniCtx.fillStyle = '#fff';
-                miniCtx.fillText(customConfig.icon, 16, 16);
-            }
-            miniCtx.strokeStyle = 'rgba(74, 157, 78, 0.5)';
-            miniCtx.lineWidth = 1;
-            miniCtx.strokeRect(0, 0, 32, 32);
-        }
-
-        tileItem.appendChild(miniCanvas);
-
-        // Ajouter le nom
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = customConfig.name;
-        tileItem.appendChild(nameSpan);
-
-        tileItem.addEventListener('click', () => {
-            selectedTile = tileType;
-            updatePaletteSelection();
-            // Rafraîchir le rendu du mini canvas
-            if (customConfig.imageData) {
-                const img = new Image();
-                img.onload = () => {
-                    miniCtx.clearRect(0, 0, 32, 32);
-                    miniCtx.imageSmoothingEnabled = false;
-                    miniCtx.drawImage(img, 0, 0, 32, 32);
-                    miniCtx.strokeStyle = 'rgba(74, 157, 78, 0.5)';
-                    miniCtx.lineWidth = 1;
-                    miniCtx.strokeRect(0, 0, 32, 32);
-                };
-                img.src = customConfig.imageData;
-            }
-        });
-
-        palette.appendChild(tileItem);
-    }
+    };
 }
 
 // Mettre à jour la sélection de la palette
@@ -720,25 +673,13 @@ function handleCanvasMouseDown(e) {
         
         const tileType = levelManager.getTile(x, y);
         
-        // Rotation de barrière L: si on clique sur une barrière L avec une barrière L sélectionnée
-        const lBarriers = [TileTypes.BARRIER_L_NE, TileTypes.BARRIER_L_SE, TileTypes.BARRIER_L_SW, TileTypes.BARRIER_L_NW];
-        if (lBarriers.includes(tileType) && lBarriers.includes(selectedTile)) {
-            saveUndoState();
-            // Rotation 90° sens horaire: NE -> SE -> SW -> NW -> NE
-            let newTile;
-            if (tileType === TileTypes.BARRIER_L_NE) newTile = TileTypes.BARRIER_L_SE;
-            else if (tileType === TileTypes.BARRIER_L_SE) newTile = TileTypes.BARRIER_L_SW;
-            else if (tileType === TileTypes.BARRIER_L_SW) newTile = TileTypes.BARRIER_L_NW;
-            else if (tileType === TileTypes.BARRIER_L_NW) newTile = TileTypes.BARRIER_L_NE;
-            levelManager.setTile(x, y, newTile);
-            renderEditor();
-            return;
-        }
-        
         // Vérifier si on clique sur un coffre déjà placé
-        if (tileType === TileTypes.CHEST || (TileConfig[tileType] && TileConfig[tileType].isChest)) {
+        if (TileConfig[tileType] && TileConfig[tileType].isChest) {
             // Si la tuile sélectionnée est aussi un coffre, ouvrir le modal d'édition
-            if (selectedTile === TileTypes.CHEST || (TileConfig[selectedTile] && TileConfig[selectedTile].isChest)) {
+            console.log('Coffre détecté:', { tileType, selectedTile, 
+                tileConfig: TileConfig[tileType], 
+                selectedConfig: TileConfig[selectedTile] });
+            if (TileConfig[selectedTile] && TileConfig[selectedTile].isChest) {
                 openChestEditModal(x, y);
                 return;
             }
@@ -746,9 +687,9 @@ function handleCanvasMouseDown(e) {
         }
         
         // Vérifier si on clique sur un panneau déjà placé
-        if (tileType === TileTypes.SIGN || (TileConfig[tileType] && TileConfig[tileType].isSign)) {
+        if (TileConfig[tileType] && TileConfig[tileType].isSign) {
             // Si la tuile sélectionnée est aussi un panneau, ouvrir le modal d'édition
-            if (selectedTile === TileTypes.SIGN || (TileConfig[selectedTile] && TileConfig[selectedTile].isSign)) {
+            if (TileConfig[selectedTile] && TileConfig[selectedTile].isSign) {
                 openSignEditModal(x, y);
                 return;
             }
@@ -756,24 +697,18 @@ function handleCanvasMouseDown(e) {
         }
         
         // Vérifier si on clique sur un warp déjà placé
-        if (tileType === TileTypes.WARP || (TileConfig[tileType] && TileConfig[tileType].isWarp)) {
+        if (TileConfig[tileType] && TileConfig[tileType].isWarp) {
             // Toujours ouvrir le modal de warp, peu importe la tuile sélectionnée
             openWarpEditModal(x, y);
             return;
             // Sinon, on remplace le warp (suppression de la destination)
         }
         
-        // Mode dessin normal - vérifier si c'est sur les bords
-        if (x === 0 || x === 15 || y === 0 || y === 15) {
-            // Ne rien faire sur les bords
-            return;
-        }
-        
         saveUndoState();
         
         // Si on remplace un coffre, supprimer son contenu
-        if ((tileType === TileTypes.CHEST || (TileConfig[tileType] && TileConfig[tileType].isChest)) && 
-            selectedTile !== TileTypes.CHEST && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isChest)) {
+        if ((TileConfig[tileType] && TileConfig[tileType].isChest) && 
+            (!TileConfig[selectedTile] || !TileConfig[selectedTile].isChest)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.chestData && levelManager.currentLevel.chestData[key]) {
                 delete levelManager.currentLevel.chestData[key];
@@ -781,8 +716,8 @@ function handleCanvasMouseDown(e) {
         }
         
         // Si on remplace un panneau, supprimer son message
-        if ((tileType === TileTypes.SIGN || (TileConfig[tileType] && TileConfig[tileType].isSign)) && 
-            selectedTile !== TileTypes.SIGN && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isSign)) {
+        if ((TileConfig[tileType] && TileConfig[tileType].isSign) && 
+            (!TileConfig[selectedTile] || !TileConfig[selectedTile].isSign)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.signData && levelManager.currentLevel.signData[key]) {
                 delete levelManager.currentLevel.signData[key];
@@ -790,8 +725,8 @@ function handleCanvasMouseDown(e) {
         }
         
         // Si on remplace un warp, supprimer sa destination
-        if ((tileType === TileTypes.WARP || (TileConfig[tileType] && TileConfig[tileType].isWarp)) && 
-            selectedTile !== TileTypes.WARP && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isWarp)) {
+        if ((TileConfig[tileType] && TileConfig[tileType].isWarp) && 
+            (!TileConfig[selectedTile] || !TileConfig[selectedTile].isWarp)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.warpData && levelManager.currentLevel.warpData[key]) {
                 delete levelManager.currentLevel.warpData[key];
@@ -821,16 +756,18 @@ function paintTile(e) {
     const x = Math.floor((e.clientX - rect.left) / (rect.width / 16));
     const y = Math.floor((e.clientY - rect.top) / (rect.height / 16));
 
-    // Vérifier que les coordonnées sont dans la grille valide
+    // Vérifier que les coordonnées sont dans la grille valide (grille 16x16 complète)
     if (x >= 0 && x < 16 && y >= 0 && y < 16) {
-        // Empêcher la modification des contours (murs extérieurs)
-        if (x === 0 || x === 15 || y === 0 || y === 15) {
-            return; // Ne rien faire sur les bords
-        }
-        // Si on remplace un coffre, supprimer son contenu associé
+        // Vérifier si la tuile existante a editable: false
         const existingTile = levelManager.getTile(x, y);
-        if ((existingTile === TileTypes.CHEST || (TileConfig[existingTile] && TileConfig[existingTile].isChest)) && 
-            selectedTile !== TileTypes.CHEST && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isChest)) {
+        const existingConfig = TileConfig[existingTile];
+        
+        // Sauvegarder l'état pour l'undo
+        saveUndoState();
+        
+        // Si on remplace un coffre, supprimer son contenu associé
+        if ((existingConfig && existingConfig.isChest) && 
+            (!TileConfig[selectedTile] || !TileConfig[selectedTile].isChest)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.chestData && levelManager.currentLevel.chestData[key]) {
                 delete levelManager.currentLevel.chestData[key];
@@ -838,8 +775,8 @@ function paintTile(e) {
         }
 
         // Si on remplace un panneau, supprimer son message associé
-        if ((existingTile === TileTypes.SIGN || (TileConfig[existingTile] && TileConfig[existingTile].isSign)) && 
-            selectedTile !== TileTypes.SIGN && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isSign)) {
+        if ((TileConfig[existingTile] && TileConfig[existingTile].isSign) && 
+            (!TileConfig[selectedTile] || !TileConfig[selectedTile].isSign)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.signData && levelManager.currentLevel.signData[key]) {
                 delete levelManager.currentLevel.signData[key];
@@ -847,8 +784,8 @@ function paintTile(e) {
         }
 
         // Si on remplace un warp, supprimer sa destination associée
-        if ((existingTile === TileTypes.WARP || (TileConfig[existingTile] && TileConfig[existingTile].isWarp)) && 
-            selectedTile !== TileTypes.WARP && (!TileConfig[selectedTile] || !TileConfig[selectedTile].isWarp)) {
+        if ((TileConfig[existingTile] && TileConfig[existingTile].isWarp) && 
+            (!TileConfig[selectedTile] || !TileConfig[selectedTile].isWarp)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.warpData && levelManager.currentLevel.warpData[key]) {
                 delete levelManager.currentLevel.warpData[key];
@@ -927,19 +864,6 @@ function renderEditor() {
         editorCtx.font = 'bold 24px Arial';
         editorCtx.textAlign = 'center';
         editorCtx.fillText('Cliquez pour placer le joueur', editorCanvas.width / 2, 30);
-    }
-    
-    // Overlay pour les zones non modifiables (contours)
-    if (!isSettingPlayerPos) {
-        editorCtx.fillStyle = 'rgba(255, 0, 0, 0.1)';
-        // Bord haut
-        editorCtx.fillRect(0, 0, 512, 32);
-        // Bord bas
-        editorCtx.fillRect(0, 480, 512, 32);
-        // Bord gauche
-        editorCtx.fillRect(0, 0, 32, 512);
-        // Bord droit
-        editorCtx.fillRect(480, 0, 32, 512);
     }
 }
 

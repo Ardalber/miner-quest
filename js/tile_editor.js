@@ -27,7 +27,15 @@ class PixelCanvas {
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mouseup', () => this.isDrawing = false);
-        this.canvas.addEventListener('mouseleave', () => this.isDrawing = false);
+        this.canvas.addEventListener('mouseleave', () => {
+            this.isDrawing = false;
+            this.draw(); // Redraw sans la preview
+        });
+        this.canvas.addEventListener('mousemove', (e) => {
+            if (!this.isDrawing) {
+                this.drawWithPreview(e);
+            }
+        });
     }
 
     getPixelAt(x, y) {
@@ -46,6 +54,55 @@ class PixelCanvas {
         this.isDrawing = true;
         this.saveHistory();
         this.drawPixel(e);
+    }
+
+    handleMouseMove(e) {
+        if (!this.isDrawing) return;
+        this.drawPixel(e);
+    }
+
+    drawWithPreview(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const pixel = this.getPixelAt(x, y);
+        
+        // Redraw le canvas d'abord
+        this.draw();
+        
+        // Puis afficher la preview si on est sur la grille
+        if (pixel) {
+            const brushSize = this.brushSize || 2;
+            const color = document.getElementById('brush-color').value;
+            
+            // Afficher la zone d'effet avec transparence
+            this.ctx.fillStyle = color;
+            this.ctx.globalAlpha = 0.5;
+            
+            for (let dx = 0; dx < brushSize; dx++) {
+                for (let dy = 0; dy < brushSize; dy++) {
+                    const px = pixel.x + dx;
+                    const py = pixel.y + dy;
+                    
+                    if (px < this.pixelWidth && py < this.pixelHeight) {
+                        const screenX = px * this.scale;
+                        const screenY = py * this.scale;
+                        this.ctx.fillRect(screenX, screenY, this.scale, this.scale);
+                    }
+                }
+            }
+            
+            // Border autour de la zone
+            this.ctx.globalAlpha = 1;
+            this.ctx.strokeStyle = color;
+            this.ctx.lineWidth = 2;
+            const startX = pixel.x * this.scale;
+            const startY = pixel.y * this.scale;
+            const width = Math.min(brushSize, this.pixelWidth - pixel.x) * this.scale;
+            const height = Math.min(brushSize, this.pixelHeight - pixel.y) * this.scale;
+            this.ctx.strokeRect(startX, startY, width, height);
+        }
     }
 
     handleMouseMove(e) {
@@ -156,6 +213,74 @@ class PixelCanvas {
 
         return out;
     }
+
+    loadFromImage(imageFile) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                const img = new Image();
+                
+                img.onload = () => {
+                    // Créer un canvas temporaire pour redimensionner l'image
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = this.pixelWidth;
+                    tempCanvas.height = this.pixelHeight;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    // Dessiner l'image redimensionnée sur le canvas temporaire
+                    tempCtx.drawImage(img, 0, 0, this.pixelWidth, this.pixelHeight);
+                    
+                    // Extraire les pixels de l'image
+                    const imageData = tempCtx.getImageData(0, 0, this.pixelWidth, this.pixelHeight);
+                    const data = imageData.data;
+                    
+                    // Sauvegarder l'état actuel
+                    this.saveHistory();
+                    
+                    // Convertir les pixels en couleurs hex
+                    for (let i = 0; i < this.pixels.length; i++) {
+                        const dataIndex = i * 4;
+                        const r = data[dataIndex];
+                        const g = data[dataIndex + 1];
+                        const b = data[dataIndex + 2];
+                        const a = data[dataIndex + 3];
+                        
+                        // Si le pixel est transparent, utiliser blanc
+                        if (a < 128) {
+                            this.pixels[i] = '#ffffff';
+                        } else {
+                            // Convertir RGB en hex
+                            const hex = '#' + 
+                                r.toString(16).padStart(2, '0') + 
+                                g.toString(16).padStart(2, '0') + 
+                                b.toString(16).padStart(2, '0');
+                            this.pixels[i] = hex;
+                            
+                            // Ajouter la couleur aux récentes
+                            addRecentColor(hex);
+                        }
+                    }
+                    
+                    // Redessiner le canvas
+                    this.draw();
+                    resolve();
+                };
+                
+                img.onerror = () => {
+                    reject(new Error('Erreur lors du chargement de l\'image'));
+                };
+                
+                img.src = e.target.result;
+            };
+            
+            reader.onerror = () => {
+                reject(new Error('Erreur lors de la lecture du fichier'));
+            };
+            
+            reader.readAsDataURL(imageFile);
+        });
+    }
 }
 
 // ========== GESTIONNAIRE DE TUILES ==========
@@ -222,6 +347,8 @@ let pixelCanvas = null;
 let currentEditingTileId = null; // Tuile actuellement en cours d'édition
 const recentColors = new Set(); // Tracker des couleurs récentes
 const MAX_RECENT_COLORS = 8;
+const savedColors = new Set(); // Couleurs sauvegardées par l'utilisateur
+const SAVED_COLORS_KEY = 'tileEditorSavedColors';
 
 // Restaurer les tuiles personnalisées dans TileConfig global au démarrage
 function restoreCustomTilesToConfig() {
@@ -238,6 +365,7 @@ function restoreCustomTilesToConfig() {
                 
                 TileConfig[tileId] = {
                     name: config.name,
+                    color: config.color || config.backgroundColor || '#2a2a2a',
                     backgroundColor: config.backgroundColor,
                     solid: config.solid,
                     minable: config.minable,
@@ -353,6 +481,94 @@ function updateActiveSwatch() {
             swatch.classList.remove('active');
         }
     });
+    document.querySelectorAll('.saved-color-swatch').forEach(swatch => {
+        if (swatch.style.background.toLowerCase() === current.toLowerCase()) {
+            swatch.classList.add('active');
+        } else {
+            swatch.classList.remove('active');
+        }
+    });
+}
+
+// ========== GESTION DES COULEURS SAUVEGARDÉES ==========
+
+// Charger les couleurs sauvegardées depuis localStorage
+function loadSavedColors() {
+    try {
+        const stored = localStorage.getItem(SAVED_COLORS_KEY);
+        if (stored) {
+            const colors = JSON.parse(stored);
+            colors.forEach(c => savedColors.add(c));
+        }
+    } catch (e) {
+        // ignorer
+    }
+}
+
+// Sauvegarder les couleurs sauvegardées dans localStorage
+function saveSavedColors() {
+    try {
+        const colors = Array.from(savedColors);
+        localStorage.setItem(SAVED_COLORS_KEY, JSON.stringify(colors));
+    } catch (e) {
+        // ignorer
+    }
+}
+
+// Ajouter la couleur actuelle aux couleurs sauvegardées
+function saveCurrentColor() {
+    const currentColor = document.getElementById('brush-color').value;
+    
+    if (savedColors.has(currentColor)) {
+        showNotification('⚠️ Cette couleur est déjà sauvegardée');
+        return;
+    }
+    
+    savedColors.add(currentColor);
+    saveSavedColors();
+    renderSavedColors();
+    showNotification(`✅ Couleur ${currentColor} sauvegardée`);
+}
+
+// Afficher les couleurs sauvegardées
+function renderSavedColors() {
+    const container = document.getElementById('saved-colors');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (savedColors.size === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #888; font-size: 12px;">Aucune couleur sauvegardée</p>';
+        return;
+    }
+    
+    Array.from(savedColors).forEach(color => {
+        const swatch = document.createElement('div');
+        swatch.className = 'saved-color-swatch';
+        swatch.style.background = color;
+        swatch.title = color;
+        
+        // Bouton de suppression
+        const removeBtn = document.createElement('span');
+        removeBtn.className = 'remove-color';
+        removeBtn.textContent = '×';
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            savedColors.delete(color);
+            saveSavedColors();
+            renderSavedColors();
+            showNotification(`🗑️ Couleur supprimée`);
+        });
+        
+        swatch.appendChild(removeBtn);
+        swatch.addEventListener('click', () => {
+            document.getElementById('brush-color').value = color;
+            updateActiveSwatch();
+            showNotification(`🎨 Couleur sélectionnée: ${color}`);
+        });
+        container.appendChild(swatch);
+    });
+    updateActiveSwatch();
 }
 
 // ========== INITIALISATION ==========
@@ -365,6 +581,10 @@ function initTileEditor() {
     // Charger les couleurs récentes
     loadRecentColors();
     renderRecentColors();
+    
+    // Charger les couleurs sauvegardées
+    loadSavedColors();
+    renderSavedColors();
     
     // Initialiser le canvas de dessin (scale auto depuis la taille du canvas)
     const canvasEl = document.getElementById('pixel-canvas');
@@ -437,6 +657,27 @@ function setupEventListeners() {
         showNotification('↶ Action annulée');
     });
 
+    // Bouton pour charger une image
+    document.getElementById('btn-load-image').addEventListener('click', () => {
+        document.getElementById('image-upload').click();
+    });
+
+    // Gestionnaire de fichier image
+    document.getElementById('image-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            try {
+                await pixelCanvas.loadFromImage(file);
+                showNotification('✅ Image chargée avec succès!');
+            } catch (error) {
+                console.error('Erreur lors du chargement de l\'image:', error);
+                showNotification('❌ Erreur lors du chargement de l\'image', true);
+            }
+            // Réinitialiser l'input pour permettre de recharger la même image
+            e.target.value = '';
+        }
+    });
+
     // Sélecteur de taille de pinceau (carrés visuels)
     document.querySelectorAll('.brush-size-box').forEach(box => {
         box.addEventListener('click', () => {
@@ -471,9 +712,34 @@ function setupEventListeners() {
         });
     }
 
+    // Bouton pour sauvegarder une couleur
+    const btnSaveColor = document.getElementById('btn-save-color');
+    if (btnSaveColor) {
+        btnSaveColor.addEventListener('click', saveCurrentColor);
+    }
+
     // Tracker les changements de couleur
     document.getElementById('brush-color').addEventListener('change', () => {
         updateActiveSwatch();
+    });
+
+    // Cocher automatiquement Interactive quand on coche Panneau, Coffre ou Warp
+    document.getElementById('tile-is-chest').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('tile-interactive').checked = true;
+        }
+    });
+
+    document.getElementById('tile-is-sign').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('tile-interactive').checked = true;
+        }
+    });
+
+    document.getElementById('tile-is-warp').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('tile-interactive').checked = true;
+        }
     });
 
     // Création de tuile
@@ -574,7 +840,7 @@ function createNewTile(tileData, imageData) {
         minable: tileData.minable,
         resource: tileData.resource,
         durability: tileData.durability,
-        interactive: tileData.interactive || tileData.isChest || tileData.isSign,
+        interactive: tileData.interactive || tileData.isChest || tileData.isSign || tileData.isWarp,
         isChest: tileData.isChest,
         isSign: tileData.isSign,
         isWarp: tileData.isWarp,
@@ -658,7 +924,7 @@ function updateExistingTile(tileId, tileData, imageData) {
         minable: tileData.minable,
         resource: tileData.resource,
         durability: tileData.durability,
-        interactive: tileData.interactive || tileData.isChest || tileData.isSign,
+        interactive: tileData.interactive || tileData.isChest || tileData.isSign || tileData.isWarp,
         isChest: tileData.isChest,
         isSign: tileData.isSign,
         isWarp: tileData.isWarp,

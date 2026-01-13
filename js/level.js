@@ -21,12 +21,7 @@ class LevelManager {
         for (let y = 0; y < this.gridHeight; y++) {
             const row = [];
             for (let x = 0; x < this.gridWidth; x++) {
-                // Bords extérieurs en WALL, intérieur en GRASS
-                if (x === 0 || y === 0 || x === this.gridWidth - 1 || y === this.gridHeight - 1) {
-                    row.push(TileTypes.WALL);
-                } else {
-                    row.push(TileTypes.GRASS);
-                }
+                row.push(0); // EMPTY - Grille complètement éditable
             }
             tiles.push(row);
         }
@@ -45,12 +40,33 @@ class LevelManager {
         };
     }
 
+    // Migrer les tuiles invalides vers EMPTY
+    migrateTiles(level) {
+        if (!level || !level.tiles) return;
+        
+        let migratedCount = 0;
+        for (let y = 0; y < level.height; y++) {
+            for (let x = 0; x < level.width; x++) {
+                const tileType = level.tiles[y][x];
+                // Si la tuile n'existe pas dans TileConfig, la remplacer par EMPTY
+                if (!TileConfig[tileType]) {
+                    level.tiles[y][x] = 0; // EMPTY
+                    migratedCount++;
+                }
+            }
+        }
+        
+        if (migratedCount > 0) {
+            console.log(`🔄 Migration: ${migratedCount} tuiles invalides remplacées par EMPTY`);
+        }
+    }
+
     // Charger un niveau
     loadLevel(levelName) {
         if (this.levels[levelName]) {
             this.currentLevel = JSON.parse(JSON.stringify(this.levels[levelName]));
-            // S'assurer que les bords sont des murs
-            this.ensureBorderWalls(this.currentLevel);
+            // Migrer les tuiles invalides
+            this.migrateTiles(this.currentLevel);
             return this.currentLevel;
         }
         
@@ -61,16 +77,7 @@ class LevelManager {
     }
 
     // Forcer les murs sur le contour
-    ensureBorderWalls(level) {
-        if (!level) return;
-        for (let y = 0; y < level.height; y++) {
-            for (let x = 0; x < level.width; x++) {
-                if (x === 0 || y === 0 || x === this.gridWidth - 1 || y === this.gridHeight - 1) {
-                    level.tiles[y][x] = TileTypes.WALL;
-                }
-            }
-        }
-    }
+
 
     // Nettoyer les données orphelines (panneaux, coffres, warps) sans tuile correspondante
     pruneMetadata(level) {
@@ -91,19 +98,19 @@ class LevelManager {
         const hasSign = pruneMap(level.signData, (x, y, t) => {
             const tileType = t[y] && t[y][x];
             const config = TileConfig[tileType];
-            return tileType === TileTypes.SIGN || (config && config.isSign);
+            return config && config.isSign;
         });
         
         const hasChest = pruneMap(level.chestData, (x, y, t) => {
             const tileType = t[y] && t[y][x];
             const config = TileConfig[tileType];
-            return tileType === TileTypes.CHEST || (config && config.isChest);
+            return config && config.isChest;
         });
         
         const hasWarp = pruneMap(level.warpData, (x, y, t) => {
             const tileType = t[y] && t[y][x];
             const config = TileConfig[tileType];
-            return tileType === TileTypes.WARP || (config && (config.warp || config.isWarp));
+            return config && (config.warp || config.isWarp);
         });
 
         if (!hasSign) level.signData = {};
@@ -121,9 +128,9 @@ class LevelManager {
 
     // Obtenir une tuile à une position
     getTile(x, y) {
-        if (!this.currentLevel) return TileTypes.EMPTY;
+        if (!this.currentLevel) return 0; // EMPTY
         if (x < 0 || x >= this.gridWidth || y < 0 || y >= this.gridHeight) {
-            return TileTypes.WALL; // Hors limite = mur
+            return 0; // EMPTY - Hors limite
         }
         return this.currentLevel.tiles[y][x];
     }
@@ -139,13 +146,13 @@ class LevelManager {
     // Vérifier si une tuile est solide
     isSolid(x, y) {
         const tileType = this.getTile(x, y);
-        return TileConfig[tileType].solid;
+        return TileConfig[tileType] && TileConfig[tileType].solid;
     }
 
     // Vérifier si une tuile est minable
     isMinable(x, y) {
         const tileType = this.getTile(x, y);
-        return TileConfig[tileType].minable;
+        return TileConfig[tileType] && TileConfig[tileType].minable;
     }
 
     // Miner une tuile
@@ -153,18 +160,18 @@ class LevelManager {
         const tileType = this.getTile(x, y);
         const config = TileConfig[tileType];
         
-        if (config.minable) {
+        if (config && config.minable) {
             // Warp: ne pas faire disparaître, juste activer la téléportation côté joueur
-            if (tileType === TileTypes.WARP || config.warp || config.isWarp) {
+            if (config.warp || config.isWarp) {
                 return null;
             }
-            // Autres blocs: les remplacer par de l'herbe et nettoyer les métadonnées
-            this.setTile(x, y, TileTypes.GRASS);
+            // Autres blocs: les remplacer par vide et nettoyer les métadonnées
+            this.setTile(x, y, 0); // EMPTY
             const key = `${x}_${y}`;
-            if ((tileType === TileTypes.CHEST || config.isChest) && this.currentLevel.chestData) {
+            if (config.isChest && this.currentLevel.chestData) {
                 delete this.currentLevel.chestData[key];
             }
-            if ((tileType === TileTypes.SIGN || config.isSign) && this.currentLevel.signData) {
+            if (config.isSign && this.currentLevel.signData) {
                 delete this.currentLevel.signData[key];
             }
             this.commitCurrentLevel();
@@ -182,9 +189,10 @@ class LevelManager {
     // Obtenir le message d'une tuile
     getTileMessage(x, y) {
         const tileType = this.getTile(x, y);
+        const tileConfig = TileConfig[tileType];
         
         // Pour les panneaux, vérifier d'abord s'il y a un message personnalisé
-        if (tileType === TileTypes.SIGN) {
+        if (tileConfig && tileConfig.isSign) {
             if (this.currentLevel && this.currentLevel.signData) {
                 const key = `${x}_${y}`;
                 if (this.currentLevel.signData[key]) {
@@ -193,14 +201,12 @@ class LevelManager {
             }
         }
         
-        return TileConfig[tileType].message || '';
+        return tileConfig?.message || '';
     }
 
     // Vérifier si une tuile est un coffre
     isChest(x, y) {
         const tileType = this.getTile(x, y);
-        if (tileType === TileTypes.CHEST) return true;
-        
         // Vérifier si c'est une tuile personnalisée avec isChest
         const tileConfig = TileConfig[tileType];
         return tileConfig && tileConfig.isChest;
@@ -239,8 +245,6 @@ class LevelManager {
     // Vérifier si une tuile est un warp
     isWarp(x, y) {
         const tileType = this.getTile(x, y);
-        if (tileType === TileTypes.WARP) return true;
-        
         // Vérifier si c'est une tuile personnalisée avec isWarp
         const tileConfig = TileConfig[tileType];
         return tileConfig && (tileConfig.warp || tileConfig.isWarp);
@@ -274,7 +278,10 @@ class LevelManager {
     // Vérifier si une tuile est un panneau
     isSign(x, y) {
         const tileType = this.getTile(x, y);
-        return tileType === TileTypes.SIGN;
+        const tileConfig = TileConfig[tileType];
+        
+        // Vérifier si c'est une tuile personnalisée avec isSign
+        return tileConfig && tileConfig.isSign;
     }
 
     // Définir le message d'un panneau
@@ -329,6 +336,8 @@ class LevelManager {
             if (response.ok) {
                 const data = await response.json();
                 this.levels[levelName] = data;
+                // Migrer les tuiles invalides si nécessaire
+                this.migrateTiles(this.levels[levelName]);
                 console.log(`Niveau ${levelName} chargé depuis fichier`);
                 return true;
             }
@@ -341,6 +350,8 @@ class LevelManager {
             const data = localStorage.getItem(`minerquest_level_${levelName}`);
             if (data) {
                 this.levels[levelName] = JSON.parse(data);
+                // Migrer les tuiles invalides si nécessaire
+                this.migrateTiles(this.levels[levelName]);
                 console.log(`Niveau ${levelName} chargé depuis localStorage`);
                 return true;
             }

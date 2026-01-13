@@ -95,7 +95,19 @@ class Player {
             return;
         }
 
-        // Vérifier si la case est interactive (panneau...)
+        // Vérifier si c'est un panneau
+        if (levelManager.isSign(targetX, targetY)) {
+            this.openSign(targetX, targetY, levelManager);
+            return;
+        }
+
+        // Vérifier si c'est un warp
+        if (levelManager.isWarp(targetX, targetY)) {
+            this.triggerWarp(targetX, targetY, levelManager);
+            return;
+        }
+
+        // Vérifier si la case est interactive (autres éléments interactifs)
         if (levelManager.isInteractive(targetX, targetY)) {
             const message = levelManager.getTileMessage(targetX, targetY);
             if (message) {
@@ -192,6 +204,27 @@ class Player {
         modal.classList.add('show');
     }
 
+    // Ouvrir un panneau (lecture seule)
+    openSign(x, y, levelManager) {
+        const message = levelManager.getTileMessage(x, y);
+        const modal = document.getElementById('modal-sign');
+        const signContent = document.getElementById('sign-content');
+        
+        if (!modal || !signContent) return;
+
+        // Afficher le message du panneau
+        signContent.textContent = message || '(Panneau vide)';
+        modal.classList.add('show');
+    }
+
+    // Déclencher un warp
+    triggerWarp(x, y, levelManager) {
+        const dest = levelManager.getWarpDestination(x, y);
+        if (dest && window.onWarpActivated) {
+            window.onWarpActivated(dest);
+        }
+    }
+
     // Prendre 1 item du coffre
     takeOneItemFromChest(itemIndex, levelManager) {
         const modal = document.getElementById('modal-chest');
@@ -253,12 +286,12 @@ class Player {
                     tileName: tileConfig?.name,
                     tileWarp: tileConfig?.warp,
                     tileIsWarp: tileConfig?.isWarp,
-                    isWarp: this.miningTileType === TileTypes.WARP || (tileConfig && (tileConfig.warp || tileConfig.isWarp)),
+                    isWarp: tileConfig && (tileConfig.warp || tileConfig.isWarp),
                     miningTarget: this.miningTarget,
                     warpDest: levelManager.getWarpDestination(this.miningTarget.x, this.miningTarget.y)
                 });
                 
-                if (this.miningTileType === TileTypes.WARP || (tileConfig && (tileConfig.warp || tileConfig.isWarp))) {
+                if (tileConfig && (tileConfig.warp || tileConfig.isWarp)) {
                     const dest = levelManager.getWarpDestination(this.miningTarget.x, this.miningTarget.y);
                     console.log('🌀 WARP ACTIVATION:', { dest, hasCallback: !!window.onWarpActivated });
                     if (dest && window.onWarpActivated) {

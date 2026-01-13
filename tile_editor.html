@@ -61,6 +61,8 @@
 
                     <div class="tools-buttons">
                         <button id="btn-undo-draw" class="btn-secondary">↶ Annuler</button>
+                        <button id="btn-load-image" class="btn-secondary">🖼️ Importer Image</button>
+                        <input type="file" id="image-upload" accept="image/*" style="display: none;">
                         <button id="btn-new-tile" class="btn-secondary">➕ Nouvelle</button>
                         <button id="btn-add-tile" class="btn-success">💾 Sauvegarder</button>
                     </div>
@@ -68,21 +70,39 @@
 
                 <!-- Canvas de dessin avec palette récente et picker -->
                 <div class="canvas-wrapper">
-                    <div class="recent-colors-sidebar">
-                        <h4>Couleurs récentes</h4>
-                        <div id="recent-colors" class="recent-colors-grid"></div>
-                    </div>
-                    <div class="canvas-container">
-                        <h3>🖼️ Grille de dessin (32x32)</h3>
-                        <canvas id="pixel-canvas" width="512" height="512"></canvas>
-                        <div class="canvas-info">Cliquez pour dessiner (x16 agrandissement)</div>
-                    </div>
-                    <div class="color-picker-sidebar">
-                        <h4>🎨 Palette</h4>
-                        <input type="color" id="brush-color" value="#ffffff">
+                    <div class="colors-columns-wrapper">
+                        <div class="colors-column recent-colors-column">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4>Couleurs récentes</h4>
+                                <button id="btn-clear-recent-colors" class="btn-mini" title="Vider l'historique">✕</button>
+                            </div>
+                            <div id="recent-colors" class="recent-colors-grid"></div>
+                        </div>
                         
-                        <!-- Propriétés -->
-                        <div class="tile-properties">
+                        <div class="colors-column saved-colors-column">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4>Couleurs sauvegardées</h4>
+                            </div>
+                            <div id="saved-colors" class="saved-colors-grid"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="canvas-and-properties-wrapper">
+                        <div class="canvas-container">
+                            <h3>🖼️ Grille de dessin (32x32)</h3>
+                            <canvas id="pixel-canvas" width="512" height="512"></canvas>
+                            <div class="canvas-info">Cliquez pour dessiner (x16 agrandissement)</div>
+                        </div>
+                        
+                        <div class="color-picker-sidebar">
+                            <h4>🎨 Palette</h4>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="color" id="brush-color" value="#ffffff" style="flex: 1;">
+                                <button id="btn-save-color" class="btn-mini" title="Sauvegarder cette couleur">💾</button>
+                            </div>
+                            
+                            <!-- Propriétés -->
+                            <div class="tile-properties">
                             <h3>⚙️ Propriétés</h3>
                             
                             <div class="form-group">
@@ -138,10 +158,9 @@
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
             </div>
-
-            
         </div>
     </div>
 
