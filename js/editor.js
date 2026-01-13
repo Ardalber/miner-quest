@@ -255,6 +255,10 @@ function createTilePalette() {
                 ctx.drawImage(tileImage, 0, 0, 32, 32);
             }
         }
+        // Repeindre l'éditeur si une image se charge après un reload
+        if (typeof renderEditor === 'function') {
+            renderEditor();
+        }
     };
 }
 
@@ -423,6 +427,9 @@ async function saveCurrentLevel() {
             showEditorToast(`✓ Sauvegardé dans ${name}.json`, 'success', 2000);
         }
     }
+
+    // Rafraîchir immédiatement l'affichage pour éviter le canvas blanc après sauvegarde
+    loadEditorLevel(name);
 }
 
 // Tester le niveau
