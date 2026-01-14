@@ -126,13 +126,44 @@
     <!-- Modal d'édition de warp -->
     <div id="modal-edit-warp" class="modal-editor">
         <div class="modal-editor-content">
-            <h2>🌀 Destination du warp</h2>
+            <h2 id="warp-modal-title">🌀 Destination du warp</h2>
             <p style="margin-bottom: 16px; color: #aaa;">Sélectionnez le niveau de destination</p>
             <select id="warp-level-select" style="width: 100%; padding: 10px; background: #3c3c3c; border: 1px solid #3e3e42; color: #cccccc; border-radius: 4px; font-size: 14px;">
             </select>
             <div style="display: flex; gap: 8px; margin-top: 16px;">
                 <button id="btn-save-warp" class="btn-action" style="flex: 1;">Sauvegarder</button>
                 <button id="btn-cancel-warp" class="btn-danger" style="flex: 1;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de création de niveau -->
+    <div id="modal-new-level" class="modal-editor">
+        <div class="modal-editor-content">
+            <h2>✨ Créer un nouveau niveau</h2>
+            
+            <label style="display: block; margin-top: 16px; margin-bottom: 8px; color: #cccccc;">
+                Type de niveau:
+            </label>
+            <select id="new-level-type" style="width: 100%; padding: 10px; background: #3c3c3c; border: 1px solid #3e3e42; color: #cccccc; border-radius: 4px; font-size: 14px; margin-bottom: 16px;">
+                <option value="topdown">Top-Down (Vue du dessus)</option>
+                <option value="platformer">Platformer (Vue de côté)</option>
+            </select>
+            
+            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                <label style="flex: 1;">
+                    Largeur (tuiles):
+                    <input type="number" id="new-level-width" value="16" min="8" max="32" style="width: 100%; padding: 8px; background: #3c3c3c; border: 1px solid #3e3e42; color: #cccccc; border-radius: 4px; margin-top: 4px;">
+                </label>
+                <label style="flex: 1;">
+                    Hauteur (tuiles):
+                    <input type="number" id="new-level-height" value="16" min="8" max="32" style="width: 100%; padding: 8px; background: #3c3c3c; border: 1px solid #3e3e42; color: #cccccc; border-radius: 4px; margin-top: 4px;">
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <button id="btn-create-new-level" class="btn-action" style="flex: 1;">Créer</button>
+                <button id="btn-cancel-new-level" class="btn-danger" style="flex: 1;">Annuler</button>
             </div>
         </div>
     </div>

@@ -81,6 +81,7 @@ const MAX_UNDO = 20;
 let chestItemCounts = { stone: 0, iron: 0, gold: 0 };
 let initialLevelState = null; // Pour détecter les changements
 let levelsFolderHandle = null; // Handle du dossier levels pour l'API File System Access
+let canvasScale = 1; // Scale du canvas pour les calculs de souris
 
 // Initialisation de l'éditeur
 async function initEditor() {
@@ -133,7 +134,45 @@ async function initEditor() {
     editorCanvas.addEventListener('mouseleave', handleCanvasMouseUp);
 
     // Événements des boutons
-    document.getElementById('btn-undo').addEventListener('click', undoLastAction);
+    // Système d'annulation amélioré avec maintien du clic
+    let undoInterval = null;
+    const btnUndo = document.getElementById('btn-undo');
+    
+    btnUndo.addEventListener('mousedown', () => {
+        undoLastAction(); // Première annulation immédiate
+        // Démarrer l'annulation continue après 500ms
+        undoInterval = setTimeout(() => {
+            undoInterval = setInterval(() => {
+                if (undoStack.length > 0) {
+                    undoLastAction();
+                }
+            }, 100); // Annuler toutes les 100ms
+        }, 500);
+    });
+    
+    btnUndo.addEventListener('mouseup', () => {
+        if (undoInterval) {
+            clearTimeout(undoInterval);
+            clearInterval(undoInterval);
+            undoInterval = null;
+        }
+    });
+    
+    btnUndo.addEventListener('mouseleave', () => {
+        if (undoInterval) {
+            clearTimeout(undoInterval);
+            clearInterval(undoInterval);
+            undoInterval = null;
+        }
+    });
+    
+    // Raccourci clavier Ctrl+Z
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'z') {
+            e.preventDefault();
+            undoLastAction();
+        }
+    });
     document.getElementById('btn-new').addEventListener('click', createNewLevel);
     document.getElementById('btn-load').addEventListener('click', loadFromFile);
     document.getElementById('file-input').addEventListener('change', handleFileLoad);
@@ -160,6 +199,10 @@ async function initEditor() {
     // Événements du modal warp
     document.getElementById('btn-save-warp').addEventListener('click', saveWarpDestination);
     document.getElementById('btn-cancel-warp').addEventListener('click', closeWarpModal);
+    
+    // Événements du modal de création de niveau
+    document.getElementById('btn-create-new-level').addEventListener('click', confirmCreateNewLevel);
+    document.getElementById('btn-cancel-new-level').addEventListener('click', closeNewLevelModal);
     
     // Événements des boutons +/-
     document.querySelectorAll('.btn-increment').forEach(btn => {
@@ -301,6 +344,10 @@ function loadEditorLevel(levelName) {
         document.getElementById('start-x').value = levelManager.currentLevel.startX;
         document.getElementById('start-y').value = levelManager.currentLevel.startY;
         
+        // Mettre à jour les limites des inputs selon la taille du niveau
+        document.getElementById('start-x').max = levelManager.currentLevel.width - 1;
+        document.getElementById('start-y').max = levelManager.currentLevel.height - 1;
+        
         // Sauvegarder l'état initial pour détecter les changements
         initialLevelState = JSON.stringify(levelManager.currentLevel);
     }
@@ -326,10 +373,12 @@ function saveUndoState() {
 }
 
 // Annuler la dernière action
-function undoLastAction() {
+function undoLastAction(showToast = true) {
     if (undoStack.length === 0) {
-        showEditorToast('Aucune action à annuler', 'info', 2000);
-        return;
+        if (showToast) {
+            showEditorToast('Aucune action à annuler', 'info', 2000);
+        }
+        return false;
     }
     
     // Récupérer l'état précédent
@@ -337,17 +386,42 @@ function undoLastAction() {
     levelManager.currentLevel = JSON.parse(JSON.stringify(previousState));
     
     renderEditor();
+    return true;
 }
 
 // Créer un nouveau niveau
 function createNewLevel() {
+    // Ouvrir le modal de création de niveau
+    document.getElementById('modal-new-level').classList.add('show');
+}
+
+// Fermer le modal de création de niveau
+function closeNewLevelModal() {
+    document.getElementById('modal-new-level').classList.remove('show');
+}
+
+// Confirmer la création d'un nouveau niveau
+function confirmCreateNewLevel() {
+    const levelType = document.getElementById('new-level-type').value;
+    const width = parseInt(document.getElementById('new-level-width').value);
+    const height = parseInt(document.getElementById('new-level-height').value);
+    
+    // Validation
+    if (width < 8 || width > 32 || height < 8 || height > 32) {
+        showEditorToast('✗ Les dimensions doivent être entre 8 et 32', 'error', 3000);
+        return;
+    }
+    
     const name = 'level_' + (levelManager.getLevelList().length + 1);
-    const level = levelManager.createEmptyLevel(name);
+    const level = levelManager.createEmptyLevel(name, width, height);
+    level.type = levelType; // Ajouter le type de niveau (topdown ou platformer)
+    
     levelManager.saveLevel(name, level);
     currentLevelName = name;
     updateLevelList();
     loadEditorLevel(name);
-    showEditorToast('✓ Nouveau niveau créé: ' + formatLevelName(name), 'success', 2000);
+    closeNewLevelModal();
+    showEditorToast(`✓ Nouveau niveau ${levelType} créé: ${formatLevelName(name)} (${width}x${height})`, 'success', 2000);
 }
 
 // Charger un fichier depuis l'ordinateur
@@ -400,20 +474,17 @@ async function saveCurrentLevel() {
     levelManager.currentLevel.startX = startX;
     levelManager.currentLevel.startY = startY;
 
-    // Vérifier s'il y a des changements
-    const currentState = JSON.stringify(levelManager.currentLevel);
-    if (currentState === initialLevelState && name === currentLevelName) {
-        showEditorToast('ℹ️ Aucun changement à sauvegarder', 'info', 2000);
-        return;
-    }
-
     // Si le nom a changé, supprimer l'ancien et créer le nouveau
     if (name !== currentLevelName) {
         delete levelManager.levels[currentLevelName];
-        currentLevelName = name;
     }
 
     levelManager.saveLevel(name, levelManager.currentLevel);
+    
+    // Mettre à jour currentLevelName AVANT updateLevelList
+    currentLevelName = name;
+    
+    // Mettre à jour la liste pour que la sélection soit correcte
     updateLevelList();
     
     // Mettre à jour l'état initial
@@ -427,15 +498,15 @@ async function saveCurrentLevel() {
             showEditorToast(`✓ Sauvegardé dans ${name}.json`, 'success', 2000);
         }
     }
-
-    // Rafraîchir immédiatement l'affichage pour éviter le canvas blanc après sauvegarde
-    loadEditorLevel(name);
+    
+    // Ne PAS recharger le niveau - l'affichage reste inchangé
 }
 
 // Tester le niveau
-function testLevel() {
-    saveCurrentLevel();
-    window.location.href = 'index.html';
+async function testLevel() {
+    await saveCurrentLevel();
+    // Passer le niveau en cours comme paramètre
+    window.location.href = `index.html?level=${encodeURIComponent(currentLevelName)}`;
 }
 
 
@@ -454,7 +525,7 @@ function togglePlayerPosMode() {
 }
 
 // Supprimer le niveau actuel
-function deleteCurrentLevel() {
+async function deleteCurrentLevel() {
     const levelList = levelManager.getLevelList();
     
     if (levelList.length <= 1) {
@@ -462,22 +533,55 @@ function deleteCurrentLevel() {
         return;
     }
     
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer le niveau "${currentLevelName}" ?\n\nN'oubliez pas de supprimer manuellement le fichier ${currentLevelName}.json du dossier levels/`)) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le niveau "${currentLevelName}" ?`)) {
         return;
     }
     
+    const levelToDelete = currentLevelName;
+    
     // Supprimer du localStorage
-    localStorage.removeItem(`minerquest_level_${currentLevelName}`);
-    delete levelManager.levels[currentLevelName];
+    localStorage.removeItem(`minerquest_level_${levelToDelete}`);
+    delete levelManager.levels[levelToDelete];
     levelManager.saveLevelsToStorage();
     
-    // Charger le premier niveau disponible
+    // Obtenir la nouvelle liste APRÈS suppression
     const remainingLevels = levelManager.getLevelList();
-    if (remainingLevels.length > 0) {
-        updateLevelList();
-        loadEditorLevel(remainingLevels[0]);
-        showEditorToast(`✓ Niveau supprimé. Supprimez ${currentLevelName}.json manuellement`, 'info', 4000);
+    
+    // Tenter de supprimer le fichier du dossier levels
+    let fileDeleted = false;
+    if (!levelsFolderHandle) {
+        // Demander l'accès au dossier si pas encore fait
+        const granted = await requestLevelsFolderAccess();
+        if (granted && levelsFolderHandle) {
+            try {
+                await levelsFolderHandle.removeEntry(`${levelToDelete}.json`);
+                fileDeleted = true;
+            } catch (err) {
+                console.warn('Impossible de supprimer le fichier:', err);
+            }
+        }
+    } else {
+        try {
+            await levelsFolderHandle.removeEntry(`${levelToDelete}.json`);
+            fileDeleted = true;
+        } catch (err) {
+            console.warn('Impossible de supprimer le fichier:', err);
+        }
     }
+    
+    if (fileDeleted) {
+        showEditorToast(`✓ Niveau ${levelToDelete} et fichier JSON supprimés`, 'success', 3000);
+    } else {
+        showEditorToast(`✓ Niveau supprimé de la mémoire (fichier non supprimé)`, 'info', 3000);
+    }
+    
+    // Charger le premier niveau disponible
+    if (remainingLevels.length > 0) {
+        loadEditorLevel(remainingLevels[0]);
+    }
+    
+    // Mettre à jour la liste des niveaux APRÈS le chargement
+    updateLevelList();
 }
 
 let currentEditingChestPos = null;
@@ -603,6 +707,12 @@ function openWarpEditModal(x, y) {
         levelName: levelManager.currentLevel?.name
     });
     
+    // Afficher le niveau actuel dans le titre du modal
+    const modalTitle = document.getElementById('warp-modal-title');
+    if (modalTitle && levelManager.currentLevel) {
+        modalTitle.textContent = `🌀 Destination du warp (Niveau actuel: ${levelManager.currentLevel.name})`;
+    }
+    
     const levelList = levelManager.getLevelList();
     let options = '<option value="">-- Aucune destination --</option>';
     levelList.forEach(levelName => {
@@ -662,11 +772,29 @@ function closeWarpModal() {
 
 // Gestion de la souris sur le canvas
 function handleCanvasMouseDown(e) {
+    if (!levelManager.currentLevel) return;
+    const level = levelManager.currentLevel;
     const rect = editorCanvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / (rect.width / 16));
-    const y = Math.floor((e.clientY - rect.top) / (rect.height / 16));
+    const tileSize = 32;
     
-    if (x >= 0 && x < 16 && y >= 0 && y < 16) {
+    // S'assurer que canvasScale est correct (recalculer si nécessaire)
+    if (canvasScale <= 0 || Math.abs(canvasScale - (editorCanvas.width / rect.width)) > 0.001) {
+        canvasScale = editorCanvas.width / rect.width;
+    }
+    
+    // Calculer les coordonnées en pixels du canvas
+    const canvasX = (e.clientX - rect.left) * canvasScale;
+    const canvasY = (e.clientY - rect.top) * canvasScale;
+    
+    // Convertir en coordonnées de tuiles (arrondir vers le bas)
+    let x = Math.floor(canvasX / tileSize);
+    let y = Math.floor(canvasY / tileSize);
+    
+    // Clipper aux limites du niveau
+    x = Math.max(0, Math.min(x, level.width - 1));
+    y = Math.max(0, Math.min(y, level.height - 1));
+    
+    if (x >= 0 && x < level.width && y >= 0 && y < level.height) {
         // Mode placement de la position du joueur
         if (isSettingPlayerPos) {
             levelManager.currentLevel.startX = x;
@@ -757,14 +885,31 @@ function handleCanvasMouseUp() {
 
 // Peindre une tuile
 function paintTile(e) {
-    if (isSettingPlayerPos) return;
+    if (isSettingPlayerPos || !levelManager.currentLevel) return;
     
+    const level = levelManager.currentLevel;
     const rect = editorCanvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / (rect.width / 16));
-    const y = Math.floor((e.clientY - rect.top) / (rect.height / 16));
+    const tileSize = 32;
+    
+    // S'assurer que canvasScale est correct (recalculer si nécessaire)
+    if (canvasScale <= 0 || Math.abs(canvasScale - (editorCanvas.width / rect.width)) > 0.001) {
+        canvasScale = editorCanvas.width / rect.width;
+    }
+    
+    // Calculer les coordonnées en pixels du canvas
+    const canvasX = (e.clientX - rect.left) * canvasScale;
+    const canvasY = (e.clientY - rect.top) * canvasScale;
+    
+    // Convertir en coordonnées de tuiles (arrondir vers le bas)
+    let x = Math.floor(canvasX / tileSize);
+    let y = Math.floor(canvasY / tileSize);
+    
+    // Clipper aux limites du niveau
+    x = Math.max(0, Math.min(x, level.width - 1));
+    y = Math.max(0, Math.min(y, level.height - 1));
 
-    // Vérifier que les coordonnées sont dans la grille valide (grille 16x16 complète)
-    if (x >= 0 && x < 16 && y >= 0 && y < 16) {
+    // Vérifier que les coordonnées sont dans la grille valide
+    if (x >= 0 && x < level.width && y >= 0 && y < level.height) {
         // Vérifier si la tuile existante a editable: false
         const existingTile = levelManager.getTile(x, y);
         const existingConfig = TileConfig[existingTile];
@@ -808,12 +953,22 @@ function paintTile(e) {
 function renderEditor() {
     if (!levelManager.currentLevel) return;
 
+    const level = levelManager.currentLevel;
+    const tileSize = 32; // Taille fixe de 32x32 pixels
+    
+    // Adapter la taille du canvas à la taille du niveau
+    editorCanvas.width = level.width * tileSize;
+    editorCanvas.height = level.height * tileSize;
+    
+    // Calculer et stocker le scale du canvas (ratio affichage/interne)
+    const rect = editorCanvas.getBoundingClientRect();
+    canvasScale = editorCanvas.width / rect.width;
+
     // Effacer le canvas
     editorCtx.fillStyle = '#1a1a1a';
     editorCtx.fillRect(0, 0, editorCanvas.width, editorCanvas.height);
 
     // Dessiner les tuiles
-    const level = levelManager.currentLevel;
     for (let y = 0; y < level.height; y++) {
         for (let x = 0; x < level.width; x++) {
             const tileType = level.tiles[y][x];
@@ -821,10 +976,10 @@ function renderEditor() {
             
             editorCtx.drawImage(
                 tileImage,
-                x * 32,
-                y * 32,
-                32,
-                32
+                x * tileSize,
+                y * tileSize,
+                tileSize,
+                tileSize
             );
         }
     }
@@ -832,34 +987,34 @@ function renderEditor() {
     // Dessiner la grille
     editorCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     editorCtx.lineWidth = 1;
-    for (let x = 0; x <= 16; x++) {
+    for (let x = 0; x <= level.width; x++) {
         editorCtx.beginPath();
-        editorCtx.moveTo(x * 32, 0);
-        editorCtx.lineTo(x * 32, 512);
+        editorCtx.moveTo(x * tileSize, 0);
+        editorCtx.lineTo(x * tileSize, level.height * tileSize);
         editorCtx.stroke();
     }
-    for (let y = 0; y <= 16; y++) {
+    for (let y = 0; y <= level.height; y++) {
         editorCtx.beginPath();
-        editorCtx.moveTo(0, y * 32);
-        editorCtx.lineTo(512, y * 32);
+        editorCtx.moveTo(0, y * tileSize);
+        editorCtx.lineTo(level.width * tileSize, y * tileSize);
         editorCtx.stroke();
     }
 
     // Dessiner la position de départ du joueur
     if (level.startX !== undefined && level.startY !== undefined) {
         editorCtx.fillStyle = 'rgba(255, 107, 107, 0.5)';
-        editorCtx.fillRect(level.startX * 32, level.startY * 32, 32, 32);
+        editorCtx.fillRect(level.startX * tileSize, level.startY * tileSize, tileSize, tileSize);
         
         editorCtx.strokeStyle = '#ff6b6b';
         editorCtx.lineWidth = 3;
-        editorCtx.strokeRect(level.startX * 32, level.startY * 32, 32, 32);
+        editorCtx.strokeRect(level.startX * tileSize, level.startY * tileSize, tileSize, tileSize);
         
         // Ajouter un icône de joueur
         editorCtx.fillStyle = '#ff6b6b';
         editorCtx.font = 'bold 20px Arial';
         editorCtx.textAlign = 'center';
         editorCtx.textBaseline = 'middle';
-        editorCtx.fillText('👤', level.startX * 32 + 16, level.startY * 32 + 16);
+        editorCtx.fillText('👤', level.startX * tileSize + tileSize/2, level.startY * tileSize + tileSize/2);
     }
     
     // Indicateur de mode placement joueur

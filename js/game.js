@@ -64,13 +64,23 @@ async function init() {
     // Charger les niveaux
     await levelManager.loadLevelsFromStorage();
     
+    // Vérifier si un niveau a été passé en paramètre URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const levelFromURL = urlParams.get('level');
+    
     // Charger le niveau level_1 en priorité, sinon le premier disponible
     const levelList = levelManager.getLevelList();
     if (levelList.length > 0) {
-        const defaultLevel = levelList.includes('level_1') ? 'level_1' : levelList[0];
+        let defaultLevel = levelFromURL && levelList.includes(levelFromURL) ? levelFromURL : null;
+        if (!defaultLevel) {
+            defaultLevel = levelList.includes('level_1') ? 'level_1' : levelList[0];
+        }
         levelManager.loadLevel(defaultLevel);
-        // Positionner le joueur
+        // Adapter la taille du canvas au niveau
         if (levelManager.currentLevel) {
+            const tileSize = 32;
+            canvas.width = levelManager.currentLevel.width * tileSize;
+            canvas.height = levelManager.currentLevel.height * tileSize;
             player.setPosition(
                 levelManager.currentLevel.startX,
                 levelManager.currentLevel.startY
@@ -91,6 +101,10 @@ async function init() {
     window.onWarpActivated = function(targetLevel) {
         levelManager.loadLevel(targetLevel);
         if (levelManager.currentLevel) {
+            // Adapter la taille du canvas au nouveau niveau
+            const tileSize = 32;
+            canvas.width = levelManager.currentLevel.width * tileSize;
+            canvas.height = levelManager.currentLevel.height * tileSize;
             player.setPosition(
                 levelManager.currentLevel.startX,
                 levelManager.currentLevel.startY
@@ -252,25 +266,79 @@ function gameLoop(currentTime) {
 
 // Mise à jour de la logique du jeu
 function update(deltaTime) {
-    // Déplacement du joueur (limiter à une fois toutes les 150ms pour éviter déplacement trop rapide)
-    if (!player.moveDelay || player.moveDelay <= 0) {
-        let moved = false;
-
-        if (keys['z']) {
-            moved = player.move(0, -1, levelManager);
-        } else if (keys['s']) {
-            moved = player.move(0, 1, levelManager);
-        } else if (keys['q']) {
-            moved = player.move(-1, 0, levelManager);
+    const isPlatformer = levelManager.currentLevel?.type === 'platformer';
+    
+    if (isPlatformer) {
+        // Mode platformer : physique et contrôles différents
+        player.applyPlatformerPhysics(deltaTime, levelManager);
+        
+        // Mouvement fluide horizontal avec vélocité continue
+        const isShiftPressed = keys['shift'];
+        const speed = isShiftPressed ? 0.16 : 0.08; // 0.08 ≈ 2.56 cases/sec (≈ 4 avant), 0.16 ≈ 5.12 cases/sec (≈ 8 avant)
+        
+        // Accélération / Décélération de la vélocité horizontale
+        if (keys['q']) {
+            player.velocityX = -speed;
         } else if (keys['d']) {
-            moved = player.move(1, 0, levelManager);
+            player.velocityX = speed;
+        } else {
+            // Décélération graduelle quand aucune touche n'est pressée
+            player.velocityX *= 0.8; // Appliquer une friction
+            if (Math.abs(player.velocityX) < 0.001) {
+                player.velocityX = 0;
+            }
         }
-
-        if (moved) {
-            player.moveDelay = 0.15; // 150ms de délai
+        
+        // Appliquer la vélocité avec vérification de collision
+        if (player.velocityX !== 0) {
+            const newX = player.x + player.velocityX;
+            const footY = Math.floor(player.y);
+            const headY = Math.floor(player.y) - 1;
+            
+            // Vérifier si la nouvelle position est valide
+            if (!levelManager.isSolid(Math.floor(newX), footY) && 
+                !levelManager.isSolid(Math.floor(newX), headY)) {
+                player.x = newX;
+                
+                // Mettre à jour la direction
+                if (player.velocityX > 0) player.direction = 'right';
+                else if (player.velocityX < 0) player.direction = 'left';
+                
+                // Vérifier les warps
+                if (levelManager.isWarp(Math.floor(newX), footY)) {
+                    const targetLevel = levelManager.getWarpDestination(Math.floor(newX), footY);
+                    if (targetLevel && window.onWarpActivated) {
+                        window.onWarpActivated(targetLevel);
+                    }
+                }
+            }
+        }
+        
+        // Saut avec Z
+        if (keys['z']) {
+            player.jump(levelManager);
         }
     } else {
-        player.moveDelay -= deltaTime;
+        // Mode top-down : mouvement dans 4 directions avec délai
+        if (!player.moveDelay || player.moveDelay <= 0) {
+            let moved = false;
+
+            if (keys['z']) {
+                moved = player.move(0, -1, levelManager);
+            } else if (keys['s']) {
+                moved = player.move(0, 1, levelManager);
+            } else if (keys['q']) {
+                moved = player.move(-1, 0, levelManager);
+            } else if (keys['d']) {
+                moved = player.move(1, 0, levelManager);
+            }
+
+            if (moved) {
+                player.moveDelay = 0.15; // 150ms de délai
+            }
+        } else {
+            player.moveDelay -= deltaTime;
+        }
     }
 
     // Mettre à jour l'animation de minage
@@ -287,7 +355,7 @@ function render() {
     drawLevel();
 
     // Dessiner le joueur
-    player.draw(ctx);
+    player.draw(ctx, levelManager);
 }
 
 // Dessiner le niveau
@@ -295,6 +363,13 @@ function drawLevel() {
     if (!levelManager.currentLevel) return;
 
     const level = levelManager.currentLevel;
+    const tileSize = 32; // Taille fixe de 32x32 pixels
+    
+    // S'assurer que le canvas a la bonne taille
+    if (canvas.width !== level.width * tileSize || canvas.height !== level.height * tileSize) {
+        canvas.width = level.width * tileSize;
+        canvas.height = level.height * tileSize;
+    }
     
     for (let y = 0; y < level.height; y++) {
         for (let x = 0; x < level.width; x++) {
@@ -303,10 +378,10 @@ function drawLevel() {
             
             ctx.drawImage(
                 tileImage,
-                x * 32,
-                y * 32,
-                32,
-                32
+                x * tileSize,
+                y * tileSize,
+                tileSize,
+                tileSize
             );
         }
     }

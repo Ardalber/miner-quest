@@ -23,50 +23,159 @@ class Player {
         
         // Direction pour l'animation
         this.direction = 'down'; // up, down, left, right
+        
+        // Proprietés platformer
+        this.velocityY = 0;        this.velocityX = 0; // Vitesse horizontale pour mouvement fluide        this.isJumping = false;
+        this.isGrounded = false;
+        this.jumpSpeed = -0.33; // Vitesse de saut pour 2.2 cases de haut (V = -sqrt(2*g*h))
+        this.gravity = 0.025; // Force de gravité
+        this.height = 1; // Hauteur en tuiles
     }
 
     // Déplacer le joueur
     move(dx, dy, levelManager) {
-        const newX = this.x + dx;
-        const newY = this.y + dy;
-
-        // Mettre à jour la direction TOUJOURS, même si bloqué
-        if (dx > 0) this.direction = 'right';
-        else if (dx < 0) this.direction = 'left';
-        else if (dy > 0) this.direction = 'down';
-        else if (dy < 0) this.direction = 'up';
-
-        // Vérifier si la position est valide
-        if (!levelManager.isSolid(newX, newY)) {
-            this.x = newX;
-            this.y = newY;
+        // Vérifier le type de niveau
+        const isPlatformer = levelManager.currentLevel?.type === 'platformer';
+        
+        if (isPlatformer) {
+            // Mode platformer : seulement mouvement horizontal
+            const newX = this.x + dx;
             
-            // Vérifier si on marche sur un warp
-            if (levelManager.isWarp(newX, newY)) {
-                const targetLevel = levelManager.getWarpDestination(newX, newY);
-                if (targetLevel && window.onWarpActivated) {
-                    window.onWarpActivated(targetLevel);
+            // Mettre à jour la direction
+            if (dx > 0) this.direction = 'right';
+            else if (dx < 0) this.direction = 'left';
+            
+            // Vérifier si la nouvelle position est valide pour les deux tuiles de hauteur
+            const canMove = !levelManager.isSolid(newX, Math.floor(this.y)) && 
+                           !levelManager.isSolid(newX, Math.floor(this.y) - 1);
+            
+            if (canMove) {
+                this.x = newX;
+                
+                // Vérifier si on marche sur un warp
+                if (levelManager.isWarp(newX, Math.floor(this.y))) {
+                    const targetLevel = levelManager.getWarpDestination(newX, Math.floor(this.y));
+                    if (targetLevel && window.onWarpActivated) {
+                        window.onWarpActivated(targetLevel);
+                    }
                 }
+                
+                return true;
             }
-            
-            return true;
+            return false;
+        } else {
+            // Mode top-down : mouvement dans toutes les directions
+            const newX = this.x + dx;
+            const newY = this.y + dy;
+
+            // Mettre à jour la direction TOUJOURS, même si bloqué
+            if (dx > 0) this.direction = 'right';
+            else if (dx < 0) this.direction = 'left';
+            else if (dy > 0) this.direction = 'down';
+            else if (dy < 0) this.direction = 'up';
+
+            // Vérifier si la position est valide
+            if (!levelManager.isSolid(newX, newY)) {
+                this.x = newX;
+                this.y = newY;
+                
+                // Vérifier si on marche sur un warp
+                if (levelManager.isWarp(newX, newY)) {
+                    const targetLevel = levelManager.getWarpDestination(newX, newY);
+                    if (targetLevel && window.onWarpActivated) {
+                        window.onWarpActivated(targetLevel);
+                    }
+                }
+                
+                return true;
+            }
+            return false;
         }
-        return false;
+    }
+    
+    // Sauter (mode platformer uniquement)
+    jump(levelManager) {
+        const isPlatformer = levelManager.currentLevel?.type === 'platformer';
+        if (isPlatformer && this.isGrounded && !this.isJumping) {
+            this.velocityY = this.jumpSpeed;
+            this.isJumping = true;
+            this.isGrounded = false;
+        }
+    }
+    
+    // Appliquer la physique platformer
+    applyPlatformerPhysics(deltaTime, levelManager) {
+        const isPlatformer = levelManager.currentLevel?.type === 'platformer';
+        if (!isPlatformer) return;
+        
+        // Appliquer la gravité
+        this.velocityY += this.gravity;
+        
+        // Limiter la vitesse de chute
+        if (this.velocityY > 1) this.velocityY = 1;
+        
+        // Calculer la nouvelle position Y
+        const newY = this.y + this.velocityY;
+        
+        // Vérifier collision vers le bas (pied du personnage)
+        const footY = Math.floor(newY);
+        const headY = Math.floor(newY) - 1;
+        
+        if (this.velocityY > 0) {
+            // Descente : vérifier collision au sol
+            if (levelManager.isSolid(Math.floor(this.x), footY + 1)) {
+                // Il y a un sol sous les pieds
+                this.y = footY;
+                this.velocityY = 0;
+                this.isGrounded = true;
+                this.isJumping = false;
+            } else {
+                // Pas de sol : continuer à tomber
+                this.y = newY;
+                this.isGrounded = false;
+            }
+        } else if (this.velocityY < 0) {
+            // Montée : vérifier collision avec le plafond
+            if (levelManager.isSolid(Math.floor(this.x), headY - 1)) {
+                // Il y a un plafond
+                this.velocityY = 0;
+                this.y = Math.ceil(this.y);
+            } else {
+                // Pas de plafond : continuer à monter
+                this.y = newY;
+            }
+        }
     }
 
     // Commencer à miner
     startMining(levelManager) {
         if (this.isMining) return;
 
+        const isPlatformer = levelManager.currentLevel?.type === 'platformer';
+        
         // Déterminer la case ciblée selon la direction
-        let targetX = this.x;
-        let targetY = this.y;
+        let targetX = Math.floor(this.x);
+        let targetY = Math.floor(this.y);
 
-        switch (this.direction) {
-            case 'up': targetY--; break;
-            case 'down': targetY++; break;
-            case 'left': targetX--; break;
-            case 'right': targetX++; break;
+        if (isPlatformer) {
+            // En mode platformer : seulement gauche, droite ou bas
+            switch (this.direction) {
+                case 'left': targetX--; break;
+                case 'right': targetX++; break;
+                case 'down': targetY++; break; // Vers le bas
+                default: 
+                    // Par défaut, miner devant selon la direction actuelle
+                    if (this.direction === 'left') targetX--;
+                    else targetX++; // right par défaut
+            }
+        } else {
+            // En mode top-down : toutes les directions
+            switch (this.direction) {
+                case 'up': targetY--; break;
+                case 'down': targetY++; break;
+                case 'left': targetX--; break;
+                case 'right': targetX++; break;
+            }
         }
 
         const tileType = levelManager.getTile(targetX, targetY);
@@ -382,47 +491,72 @@ class Player {
     }
 
     // Dessiner le joueur
-    draw(ctx) {
-        const pixelX = this.x * this.tileSize;
-        const pixelY = this.y * this.tileSize;
+    draw(ctx, levelManager) {
+        const isPlatformer = levelManager?.currentLevel?.type === 'platformer';
+        
+        // Utiliser une taille fixe de 32x32 pixels
+        const tileSize = 32;
+        
+        const pixelX = this.x * tileSize;
+        const pixelY = this.y * tileSize;
 
-        // Corps du joueur (carré avec contour)
+        // Personnage de 1 tuile de haut dans tous les modes
+        const padding = tileSize * 0.1875;
+        const bodySize = tileSize * 0.625;
+        
         ctx.fillStyle = this.color;
-        ctx.fillRect(pixelX + 6, pixelY + 6, 20, 20);
+        ctx.fillRect(pixelX + padding, pixelY + padding, bodySize, bodySize);
         
         ctx.strokeStyle = '#cc5555';
         ctx.lineWidth = 3;
-        ctx.strokeRect(pixelX + 6, pixelY + 6, 20, 20);
+        ctx.strokeRect(pixelX + padding, pixelY + padding, bodySize, bodySize);
 
         // Yeux selon la direction
+        const eyeSize = tileSize * 0.125;
+        const eyeOffsetNear = tileSize * 0.3125;
+        const eyeOffsetFar = tileSize * 0.5625;
+        
         ctx.fillStyle = '#ffffff';
-        if (this.direction === 'right') {
-            ctx.fillRect(pixelX + 18, pixelY + 10, 4, 4);
-            ctx.fillRect(pixelX + 18, pixelY + 18, 4, 4);
-        } else if (this.direction === 'left') {
-            ctx.fillRect(pixelX + 10, pixelY + 10, 4, 4);
-            ctx.fillRect(pixelX + 10, pixelY + 18, 4, 4);
-        } else if (this.direction === 'up') {
-            ctx.fillRect(pixelX + 10, pixelY + 10, 4, 4);
-            ctx.fillRect(pixelX + 18, pixelY + 10, 4, 4);
-        } else { // down
-            ctx.fillRect(pixelX + 10, pixelY + 18, 4, 4);
-            ctx.fillRect(pixelX + 18, pixelY + 18, 4, 4);
+        
+        if (isPlatformer) {
+            // En mode platformer : yeux gauche/droite seulement
+            if (this.direction === 'right' || this.direction === 'down') {
+                ctx.fillRect(pixelX + eyeOffsetFar, pixelY + eyeOffsetNear, eyeSize, eyeSize);
+                ctx.fillRect(pixelX + eyeOffsetFar, pixelY + eyeOffsetFar, eyeSize, eyeSize);
+            } else { // left ou up
+                ctx.fillRect(pixelX + eyeOffsetNear, pixelY + eyeOffsetNear, eyeSize, eyeSize);
+                ctx.fillRect(pixelX + eyeOffsetNear, pixelY + eyeOffsetFar, eyeSize, eyeSize);
+            }
+        } else {
+            // En mode top-down : yeux dans toutes les directions
+            if (this.direction === 'right') {
+                ctx.fillRect(pixelX + eyeOffsetFar, pixelY + eyeOffsetNear, eyeSize, eyeSize);
+                ctx.fillRect(pixelX + eyeOffsetFar, pixelY + eyeOffsetFar, eyeSize, eyeSize);
+            } else if (this.direction === 'left') {
+                ctx.fillRect(pixelX + eyeOffsetNear, pixelY + eyeOffsetNear, eyeSize, eyeSize);
+                ctx.fillRect(pixelX + eyeOffsetNear, pixelY + eyeOffsetFar, eyeSize, eyeSize);
+            } else if (this.direction === 'up') {
+                ctx.fillRect(pixelX + eyeOffsetNear, pixelY + eyeOffsetNear, eyeSize, eyeSize);
+                ctx.fillRect(pixelX + eyeOffsetFar, pixelY + eyeOffsetNear, eyeSize, eyeSize);
+            } else { // down
+                ctx.fillRect(pixelX + eyeOffsetNear, pixelY + eyeOffsetFar, eyeSize, eyeSize);
+                ctx.fillRect(pixelX + eyeOffsetFar, pixelY + eyeOffsetFar, eyeSize, eyeSize);
+            }
         }
 
         // Dessiner la pioche si en train de miner
         if (this.isMining) {
-            this.drawPickaxe(ctx, pixelX, pixelY);
+            this.drawPickaxe(ctx, pixelX, pixelY, tileSize);
         }
     }
 
     // Dessiner l'animation de la pioche
-    drawPickaxe(ctx, pixelX, pixelY) {
+    drawPickaxe(ctx, pixelX, pixelY, tileSize) {
         ctx.save();
 
         // Position de départ de la pioche selon la direction
-        let startX = pixelX + 16;
-        let startY = pixelY + 16;
+        let startX = pixelX + tileSize / 2;
+        let startY = pixelY + tileSize / 2;
         let angleOffset = 0;
 
         switch (this.direction) {
@@ -431,7 +565,7 @@ class Player {
                 angleOffset = -90;
                 break;
             case 'down':
-                startY = pixelY + 32;
+                startY = pixelY + tileSize;
                 angleOffset = 90;
                 break;
             case 'left':
@@ -439,7 +573,7 @@ class Player {
                 angleOffset = 180;
                 break;
             case 'right':
-                startX = pixelX + 32;
+                startX = pixelX + tileSize;
                 angleOffset = 0;
                 break;
         }
@@ -448,19 +582,21 @@ class Player {
         ctx.rotate((angleOffset + this.pickaxeAngle) * Math.PI / 180);
 
         // Manche de la pioche
+        const handleLength = tileSize * 0.75;
         ctx.strokeStyle = '#8B4513';
         ctx.lineWidth = 4;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(24, 0);
+        ctx.lineTo(handleLength, 0);
         ctx.stroke();
 
         // Tête de la pioche
+        const headSize = tileSize * 0.25;
         ctx.fillStyle = '#A9A9A9';
         ctx.beginPath();
-        ctx.moveTo(24, -4);
-        ctx.lineTo(32, 0);
-        ctx.lineTo(24, 4);
+        ctx.moveTo(handleLength, -headSize * 0.5);
+        ctx.lineTo(handleLength + headSize, 0);
+        ctx.lineTo(handleLength, headSize * 0.5);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();

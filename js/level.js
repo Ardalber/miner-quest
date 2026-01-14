@@ -16,11 +16,14 @@ class LevelManager {
     }
 
     // Créer un niveau vide
-    createEmptyLevel(name = 'level_1') {
+    createEmptyLevel(name = 'level_1', width = null, height = null) {
+        const gridWidth = width || this.gridWidth;
+        const gridHeight = height || this.gridHeight;
+        
         const tiles = [];
-        for (let y = 0; y < this.gridHeight; y++) {
+        for (let y = 0; y < gridHeight; y++) {
             const row = [];
-            for (let x = 0; x < this.gridWidth; x++) {
+            for (let x = 0; x < gridWidth; x++) {
                 row.push(0); // EMPTY - Grille complètement éditable
             }
             tiles.push(row);
@@ -28,12 +31,13 @@ class LevelManager {
 
         return {
             name: name,
-            width: this.gridWidth,
-            height: this.gridHeight,
-            startX: 8,
-            startY: 8,
+            width: gridWidth,
+            height: gridHeight,
+            startX: Math.floor(gridWidth / 2),
+            startY: Math.floor(gridHeight / 2),
             exits: [],
             tiles: tiles,
+            type: 'topdown', // Type par défaut
             chestData: {}, // Stocke le contenu des coffres {"x_y": {items: [...]}}
             signData: {}, // Stocke les messages des panneaux {"x_y": "message"}
             warpData: {} // Stocke les destinations des warps {"x_y": "level_name"}
@@ -67,6 +71,11 @@ class LevelManager {
             this.currentLevel = JSON.parse(JSON.stringify(this.levels[levelName]));
             // Migrer les tuiles invalides
             this.migrateTiles(this.currentLevel);
+            // Migrer le type de niveau (par défaut topdown pour les anciens niveaux)
+            if (!this.currentLevel.type) {
+                this.currentLevel.type = 'topdown';
+                console.log(`🔄 Migration: type 'topdown' ajouté au niveau ${levelName}`);
+            }
             return this.currentLevel;
         }
         
@@ -129,7 +138,7 @@ class LevelManager {
     // Obtenir une tuile à une position
     getTile(x, y) {
         if (!this.currentLevel) return 0; // EMPTY
-        if (x < 0 || x >= this.gridWidth || y < 0 || y >= this.gridHeight) {
+        if (x < 0 || x >= this.currentLevel.width || y < 0 || y >= this.currentLevel.height) {
             return 0; // EMPTY - Hors limite
         }
         return this.currentLevel.tiles[y][x];
@@ -138,7 +147,7 @@ class LevelManager {
     // Définir une tuile à une position
     setTile(x, y, tileType) {
         if (!this.currentLevel) return;
-        if (x < 0 || x >= this.gridWidth || y < 0 || y >= this.gridHeight) return;
+        if (x < 0 || x >= this.currentLevel.width || y < 0 || y >= this.currentLevel.height) return;
         this.currentLevel.tiles[y][x] = tileType;
         this.commitCurrentLevel();
     }
