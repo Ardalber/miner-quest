@@ -4,6 +4,7 @@ let player;
 let lastTime = 0;
 let keys = {};
 let playerName = '';
+let isTestingMode = false;
 
 // Afficher le modal de prénom au démarrage
 function showNameModal() {
@@ -11,11 +12,21 @@ function showNameModal() {
     const input = document.getElementById('player-name-input');
     const btnStart = document.getElementById('btn-start-game');
     
+    // Vérifier si on est en mode test
+    const urlParams = new URLSearchParams(window.location.search);
+    const testMode = urlParams.get('test');
+    
     if (modal && input && btnStart) {
         // Vérifier si un nom est déjà sauvegardé
         const savedName = localStorage.getItem('minerquest_player_name');
         if (savedName) {
             playerName = savedName;
+            modal.style.display = 'none';
+            init();
+        } else if (testMode) {
+            // Mode test : utiliser un nom par défaut temporaire
+            playerName = 'Testeur';
+            localStorage.setItem('minerquest_player_name', playerName);
             modal.style.display = 'none';
             init();
         } else {
@@ -55,7 +66,15 @@ async function init() {
 
     // Restaurer les tuiles personnalisées dans TileConfig (si pas déjà fait)
     if (typeof restoreCustomTilesToConfig === 'function') {
+        console.log('📦 Before restoreCustomTilesToConfig - TileConfig keys:', Object.keys(TileConfig).filter(k => !isNaN(k)).sort((a,b) => a-b).join(','));
         restoreCustomTilesToConfig();
+        console.log('📦 After restoreCustomTilesToConfig - TileConfig keys:', Object.keys(TileConfig).filter(k => !isNaN(k)).sort((a,b) => a-b).join(','));
+        // Log les propriétés minable de toutes les tuiles
+        const minableTiles = Object.keys(TileConfig)
+            .filter(k => !isNaN(k) && TileConfig[k].minable)
+            .map(k => `${k}(${TileConfig[k].name})`)
+            .join(', ');
+        console.log('✅ Minable tiles in TileConfig:', minableTiles || 'none');
     }
 
     // Créer le joueur
@@ -64,9 +83,20 @@ async function init() {
     // Charger les niveaux
     await levelManager.loadLevelsFromStorage();
     
-    // Vérifier si un niveau a été passé en paramètre URL
+    // Vérifier si un niveau a été passé en paramètre URL et si on est en mode test
     const urlParams = new URLSearchParams(window.location.search);
     const levelFromURL = urlParams.get('level');
+    const testMode = urlParams.get('test');
+    isTestingMode = testMode === '1';
+    
+    // Afficher une notification et le badge si on est en mode test
+    if (isTestingMode) {
+        const testBadge = document.getElementById('test-badge');
+        if (testBadge) {
+            testBadge.style.display = 'block';
+        }
+        showToast('🧪 Mode test - Appuyez sur ESC pour revenir à l\'éditeur', 'info', 5000);
+    }
     
     // Charger le niveau level_1 en priorité, sinon le premier disponible
     const levelList = levelManager.getLevelList();
@@ -76,6 +106,14 @@ async function init() {
             defaultLevel = levelList.includes('level_1') ? 'level_1' : levelList[0];
         }
         levelManager.loadLevel(defaultLevel);
+        console.log('🎮 Level Loaded:', defaultLevel);
+        console.log('📊 Level Data:', {
+            width: levelManager.currentLevel?.width,
+            height: levelManager.currentLevel?.height,
+            tilesLength: levelManager.currentLevel?.tiles?.length,
+            backgroundTilesLength: levelManager.currentLevel?.backgroundTiles?.length,
+            backgroundTilesSample: levelManager.currentLevel?.backgroundTiles?.slice(0, 3)
+        });
         // Adapter la taille du canvas au niveau
         if (levelManager.currentLevel) {
             const tileSize = 32;
@@ -242,6 +280,12 @@ function handleKeyDown(e) {
     if (e.key === ' ') {
         player.startMining(levelManager);
     }
+    
+    // Touche Échap en mode test pour retourner à l'éditeur
+    if (e.key === 'Escape' && isTestingMode) {
+        e.preventDefault();
+        window.location.href = 'editor.html';
+    }
 }
 
 // Gestion des touches relâchées
@@ -371,18 +415,39 @@ function drawLevel() {
         canvas.height = level.height * tileSize;
     }
     
+    // Dessiner d'abord la couche AVANT-PLAN (tiles) en dessous - PLEINE OPACITÉ
     for (let y = 0; y < level.height; y++) {
         for (let x = 0; x < level.width; x++) {
             const tileType = level.tiles[y][x];
-            const tileImage = tileRenderer.getTile(tileType);
-            
-            ctx.drawImage(
-                tileImage,
-                x * tileSize,
-                y * tileSize,
-                tileSize,
-                tileSize
-            );
+            if (tileType !== 0) { // Ne dessiner que si ce n'est pas EMPTY
+                const tileImage = tileRenderer.getTile(tileType);
+                ctx.drawImage(
+                    tileImage,
+                    x * tileSize,
+                    y * tileSize,
+                    tileSize,
+                    tileSize
+                );
+            }
+        }
+    }
+    
+    // Dessiner ensuite l'ARRIÈRE-PLAN (backgroundTiles) PAR-DESSUS - PLEINE OPACITÉ
+    if (level.backgroundTiles) {
+        for (let y = 0; y < level.height; y++) {
+            for (let x = 0; x < level.width; x++) {
+                const bgTileType = level.backgroundTiles[y][x];
+                if (bgTileType !== 0) { // Ne dessiner que si ce n'est pas EMPTY
+                    const bgTileImage = tileRenderer.getTile(bgTileType);
+                    ctx.drawImage(
+                        bgTileImage,
+                        x * tileSize,
+                        y * tileSize,
+                        tileSize,
+                        tileSize
+                    );
+                }
+            }
         }
     }
 }

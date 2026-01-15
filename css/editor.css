@@ -134,6 +134,36 @@ body {
     letter-spacing: 0.5px;
 }
 
+/* Sélecteur de couche */
+.layer-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.layer-btn {
+    flex: 1;
+    padding: 10px;
+    background: #2d2d30;
+    color: #cccccc;
+    border: 2px solid #3e3e42;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.layer-btn:hover {
+    border-color: #007acc;
+    background: #37373d;
+}
+
+.layer-btn.active {
+    background: #0e639c;
+    color: white;
+    border-color: #007acc;
+}
+
 .tile-palette {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

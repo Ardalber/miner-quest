@@ -82,6 +82,7 @@ let chestItemCounts = { stone: 0, iron: 0, gold: 0 };
 let initialLevelState = null; // Pour détecter les changements
 let levelsFolderHandle = null; // Handle du dossier levels pour l'API File System Access
 let canvasScale = 1; // Scale du canvas pour les calculs de souris
+let currentLayer = 'foreground'; // 'foreground' ou 'background'
 
 // Initialisation de l'éditeur
 async function initEditor() {
@@ -177,6 +178,25 @@ async function initEditor() {
     document.getElementById('btn-load').addEventListener('click', loadFromFile);
     document.getElementById('file-input').addEventListener('change', handleFileLoad);
     document.getElementById('btn-save').addEventListener('click', saveCurrentLevel);
+    
+    // Boutons de sélection de couche
+    document.getElementById('btn-layer-foreground').addEventListener('click', () => {
+        currentLayer = 'foreground';
+        document.getElementById('btn-layer-foreground').classList.add('active');
+        document.getElementById('btn-layer-background').classList.remove('active');
+        document.getElementById('layer-indicator').textContent = 'Couche active: Dessous (sera caché par le dessus)';
+        showEditorToast('Mode: Dessous - Placez ce qui sera caché (minerais, coffres...)', 'info', 2500);
+        renderEditor(); // Rerender pour appliquer les effets visuels
+    });
+    
+    document.getElementById('btn-layer-background').addEventListener('click', () => {
+        currentLayer = 'background';
+        document.getElementById('btn-layer-background').classList.add('active');
+        document.getElementById('btn-layer-foreground').classList.remove('active');
+        document.getElementById('layer-indicator').textContent = 'Couche active: Dessus (visible et minable)';
+        showEditorToast('Mode: Dessus - Placez ce qui sera visible (herbe, terre...)', 'info', 2500);
+        renderEditor(); // Rerender pour appliquer les effets visuels
+    });
     document.getElementById('btn-test').addEventListener('click', testLevel);
     document.getElementById('btn-set-player-pos').addEventListener('click', togglePlayerPosMode);
     document.getElementById('btn-delete-level').addEventListener('click', deleteCurrentLevel);
@@ -504,9 +524,20 @@ async function saveCurrentLevel() {
 
 // Tester le niveau
 async function testLevel() {
-    await saveCurrentLevel();
-    // Passer le niveau en cours comme paramètre
-    window.location.href = `index.html?level=${encodeURIComponent(currentLevelName)}`;
+    try {
+        // Sauvegarder le niveau actuel
+        await saveCurrentLevel();
+        showEditorToast(`✓ Niveau "${currentLevelName}" sauvegardé - Lancement du test...`, 'success', 1500);
+        
+        // Attendre un peu avant de rediriger
+        setTimeout(() => {
+            // Passer le niveau en cours comme paramètre et le mode test
+            window.location.href = `index.html?level=${encodeURIComponent(currentLevelName)}&test=1`;
+        }, 500);
+    } catch (err) {
+        console.error('Erreur lors du test du niveau:', err);
+        showEditorToast('✗ Erreur lors de la sauvegarde du niveau', 'error', 3000);
+    }
 }
 
 
@@ -806,10 +837,13 @@ function handleCanvasMouseDown(e) {
             return;
         }
         
-        const tileType = levelManager.getTile(x, y);
+        // Vérifier la tuile existante SELON LA COUCHE ACTIVE
+        const tileType = currentLayer === 'background' 
+            ? levelManager.getBackgroundTile(x, y) 
+            : levelManager.getTile(x, y);
         
-        // Vérifier si on clique sur un coffre déjà placé
-        if (TileConfig[tileType] && TileConfig[tileType].isChest) {
+        // Vérifier si on clique sur un coffre déjà placé (seulement sur couche Dessous)
+        if (currentLayer === 'foreground' && TileConfig[tileType] && TileConfig[tileType].isChest) {
             // Si la tuile sélectionnée est aussi un coffre, ouvrir le modal d'édition
             console.log('Coffre détecté:', { tileType, selectedTile, 
                 tileConfig: TileConfig[tileType], 
@@ -821,8 +855,8 @@ function handleCanvasMouseDown(e) {
             // Sinon, on remplace le coffre (suppression du contenu)
         }
         
-        // Vérifier si on clique sur un panneau déjà placé
-        if (TileConfig[tileType] && TileConfig[tileType].isSign) {
+        // Vérifier si on clique sur un panneau déjà placé (seulement sur couche Dessous)
+        if (currentLayer === 'foreground' && TileConfig[tileType] && TileConfig[tileType].isSign) {
             // Si la tuile sélectionnée est aussi un panneau, ouvrir le modal d'édition
             if (TileConfig[selectedTile] && TileConfig[selectedTile].isSign) {
                 openSignEditModal(x, y);
@@ -831,8 +865,8 @@ function handleCanvasMouseDown(e) {
             // Sinon, on remplace le panneau (suppression du message)
         }
         
-        // Vérifier si on clique sur un warp déjà placé
-        if (TileConfig[tileType] && TileConfig[tileType].isWarp) {
+        // Vérifier si on clique sur un warp déjà placé (seulement sur couche Dessous)
+        if (currentLayer === 'foreground' && TileConfig[tileType] && TileConfig[tileType].isWarp) {
             // Toujours ouvrir le modal de warp, peu importe la tuile sélectionnée
             openWarpEditModal(x, y);
             return;
@@ -841,8 +875,8 @@ function handleCanvasMouseDown(e) {
         
         saveUndoState();
         
-        // Si on remplace un coffre, supprimer son contenu
-        if ((TileConfig[tileType] && TileConfig[tileType].isChest) && 
+        // Si on remplace un coffre, supprimer son contenu (seulement sur couche Dessous)
+        if (currentLayer === 'foreground' && (TileConfig[tileType] && TileConfig[tileType].isChest) && 
             (!TileConfig[selectedTile] || !TileConfig[selectedTile].isChest)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.chestData && levelManager.currentLevel.chestData[key]) {
@@ -850,8 +884,8 @@ function handleCanvasMouseDown(e) {
             }
         }
         
-        // Si on remplace un panneau, supprimer son message
-        if ((TileConfig[tileType] && TileConfig[tileType].isSign) && 
+        // Si on remplace un panneau, supprimer son message (seulement sur couche Dessous)
+        if (currentLayer === 'foreground' && (TileConfig[tileType] && TileConfig[tileType].isSign) && 
             (!TileConfig[selectedTile] || !TileConfig[selectedTile].isSign)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.signData && levelManager.currentLevel.signData[key]) {
@@ -859,8 +893,8 @@ function handleCanvasMouseDown(e) {
             }
         }
         
-        // Si on remplace un warp, supprimer sa destination
-        if ((TileConfig[tileType] && TileConfig[tileType].isWarp) && 
+        // Si on remplace un warp, supprimer sa destination (seulement sur couche Dessous)
+        if (currentLayer === 'foreground' && (TileConfig[tileType] && TileConfig[tileType].isWarp) && 
             (!TileConfig[selectedTile] || !TileConfig[selectedTile].isWarp)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.warpData && levelManager.currentLevel.warpData[key]) {
@@ -910,15 +944,17 @@ function paintTile(e) {
 
     // Vérifier que les coordonnées sont dans la grille valide
     if (x >= 0 && x < level.width && y >= 0 && y < level.height) {
-        // Vérifier si la tuile existante a editable: false
-        const existingTile = levelManager.getTile(x, y);
+        // Vérifier la tuile existante SELON LA COUCHE ACTIVE
+        const existingTile = currentLayer === 'background' 
+            ? levelManager.getBackgroundTile(x, y) 
+            : levelManager.getTile(x, y);
         const existingConfig = TileConfig[existingTile];
         
         // Sauvegarder l'état pour l'undo
         saveUndoState();
         
-        // Si on remplace un coffre, supprimer son contenu associé
-        if ((existingConfig && existingConfig.isChest) && 
+        // Si on remplace un coffre, supprimer son contenu associé (seulement sur la couche Dessous)
+        if (currentLayer === 'foreground' && (existingConfig && existingConfig.isChest) && 
             (!TileConfig[selectedTile] || !TileConfig[selectedTile].isChest)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.chestData && levelManager.currentLevel.chestData[key]) {
@@ -926,8 +962,8 @@ function paintTile(e) {
             }
         }
 
-        // Si on remplace un panneau, supprimer son message associé
-        if ((TileConfig[existingTile] && TileConfig[existingTile].isSign) && 
+        // Si on remplace un panneau, supprimer son message associé (seulement sur la couche Dessous)
+        if (currentLayer === 'foreground' && (TileConfig[existingTile] && TileConfig[existingTile].isSign) && 
             (!TileConfig[selectedTile] || !TileConfig[selectedTile].isSign)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.signData && levelManager.currentLevel.signData[key]) {
@@ -935,8 +971,8 @@ function paintTile(e) {
             }
         }
 
-        // Si on remplace un warp, supprimer sa destination associée
-        if ((TileConfig[existingTile] && TileConfig[existingTile].isWarp) && 
+        // Si on remplace un warp, supprimer sa destination associée (seulement sur la couche Dessous)
+        if (currentLayer === 'foreground' && (TileConfig[existingTile] && TileConfig[existingTile].isWarp) && 
             (!TileConfig[selectedTile] || !TileConfig[selectedTile].isWarp)) {
             const key = `${x}_${y}`;
             if (levelManager.currentLevel.warpData && levelManager.currentLevel.warpData[key]) {
@@ -944,7 +980,12 @@ function paintTile(e) {
             }
         }
 
-        levelManager.setTile(x, y, selectedTile);
+        // Placer la tuile sur la couche appropriée
+        if (currentLayer === 'background') {
+            levelManager.setBackgroundTile(x, y, selectedTile);
+        } else {
+            levelManager.setTile(x, y, selectedTile);
+        }
         renderEditor();
     }
 }
@@ -968,19 +1009,52 @@ function renderEditor() {
     editorCtx.fillStyle = '#1a1a1a';
     editorCtx.fillRect(0, 0, editorCanvas.width, editorCanvas.height);
 
-    // Dessiner les tuiles
+    // Dessiner d'abord l'AVANT-PLAN (tiles) en dessous
     for (let y = 0; y < level.height; y++) {
         for (let x = 0; x < level.width; x++) {
             const tileType = level.tiles[y][x];
-            const tileImage = tileRenderer.getTile(tileType);
             
-            editorCtx.drawImage(
-                tileImage,
-                x * tileSize,
-                y * tileSize,
-                tileSize,
-                tileSize
-            );
+            if (tileType !== 0) { // Ne dessiner que si ce n'est pas EMPTY
+                const tileImage = tileRenderer.getTile(tileType);
+                
+                // Si on est en mode arrière-plan, atténuer l'avant-plan pour mieux voir où placer
+                if (currentLayer === 'background') {
+                    editorCtx.globalAlpha = 0.3;
+                }
+                
+                editorCtx.drawImage(
+                    tileImage,
+                    x * tileSize,
+                    y * tileSize,
+                    tileSize,
+                    tileSize
+                );
+                editorCtx.globalAlpha = 1.0; // Restaurer l'opacité
+            }
+        }
+    }
+
+    // Dessiner ensuite l'ARRIÈRE-PLAN (backgroundTiles) PAR-DESSUS
+    if (level.backgroundTiles) {
+        for (let y = 0; y < level.height; y++) {
+            for (let x = 0; x < level.width; x++) {
+                const bgTileType = level.backgroundTiles[y][x];
+                if (bgTileType !== 0) { // Ne dessiner que si ce n'est pas EMPTY
+                    const bgTileImage = tileRenderer.getTile(bgTileType);
+                    // Si on est en mode avant-plan, atténuer l'arrière-plan pour voir ce qu'il y a dessous
+                    if (currentLayer === 'foreground') {
+                        editorCtx.globalAlpha = 0.4;
+                    }
+                    editorCtx.drawImage(
+                        bgTileImage,
+                        x * tileSize,
+                        y * tileSize,
+                        tileSize,
+                        tileSize
+                    );
+                    editorCtx.globalAlpha = 1.0;
+                }
+            }
         }
     }
 

@@ -28,12 +28,23 @@
         <div class="editor-content">
             <div class="sidebar sidebar-left">
                 <h3>Palette de Tuiles</h3>
+                <div class="layer-selector">
+                    <button id="btn-layer-foreground" class="layer-btn active">� Dessous (caché)</button>
+                    <button id="btn-layer-background" class="layer-btn">🌿 Dessus (visible)</button>
+                </div>
+                <p style="font-size: 11px; color: #888; margin-bottom: 12px;">
+                    💡 Astuce: Le dessus cache le dessous. Minez le dessus pour révéler le dessous!
+                </p>
                 <div id="tile-palette" class="tile-palette"></div>
             </div>
 
             <div class="editor-main">
                 <canvas id="editorCanvas" width="512" height="512"></canvas>
-                <p class="editor-info">Cliquez sur une tuile dans la palette, puis sur la grille pour placer</p>
+                <p class="editor-info">
+                    Cliquez sur une tuile dans la palette, puis sur la grille pour placer
+                    <br>
+                    <span id="layer-indicator" style="color: #667eea; font-weight: bold;">Couche active: Dessous (sera caché par le dessus)</span>
+                </p>
             </div>
 
             <div class="sidebar sidebar-right">

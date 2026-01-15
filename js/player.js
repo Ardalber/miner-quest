@@ -13,6 +13,7 @@ class Player {
         this.pickaxeAngle = 0;
         this.miningHits = 0; // Nombre de coups donnés
         this.requiredHits = 1; // Nombre de coups nécessaires
+        this.miningLayer = 'foreground'; // Quelle couche on est en train de miner ('foreground' ou 'background')
         
         // Inventaire
         this.inventory = {
@@ -178,45 +179,76 @@ class Player {
             }
         }
 
+        // PRIORITÉ 1: Vérifier la couche DESSUS (backgroundTiles) - VISIBLE ET MINABLE
+        const bgTileType = levelManager.getBackgroundTile(targetX, targetY);
+        const bgTileConfig = TileConfig[bgTileType];
+        
+        console.log('🔍 START MINING - Background Layer Check:', {
+            targetX, targetY,
+            bgTileType,
+            bgTileConfigExists: !!bgTileConfig,
+            bgTileConfigName: bgTileConfig?.name,
+            bgTileConfigMinable: bgTileConfig?.minable,
+            TileConfigKeys: Object.keys(TileConfig).filter(k => !isNaN(k)).sort((a,b) => a-b).join(',')
+        });
+        
+        // Si la couche Dessus est mineable, on l'utilise
+        if (bgTileConfig && bgTileConfig.minable && bgTileType !== 0) {
+            const durability = bgTileConfig.durability || 1;
+            
+            console.log('✅ Mining Background Layer!', {
+                bgTileType,
+                bgTileName: bgTileConfig.name,
+                durability
+            });
+            
+            this.isMining = true;
+            this.miningProgress = 0;
+            this.miningTarget = { x: targetX, y: targetY };
+            this.pickaxeAngle = 0;
+            this.miningHits = 0;
+            this.requiredHits = durability;
+            this.miningTileType = bgTileType;
+            this.miningLayer = 'background'; // Mémoriser quelle couche on mine
+            return;
+        }
+        
+        // PRIORITÉ 2: Sinon, vérifier la couche DESSOUS (tiles - foreground)
         const tileType = levelManager.getTile(targetX, targetY);
         const tileConfig = TileConfig[tileType];
         
         // DEBUG: Log pour comprendre ce qui se passe
-        console.log('🔍 DEBUG Warp:', {
+        console.log('🔍 DEBUG Mining:', {
             targetPos: { x: targetX, y: targetY },
+            bgTileType: bgTileType,
+            bgTileName: bgTileConfig?.name,
             tileType: tileType,
             tileName: tileConfig?.name,
             isChest: levelManager.isChest(targetX, targetY),
             isInteractive: levelManager.isInteractive(targetX, targetY),
             isMinable: levelManager.isMinable(targetX, targetY),
-            isWarp: levelManager.isWarp(targetX, targetY),
-            tileConfig: {
-                interactive: tileConfig?.interactive,
-                minable: tileConfig?.minable,
-                isWarp: tileConfig?.isWarp,
-                warp: tileConfig?.warp
-            }
+            isWarp: levelManager.isWarp(targetX, targetY)
         });
 
-        // Vérifier si c'est un coffre
+        // Vérifier si c'est un coffre (couche Dessous)
         if (levelManager.isChest(targetX, targetY)) {
             this.openChest(targetX, targetY, levelManager);
             return;
         }
 
-        // Vérifier si c'est un panneau
+        // Vérifier si c'est un panneau (couche Dessous)
         if (levelManager.isSign(targetX, targetY)) {
             this.openSign(targetX, targetY, levelManager);
             return;
         }
 
-        // Vérifier si c'est un warp
+        // Vérifier si c'est un warp (couche Dessous)
         if (levelManager.isWarp(targetX, targetY)) {
             this.triggerWarp(targetX, targetY, levelManager);
             return;
         }
 
-        // Vérifier si la case est interactive (autres éléments interactifs)
+        // Vérifier si la case est interactive (couche Dessous)
         if (levelManager.isInteractive(targetX, targetY)) {
             const message = levelManager.getTileMessage(targetX, targetY);
             if (message) {
@@ -225,9 +257,9 @@ class Player {
             return;
         }
 
-        // Vérifier si la case est minable
+        // Vérifier si la couche Dessous est minable
         if (levelManager.isMinable(targetX, targetY)) {
-            const durability = TileConfig[tileType].durability || 1;
+            const durability = tileConfig.durability || 1;
             
             this.isMining = true;
             this.miningProgress = 0;
@@ -237,6 +269,7 @@ class Player {
             this.requiredHits = durability;
             // Mémoriser le type pour actions spéciales (warp)
             this.miningTileType = tileType;
+            this.miningLayer = 'foreground'; // Mémoriser quelle couche on mine
         }
     }
 

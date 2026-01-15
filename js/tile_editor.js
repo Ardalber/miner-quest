@@ -336,6 +336,20 @@ class CustomTileManager {
     addToGlobalTileConfig(id, tileConfig) {
         TileTypes[`CUSTOM_${id}`] = id;
         TileConfig[id] = tileConfig;
+        // IMPORTANT: Update the customTiles entry with the full tileConfig
+        if (this.customTiles[id]) {
+            this.customTiles[id] = {
+                ...this.customTiles[id],
+                ...tileConfig,
+                id: id
+            };
+        } else {
+            this.customTiles[id] = {
+                ...tileConfig,
+                id: id,
+                isCustom: true
+            };
+        }
         this.saveCustomTiles();
     }
 }
@@ -354,6 +368,7 @@ const SAVED_COLORS_KEY = 'tileEditorSavedColors';
 function restoreCustomTilesToConfig() {
     try {
         const customTiles = customTileManager.getAllTiles();
+        console.log('🔄 Restoring custom tiles from storage. Found', Object.keys(customTiles).length, 'tiles');
         for (const [id, config] of Object.entries(customTiles)) {
             const tileId = parseInt(id);
             if (!TileConfig[tileId]) {
@@ -363,12 +378,12 @@ function restoreCustomTilesToConfig() {
                     interactive = false;
                 }
                 
-                TileConfig[tileId] = {
+                const tileConfig = {
                     name: config.name,
                     color: config.color || config.backgroundColor || '#2a2a2a',
                     backgroundColor: config.backgroundColor,
                     solid: config.solid,
-                    minable: config.minable,
+                    minable: config.minable || false,  // Explicitly default to false if missing
                     resource: config.resource,
                     durability: config.durability,
                     interactive: interactive,
@@ -380,8 +395,9 @@ function restoreCustomTilesToConfig() {
                     imageData: config.imageData,
                     pixelData: config.pixelData
                 };
-                // Mettre aussi dans TileTypes
-                TileTypes[`CUSTOM_${tileId}`] = tileId;
+                
+                TileConfig[tileId] = tileConfig;
+                console.log(`  ✓ Restored tile ${tileId} (${config.name}), minable=${config.minable}`);
             }
         }
     } catch (e) {

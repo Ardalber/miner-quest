@@ -21,12 +21,16 @@ class LevelManager {
         const gridHeight = height || this.gridHeight;
         
         const tiles = [];
+        const backgroundTiles = [];
         for (let y = 0; y < gridHeight; y++) {
             const row = [];
+            const bgRow = [];
             for (let x = 0; x < gridWidth; x++) {
                 row.push(0); // EMPTY - Grille complètement éditable
+                bgRow.push(0); // EMPTY pour la couche de fond
             }
             tiles.push(row);
+            backgroundTiles.push(bgRow);
         }
 
         return {
@@ -37,6 +41,7 @@ class LevelManager {
             startY: Math.floor(gridHeight / 2),
             exits: [],
             tiles: tiles,
+            backgroundTiles: backgroundTiles, // Couche de fond
             type: 'topdown', // Type par défaut
             chestData: {}, // Stocke le contenu des coffres {"x_y": {items: [...]}}
             signData: {}, // Stocke les messages des panneaux {"x_y": "message"}
@@ -76,6 +81,47 @@ class LevelManager {
                 this.currentLevel.type = 'topdown';
                 console.log(`🔄 Migration: type 'topdown' ajouté au niveau ${levelName}`);
             }
+            // Migrer les backgroundTiles si elles n'existent pas
+            if (!this.currentLevel.backgroundTiles) {
+                this.currentLevel.backgroundTiles = [];
+                for (let y = 0; y < this.currentLevel.height; y++) {
+                    const bgRow = [];
+                    for (let x = 0; x < this.currentLevel.width; x++) {
+                        bgRow.push(0); // EMPTY
+                    }
+                    this.currentLevel.backgroundTiles.push(bgRow);
+                }
+                console.log(`🔄 Migration: backgroundTiles ajoutées au niveau ${levelName}`);
+            }
+            
+            // Vérifier que les tuiles utilisées dans backgroundTiles sont en TileConfig
+            console.log('🔍 Checking if all backgroundTiles are defined in TileConfig...');
+            const usedBgTileIds = new Set();
+            for (let y = 0; y < this.currentLevel.backgroundTiles.length; y++) {
+                for (let x = 0; x < this.currentLevel.backgroundTiles[y].length; x++) {
+                    const tileId = this.currentLevel.backgroundTiles[y][x];
+                    if (tileId > 0) {
+                        usedBgTileIds.add(tileId);
+                    }
+                }
+            }
+            
+            const missingTiles = Array.from(usedBgTileIds).filter(id => !TileConfig[id]);
+            if (missingTiles.length > 0) {
+                console.warn('⚠️ Missing TileConfig entries for backgroundTiles:', missingTiles);
+                // Attempt to restore custom tiles
+                if (typeof restoreCustomTilesToConfig === 'function') {
+                    console.log('🔄 Attempting to restore custom tiles to TileConfig...');
+                    restoreCustomTilesToConfig();
+                    const stillMissing = missingTiles.filter(id => !TileConfig[id]);
+                    if (stillMissing.length > 0) {
+                        console.error('❌ Still missing after restore:', stillMissing);
+                    } else {
+                        console.log('✅ All tiles restored successfully');
+                    }
+                }
+            }
+            
             return this.currentLevel;
         }
         
@@ -152,10 +198,40 @@ class LevelManager {
         this.commitCurrentLevel();
     }
 
-    // Vérifier si une tuile est solide
+    // Obtenir une tuile de fond à une position
+    getBackgroundTile(x, y) {
+        if (!this.currentLevel || !this.currentLevel.backgroundTiles) return 0; // EMPTY
+        if (x < 0 || x >= this.currentLevel.width || y < 0 || y >= this.currentLevel.height) {
+            return 0; // EMPTY - Hors limite
+        }
+        return this.currentLevel.backgroundTiles[y][x];
+    }
+
+    // Définir une tuile de fond à une position
+    setBackgroundTile(x, y, tileType) {
+        if (!this.currentLevel || !this.currentLevel.backgroundTiles) return;
+        if (x < 0 || x >= this.currentLevel.width || y < 0 || y >= this.currentLevel.height) return;
+        this.currentLevel.backgroundTiles[y][x] = tileType;
+        this.commitCurrentLevel();
+    }
+
+    // Vérifier si une tuile est solide (sur n'importe quelle couche)
     isSolid(x, y) {
+        // PRIORITÉ 1: Vérifier la couche BACKGROUND (dessus - visible)
+        const bgTileType = this.getBackgroundTile(x, y);
+        const bgConfig = TileConfig[bgTileType];
+        if (bgConfig && bgConfig.solid) {
+            return true;
+        }
+        
+        // PRIORITÉ 2: Vérifier la couche FOREGROUND (dessous - hidden)
         const tileType = this.getTile(x, y);
-        return TileConfig[tileType] && TileConfig[tileType].solid;
+        const config = TileConfig[tileType];
+        if (config && config.solid) {
+            return true;
+        }
+        
+        return false;
     }
 
     // Vérifier si une tuile est minable
@@ -166,15 +242,60 @@ class LevelManager {
 
     // Miner une tuile
     mineTile(x, y) {
+        // PRIORITÉ 1: Vérifier si l'arrière-plan (par-dessus) est minable
+        const bgTileType = this.getBackgroundTile(x, y);
+        const bgConfig = TileConfig[bgTileType];
+        
+        console.log('⛏️ mineTile - Checking Background Layer:', {
+            x, y,
+            bgTileType,
+            bgConfigExists: !!bgConfig,
+            bgConfigName: bgConfig?.name,
+            bgConfigMinable: bgConfig?.minable,
+            bgTileTypeZero: bgTileType === 0
+        });
+        
+        if (bgConfig && bgConfig.minable && bgTileType !== 0) {
+            // Warp: ne pas faire disparaître, juste activer la téléportation
+            if (bgConfig.warp || bgConfig.isWarp) {
+                console.log('🌀 mineTile - Background Warp (not removing):', bgConfig.name);
+                return null;
+            }
+            // Miner l'arrière-plan en premier (la couche visible)
+            console.log('✅ mineTile - Mining Background Tile:', {
+                bgTileType,
+                bgName: bgConfig.name,
+                resource: bgConfig.resource
+            });
+            this.setBackgroundTile(x, y, 0); // EMPTY - Révèle l'avant-plan en dessous
+            this.commitCurrentLevel();
+            return bgConfig.resource;
+        }
+        
+        // PRIORITÉ 2: Si pas d'arrière-plan minable, vérifier l'avant-plan
         const tileType = this.getTile(x, y);
         const config = TileConfig[tileType];
+        
+        console.log('⛏️ mineTile - Checking Foreground Layer:', {
+            x, y,
+            tileType,
+            configExists: !!config,
+            configName: config?.name,
+            configMinable: config?.minable
+        });
         
         if (config && config.minable) {
             // Warp: ne pas faire disparaître, juste activer la téléportation côté joueur
             if (config.warp || config.isWarp) {
+                console.log('🌀 mineTile - Foreground Warp (not removing):', config.name);
                 return null;
             }
-            // Autres blocs: les remplacer par vide et nettoyer les métadonnées
+            // Miner l'avant-plan et nettoyer les métadonnées
+            console.log('✅ mineTile - Mining Foreground Tile:', {
+                tileType,
+                name: config.name,
+                resource: config.resource
+            });
             this.setTile(x, y, 0); // EMPTY
             const key = `${x}_${y}`;
             if (config.isChest && this.currentLevel.chestData) {
@@ -186,6 +307,7 @@ class LevelManager {
             this.commitCurrentLevel();
             return config.resource;
         }
+        console.log('⛏️ mineTile - No minable tile found');
         return null;
     }
 
