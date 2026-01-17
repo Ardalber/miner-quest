@@ -47,8 +47,8 @@ class Player {
             else if (dx < 0) this.direction = 'left';
             
             // Vérifier si la nouvelle position est valide pour les deux tuiles de hauteur
-            const canMove = !levelManager.isSolid(newX, Math.floor(this.y)) && 
-                           !levelManager.isSolid(newX, Math.floor(this.y) - 1);
+            const canMove = !this.checkCollisionDirectional(newX, Math.floor(this.y), dx, 0, levelManager) && 
+                           !this.checkCollisionDirectional(newX, Math.floor(this.y) - 1, dx, 0, levelManager);
             
             if (canMove) {
                 this.x = newX;
@@ -75,8 +75,8 @@ class Player {
             else if (dy > 0) this.direction = 'down';
             else if (dy < 0) this.direction = 'up';
 
-            // Vérifier si la position est valide
-            if (!levelManager.isSolid(newX, newY)) {
+            // Vérifier si la position est valide en testant la collision dans la direction du mouvement
+            if (!this.checkCollisionDirectional(newX, newY, dx, dy, levelManager)) {
                 this.x = newX;
                 this.y = newY;
                 
@@ -92,6 +92,68 @@ class Player {
             }
             return false;
         }
+    }
+    
+    // Vérifier la collision selon la direction du mouvement
+    checkCollisionDirectional(x, y, dx, dy, levelManager) {
+        // Tester toutes les tuiles que le joueur occupera après le mouvement
+        // Le joueur occupe 1 tuile de [x, x+1) x [y, y+1)
+        
+        const minTileX = Math.floor(x);
+        const maxTileX = Math.floor(x + 0.999); // +0.999 au lieu de +1 pour tester correctement
+        const minTileY = Math.floor(y);
+        const maxTileY = Math.floor(y + 0.999);
+        
+        // Tester les tuiles dans la direction du mouvement
+        // Si on va à droite, tester la colonne la plus à droite
+        // Si on va à gauche, tester la colonne la plus à gauche
+        // Si on va en bas, tester la ligne la plus basse
+        // Si on va en haut, tester la ligne la plus haute
+        
+        if (dx > 0) {
+            // Mouvement à droite : tester les tuiles à droite
+            for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+                if (levelManager.isSolid(maxTileX, tileY)) {
+                    return true;
+                }
+            }
+        } else if (dx < 0) {
+            // Mouvement à gauche : tester les tuiles à gauche
+            for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+                if (levelManager.isSolid(minTileX, tileY)) {
+                    return true;
+                }
+            }
+        }
+        
+        if (dy > 0) {
+            // Mouvement en bas : tester les tuiles en bas
+            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+                if (levelManager.isSolid(tileX, maxTileY)) {
+                    return true;
+                }
+            }
+        } else if (dy < 0) {
+            // Mouvement en haut : tester les tuiles en haut
+            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+                if (levelManager.isSolid(tileX, minTileY)) {
+                    return true;
+                }
+            }
+        }
+        
+        // Pas de mouvement (cas statique) : tester toutes les tuiles
+        if (dx === 0 && dy === 0) {
+            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
+                for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
+                    if (levelManager.isSolid(tileX, tileY)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
     
     // Sauter (mode platformer uniquement)
@@ -124,7 +186,7 @@ class Player {
         
         if (this.velocityY > 0) {
             // Descente : vérifier collision au sol
-            if (levelManager.isSolid(Math.floor(this.x), footY + 1)) {
+            if (this.checkCollisionDirectional(Math.floor(this.x), footY + 1, 0, 1, levelManager)) {
                 // Il y a un sol sous les pieds
                 this.y = footY;
                 this.velocityY = 0;
@@ -137,7 +199,7 @@ class Player {
             }
         } else if (this.velocityY < 0) {
             // Montée : vérifier collision avec le plafond
-            if (levelManager.isSolid(Math.floor(this.x), headY - 1)) {
+            if (this.checkCollisionDirectional(Math.floor(this.x), headY - 1, 0, -1, levelManager)) {
                 // Il y a un plafond
                 this.velocityY = 0;
                 this.y = Math.ceil(this.y);
