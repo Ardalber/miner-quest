@@ -122,11 +122,50 @@
                     </div>
                 </div>
                 <div class="chest-section">
-                    <h2>📦 Contenu du coffre</h2>
+                    <div class="chest-header">
+                        <h2>📦 Contenu du coffre</h2>
+                        <button id="btn-take-all-chest" class="btn-secondary" title="Prendre toutes les ressources">🏃 Prendre tout</button>
+                    </div>
                     <div id="chest-grid" class="chest-grid"></div>
                 </div>
             </div>
             <button id="btn-close-chest" class="modal-close-btn">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Modal d'édition des coffres (pour l'éditeur) -->
+    <div id="modal-chest-editor" class="modal">
+        <div class="modal-content modal-chest-editor-content">
+            <h2>📦 Éditer le contenu du coffre</h2>
+            
+            <div class="chest-editor-container">
+                <div class="chest-add-resource">
+                    <h3>➕ Ajouter une ressource</h3>
+                    
+                    <div class="form-group">
+                        <label for="chest-resource-select">Ressource mineable:</label>
+                        <select id="chest-resource-select">
+                            <option value="">-- Sélectionner une ressource --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="chest-resource-quantity">Quantité:</label>
+                        <input type="number" id="chest-resource-quantity" min="1" max="999" value="1">
+                    </div>
+                    
+                    <button id="btn-add-to-chest" class="btn-success">➕ Ajouter</button>
+                </div>
+                
+                <div class="chest-contents">
+                    <h3>📋 Contenu du coffre</h3>
+                    <div id="chest-editor-contents" class="chest-editor-contents-list">
+                        <!-- Items seront ajoutés dynamiquement -->
+                    </div>
+                </div>
+            </div>
+            
+            <button id="btn-close-chest-editor" class="modal-close-btn">Fermer</button>
         </div>
     </div>
 

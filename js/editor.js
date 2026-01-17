@@ -208,9 +208,21 @@ async function initEditor() {
         window.location.href = 'index.html';
     });
 
-    // Événements du modal coffre
+    // Événements du modal coffre (legacy)
     document.getElementById('btn-save-chest').addEventListener('click', saveChestContent);
     document.getElementById('btn-cancel-chest').addEventListener('click', closeChestModal);
+    
+    // Événements du modal coffre avancé
+    document.getElementById('btn-add-advanced-chest-item').addEventListener('click', addResourceToAdvancedChest);
+    document.getElementById('btn-save-advanced-chest').addEventListener('click', saveAdvancedChestContent);
+    document.getElementById('btn-cancel-advanced-chest').addEventListener('click', closeAdvancedChestModal);
+    
+    // Permettre d'appuyer sur Entrée dans la quantité
+    document.getElementById('advanced-chest-quantity').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            addResourceToAdvancedChest();
+        }
+    });
     
     // Événements du modal panneau
     document.getElementById('btn-save-sign').addEventListener('click', saveSignMessage);
@@ -616,6 +628,7 @@ async function deleteCurrentLevel() {
 }
 
 let currentEditingChestPos = null;
+let currentAdvancedChestItems = [];
 
 // Mettre à jour l'affichage des quantités dans le modal
 function updateChestDisplay() {
@@ -624,8 +637,157 @@ function updateChestDisplay() {
     document.getElementById('chest-gold-value').textContent = chestItemCounts.gold;
 }
 
-// Ouvrir le modal d'édition de coffre
+// Ouvrir le modal d'édition de coffre (version avancée avec ressources minables)
 function openChestEditModal(x, y) {
+    currentEditingChestPos = { x, y };
+    currentAdvancedChestItems = [];
+    
+    const content = levelManager.getChestContent(x, y);
+    
+    // Remplir avec les valeurs existantes
+    if (content && content.items && Array.isArray(content.items)) {
+        currentAdvancedChestItems = JSON.parse(JSON.stringify(content.items));
+    }
+    
+    // Remplir le sélecteur de ressources minables
+    const select = document.getElementById('advanced-chest-resource-select');
+    select.innerHTML = '<option value="">-- Sélectionner --</option>';
+    
+    // Obtenir toutes les ressources minables
+    const minableResources = [];
+    for (const [tileId, config] of Object.entries(TileConfig)) {
+        if (!isNaN(tileId) && config.minable && tileId !== '0') {
+            minableResources.push({
+                id: parseInt(tileId),
+                name: config.name,
+                resource: config.resource || 'custom'
+            });
+        }
+    }
+    
+    // Remplir les options
+    minableResources.forEach(resource => {
+        const option = document.createElement('option');
+        option.value = resource.id;
+        option.textContent = resource.name;
+        select.appendChild(option);
+    });
+    
+    // Réinitialiser la quantité
+    document.getElementById('advanced-chest-quantity').value = 1;
+    
+    // Afficher le contenu actuel
+    updateAdvancedChestItemsList();
+    
+    // Afficher la modale
+    document.getElementById('modal-advanced-chest-editor').classList.add('show');
+}
+
+// Mettre à jour l'affichage de la liste d'items dans le modal avancé
+function updateAdvancedChestItemsList() {
+    const list = document.getElementById('advanced-chest-items-list');
+    list.innerHTML = '';
+    
+    if (currentAdvancedChestItems.length === 0) {
+        list.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Aucune ressource ajoutée</p>';
+        return;
+    }
+    
+    currentAdvancedChestItems.forEach((item, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.style.cssText = 'display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px; background: #3c3c3c; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #667eea;';
+        
+        let color = '#666';
+        let icon = '❓';
+        switch(item.type) {
+            case 'stone': color = '#7a7a7a'; icon = '🪨'; break;
+            case 'iron': color = '#b87333'; icon = '⚙️'; break;
+            case 'gold': color = '#ffd700'; icon = '⭐'; break;
+        }
+        
+        itemDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px; color: ${color};">${icon}</span>
+                <div>
+                    <div style="color: #cccccc; font-weight: 600; font-size: 14px;">${item.name}</div>
+                    <div style="color: #888; font-size: 12px;">Quantité: ${item.count}</div>
+                </div>
+            </div>
+            <button class="btn-remove-advanced-item" data-index="${index}" style="padding: 6px 12px; background: #d13438; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">✕</button>
+        `;
+        
+        const removeBtn = itemDiv.querySelector('.btn-remove-advanced-item');
+        removeBtn.addEventListener('click', () => {
+            currentAdvancedChestItems.splice(index, 1);
+            updateAdvancedChestItemsList();
+        });
+        
+        list.appendChild(itemDiv);
+    });
+}
+
+// Ajouter une ressource au coffre en édition avancée
+function addResourceToAdvancedChest() {
+    const select = document.getElementById('advanced-chest-resource-select');
+    const quantityInput = document.getElementById('advanced-chest-quantity');
+    
+    if (!select.value) {
+        showEditorToast('❌ Sélectionnez une ressource', 'error', 2000);
+        return;
+    }
+    
+    const tileId = parseInt(select.value);
+    const quantity = Math.max(1, parseInt(quantityInput.value) || 1);
+    
+    const config = TileConfig[tileId];
+    if (!config) {
+        showEditorToast('❌ Ressource invalide', 'error', 2000);
+        return;
+    }
+    
+    currentAdvancedChestItems.push({
+        type: config.resource || 'custom',
+        name: config.name,
+        count: quantity,
+        tileId: tileId
+    });
+    
+    // Réinitialiser
+    select.value = '';
+    quantityInput.value = 1;
+    
+    updateAdvancedChestItemsList();
+}
+
+// Sauvegarder le coffre en édition avancée
+function saveAdvancedChestContent() {
+    if (!currentEditingChestPos) return;
+    
+    if (currentAdvancedChestItems.length === 0) {
+        // Supprimer les données du coffre si vide
+        const key = `${currentEditingChestPos.x}_${currentEditingChestPos.y}`;
+        if (levelManager.currentLevel.chestData && levelManager.currentLevel.chestData[key]) {
+            delete levelManager.currentLevel.chestData[key];
+        }
+    } else {
+        levelManager.setChestContent(currentEditingChestPos.x, currentEditingChestPos.y, { items: currentAdvancedChestItems });
+    }
+    
+    levelManager.saveLevelsToStorage();
+    closeAdvancedChestModal();
+    renderEditor();
+    showEditorToast('✅ Contenu du coffre sauvegardé', 'success', 2000);
+}
+
+// Fermer le modal d'édition avancée
+function closeAdvancedChestModal() {
+    document.getElementById('modal-advanced-chest-editor').classList.remove('show');
+    currentEditingChestPos = null;
+    currentAdvancedChestItems = [];
+}
+
+// Version originale pour compatibilité (à garder pour les interactions antigas)
+function openLegacyChestEditModal(x, y) {
     currentEditingChestPos = { x, y };
     const content = levelManager.getChestContent(x, y);
     

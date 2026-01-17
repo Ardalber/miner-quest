@@ -426,13 +426,6 @@ class LevelManager {
         this.commitCurrentLevel();
     }
 
-    // Obtenir le message d'un panneau
-    getSignMessage(x, y) {
-        if (!this.currentLevel || !this.currentLevel.signData) return '';
-        const key = `${x}_${y}`;
-        return this.currentLevel.signData[key] || '';
-    }
-
     // Sauvegarder un niveau individuel dans localStorage
     saveLevelToStorage(levelName) {
         try {

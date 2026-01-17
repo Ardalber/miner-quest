@@ -258,7 +258,7 @@
       111,
       111,
       111,
-      111,
+      109,
       111,
       111,
       117,
@@ -1098,7 +1098,36 @@
     ]
   ],
   "type": "topdown",
-  "chestData": {},
+  "chestData": {
+    "13_7": {
+      "items": [
+        {
+          "type": "stone",
+          "name": "pierre",
+          "count": 1,
+          "tileId": 119
+        },
+        {
+          "type": "iron",
+          "name": "fer",
+          "count": 1,
+          "tileId": 120
+        },
+        {
+          "type": "gold",
+          "name": "or",
+          "count": 1,
+          "tileId": 121
+        },
+        {
+          "type": "custom",
+          "name": "bronze",
+          "count": 1,
+          "tileId": 122
+        }
+      ]
+    }
+  },
   "signData": {},
   "warpData": {
     "16_7": "level_2"

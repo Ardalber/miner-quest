@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug - Miner Quest</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            font-family: monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        #log {
+            background: #0a0a0a;
+            border: 1px solid #667eea;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .warning { color: #ffd43b; }
+        .info { color: #74c0fc; }
+        h1 { color: #667eea; margin-top: 0; }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Miner Quest</h1>
+    <div id="log"></div>
+    <button onclick="testLoadGame()">Test Chargement</button>
+    <button onclick="testDOM()">Test DOM</button>
+    <button onclick="testScripts()">Test Scripts</button>
+    <button onclick="clearLog()">Effacer</button>
+    <button onclick="loadActualGame()">Charger le jeu</button>
+
+    <script>
+        const logEl = document.getElementById('log');
+
+        function log(msg, type = 'info') {
+            const span = document.createElement('div');
+            span.className = type;
+            span.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logEl.appendChild(span);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function clearLog() {
+            logEl.innerHTML = '';
+        }
+
+        window.addEventListener('error', (e) => {
+            log(`❌ ERROR: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            log(`❌ PROMISE REJECTION: ${e.reason}`, 'error');
+        });
+
+        function testDOM() {
+            log('Vérification du DOM...', 'info');
+            
+            const elements = [
+                'modal-name',
+                'player-name-input',
+                'btn-start-game',
+                'gameCanvas',
+                'btn-commands',
+                'btn-editor',
+                'btn-tiles'
+            ];
+
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    log(`✅ #${id} existe`, 'success');
+                } else {
+                    log(`❌ #${id} MANQUANT`, 'error');
+                }
+            });
+
+            // Vérifier les CSS
+            const styles = document.querySelectorAll('link[rel="stylesheet"]');
+            log(`Feuilles CSS chargées: ${styles.length}`, 'info');
+            styles.forEach(link => {
+                log(`  - ${link.href}`, 'info');
+            });
+        }
+
+        function testScripts() {
+            log('Vérification des scripts globaux...', 'info');
+
+            const globals = [
+                'TileConfig',
+                'TileRenderer',
+                'tileRenderer',
+                'LevelManager',
+                'levelManager',
+                'Player'
+            ];
+
+            globals.forEach(name => {
+                if (typeof window[name] !== 'undefined') {
+                    log(`✅ ${name} chargé`, 'success');
+                } else {
+                    log(`❌ ${name} MANQUANT`, 'error');
+                }
+            });
+
+            // Vérifier les fonctions
+            const functions = [
+                'showNameModal',
+                'init',
+                'gameLoop'
+            ];
+
+            functions.forEach(name => {
+                if (typeof window[name] === 'function') {
+                    log(`✅ ${name}() existe`, 'success');
+                } else {
+                    log(`❌ ${name}() MANQUANT`, 'error');
+                }
+            });
+        }
+
+        function testLoadGame() {
+            log('Test chargement du jeu...', 'info');
+            
+            try {
+                testDOM();
+                testScripts();
+                
+                // Essayer de charger les niveaux
+                if (typeof levelManager !== 'undefined') {
+                    log('Chargement des niveaux...', 'info');
+                    levelManager.loadLevelsFromStorage().then(foundLevels => {
+                        if (foundLevels) {
+                            log('✅ Niveaux chargés avec succès', 'success');
+                            const levels = levelManager.getLevelList();
+                            log(`Niveaux trouvés: ${levels.join(', ')}`, 'info');
+                        } else {
+                            log('⚠️ Aucun niveau trouvé', 'warning');
+                        }
+                    }).catch(err => {
+                        log(`❌ Erreur chargement niveaux: ${err.message}`, 'error');
+                    });
+                }
+            } catch (e) {
+                log(`❌ Exception: ${e.message}`, 'error');
+            }
+        }
+
+        function loadActualGame() {
+            window.location.href = 'index.html';
+        }
+
+        // Exécuter les tests au chargement
+        window.addEventListener('DOMContentLoaded', () => {
+            log('Page chargée!', 'success');
+        });
+    </script>
+
+    <!-- Charger les mêmes scripts que index.html -->
+    <script src="js/tiles.js"></script>
+    <script src="js/level.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/tile_editor.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

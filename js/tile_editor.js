@@ -1366,3 +1366,215 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+// ========== SYSTÈME D'ÉDITION DES COFFRES ==========
+
+// Données globales pour l'éditeur de coffres
+let currentChestEditX = 0;
+let currentChestEditY = 0;
+let currentChestEditItems = [];
+
+// Obtenir toutes les ressources minables disponibles
+function getMinableResources() {
+    const minableResources = [];
+    
+    // Parcourir TileConfig pour trouver toutes les tuiles minables
+    for (const [tileId, config] of Object.entries(TileConfig)) {
+        if (!isNaN(tileId) && config.minable && tileId !== '0') {
+            minableResources.push({
+                id: parseInt(tileId),
+                name: config.name,
+                resource: config.resource || 'custom',
+                icon: getTileIconForName(config.name)
+            });
+        }
+    }
+    
+    return minableResources;
+}
+
+// Afficher la modale d'édition des coffres
+function showChestEditorModal(x, y, levelManager) {
+    const modal = document.getElementById('modal-chest-editor');
+    const select = document.getElementById('chest-resource-select');
+    const contentsList = document.getElementById('chest-editor-contents-list');
+    
+    if (!modal || !select) return;
+    
+    // Stocker les coordonnées du coffre
+    currentChestEditX = x;
+    currentChestEditY = y;
+    
+    // Récupérer le contenu actuel du coffre
+    if (levelManager && levelManager.currentLevel) {
+        const content = levelManager.getChestContent(x, y);
+        currentChestEditItems = content.items ? JSON.parse(JSON.stringify(content.items)) : [];
+    } else {
+        currentChestEditItems = [];
+    }
+    
+    // Remplir le sélecteur avec les ressources minables
+    select.innerHTML = '<option value="">-- Sélectionner une ressource --</option>';
+    
+    const minableResources = getMinableResources();
+    minableResources.forEach(resource => {
+        const option = document.createElement('option');
+        option.value = resource.id;
+        option.textContent = `${resource.icon} ${resource.name}`;
+        select.appendChild(option);
+    });
+    
+    // Réinitialiser la quantité à 1
+    const quantityInput = document.getElementById('chest-resource-quantity');
+    if (quantityInput) {
+        quantityInput.value = 1;
+    }
+    
+    // Rafraîchir l'affichage du contenu
+    updateChestEditorContents();
+    
+    // Afficher la modale
+    modal.classList.add('show');
+}
+
+// Mettre à jour l'affichage du contenu du coffre dans la modale d'édition
+function updateChestEditorContents() {
+    const contentsList = document.getElementById('chest-editor-contents-list');
+    if (!contentsList) return;
+    
+    contentsList.innerHTML = '';
+    
+    if (currentChestEditItems.length === 0) {
+        contentsList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Aucune ressource</p>';
+        return;
+    }
+    
+    currentChestEditItems.forEach((item, index) => {
+        const itemRow = document.createElement('div');
+        itemRow.className = 'chest-item-row';
+        
+        let color = '#666';
+        switch(item.type) {
+            case 'stone': color = '#7a7a7a'; break;
+            case 'iron': color = '#b87333'; break;
+            case 'gold': color = '#ffd700'; break;
+        }
+        
+        itemRow.innerHTML = `
+            <div class="chest-item-info">
+                <div class="chest-item-icon-small" style="background: ${color};">
+                    ${getTileIconForName(item.name)}
+                </div>
+                <div class="chest-item-details">
+                    <span class="chest-item-name">${item.name}</span>
+                    <span class="chest-item-quantity">Quantité: ${item.count}</span>
+                </div>
+            </div>
+            <button class="chest-item-remove" data-index="${index}">Retirer</button>
+        `;
+        
+        // Ajouter l'événement de suppression
+        const removeBtn = itemRow.querySelector('.chest-item-remove');
+        removeBtn.addEventListener('click', () => {
+            currentChestEditItems.splice(index, 1);
+            updateChestEditorContents();
+        });
+        
+        contentsList.appendChild(itemRow);
+    });
+}
+
+// Ajouter une ressource au coffre en édition
+function addResourceToChestEditor() {
+    const select = document.getElementById('chest-resource-select');
+    const quantityInput = document.getElementById('chest-resource-quantity');
+    
+    if (!select.value) {
+        alert('Veuillez sélectionner une ressource');
+        return;
+    }
+    
+    const tileId = parseInt(select.value);
+    const quantity = Math.max(1, parseInt(quantityInput.value) || 1);
+    
+    // Trouver la ressource sélectionnée dans TileConfig
+    const config = TileConfig[tileId];
+    if (!config) {
+        alert('Ressource invalide');
+        return;
+    }
+    
+    // Ajouter à la liste
+    currentChestEditItems.push({
+        type: config.resource || 'custom',
+        name: config.name,
+        count: quantity,
+        tileId: tileId
+    });
+    
+    // Réinitialiser le formulaire
+    select.value = '';
+    quantityInput.value = 1;
+    
+    // Rafraîchir l'affichage
+    updateChestEditorContents();
+}
+
+// Sauvegarder le contenu du coffre
+function saveChestContents(levelManager) {
+    if (!levelManager || !levelManager.currentLevel) return;
+    
+    const content = {
+        items: currentChestEditItems
+    };
+    
+    levelManager.setChestContent(currentChestEditX, currentChestEditY, content);
+    levelManager.commitCurrentLevel();
+    
+    // Fermer la modale
+    const modal = document.getElementById('modal-chest-editor');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+    
+    showNotification('✅ Contenu du coffre sauvegardé');
+}
+
+// Initialiser les événements de la modale d'édition
+function initChestEditorEvents(levelManager) {
+    const modal = document.getElementById('modal-chest-editor');
+    const btnAddToChest = document.getElementById('btn-add-to-chest');
+    const btnCloseChestEditor = document.getElementById('btn-close-chest-editor');
+    
+    if (!modal) return;
+    
+    // Bouton ajouter une ressource
+    if (btnAddToChest) {
+        btnAddToChest.addEventListener('click', () => {
+            addResourceToChestEditor();
+        });
+    }
+    
+    // Bouton fermer
+    if (btnCloseChestEditor) {
+        btnCloseChestEditor.addEventListener('click', () => {
+            saveChestContents(levelManager);
+        });
+    }
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            saveChestContents(levelManager);
+        }
+    });
+    
+    // Permettre d'appuyer sur Entrée pour ajouter
+    const quantityInput = document.getElementById('chest-resource-quantity');
+    if (quantityInput) {
+        quantityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addResourceToChestEditor();
+            }
+        });
+    }
+}

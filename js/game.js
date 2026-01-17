@@ -228,10 +228,20 @@ async function init() {
     // Modal du coffre
     const modalChest = document.getElementById('modal-chest');
     const btnCloseChest = document.getElementById('btn-close-chest');
+    const btnTakeAllChest = document.getElementById('btn-take-all-chest');
 
     if (btnCloseChest && modalChest) {
         btnCloseChest.addEventListener('click', () => {
             modalChest.classList.remove('show');
+        });
+    }
+
+    // Gestionnaire pour "Prendre tout"
+    if (btnTakeAllChest && modalChest) {
+        btnTakeAllChest.addEventListener('click', () => {
+            const x = parseInt(modalChest.dataset.chestX);
+            const y = parseInt(modalChest.dataset.chestY);
+            player.takeAllFromChest(x, y, levelManager);
         });
     }
 

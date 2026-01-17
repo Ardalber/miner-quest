@@ -601,3 +601,235 @@ body {
     line-height: 1.6;
 }
 
+/* === STYLES POUR L'ÉDITEUR DE COFFRES === */
+
+.modal-chest-editor-content {
+    max-width: 700px !important;
+    width: 85vw;
+    min-width: 300px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-chest-editor-content h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 24px;
+    color: #667eea;
+}
+
+.chest-editor-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 20px;
+}
+
+.chest-add-resource,
+.chest-contents {
+    background: #2a2a2a;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.chest-add-resource h3,
+.chest-contents h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.chest-add-resource .form-group {
+    margin-bottom: 15px;
+}
+
+.chest-add-resource label {
+    display: block;
+    color: #ddd;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.chest-add-resource select,
+.chest-add-resource input {
+    width: 100%;
+    padding: 10px;
+    background: #1a1a1a;
+    border: 1px solid #667eea;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.chest-add-resource select:focus,
+.chest-add-resource input:focus {
+    outline: none;
+    border-color: #7a8eef;
+    background: #222;
+}
+
+#btn-add-to-chest {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.chest-editor-contents-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.chest-item-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+    background: #1a1a1a;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid #667eea;
+}
+
+.chest-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chest-item-icon-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.chest-item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.chest-item-name {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.chest-item-quantity {
+    color: #999;
+    font-size: 12px;
+}
+
+.chest-item-remove {
+    background: #d32f2f;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.chest-item-remove:hover {
+    background: #c62828;
+}
+
+/* === STYLES POUR LE COFFRE EN JEU (ICÔNES) === */
+
+.chest-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.chest-header h2 {
+    margin: 0;
+}
+
+#btn-take-all-chest {
+    padding: 8px 16px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.chest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 8px;
+    min-height: 60px;
+}
+
+.chest-icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    background: #2a2a2a;
+    border: 2px solid #667eea;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 60px;
+    position: relative;
+}
+
+.chest-icon-item img {
+    width: 40px;
+    height: 40px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    border-radius: 3px;
+    margin-bottom: 2px;
+}
+
+.chest-icon-item:hover {
+    background: #333;
+    border-color: #7a8eef;
+    transform: scale(1.05);
+}
+
+.chest-icon-item:active {
+    transform: scale(0.98);
+}
+
+.chest-icon-resource {
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+.chest-icon-count {
+    font-size: 11px;
+    color: #fff;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 1px 4px;
+    border-radius: 2px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.chest-icon-item.empty {
+    background: #1a1a1a;
+    border-color: #444;
+    cursor: default;
+}
+
+.chest-icon-item.empty:hover {
+    background: #1a1a1a;
+    border-color: #444;
+    transform: none;
+}

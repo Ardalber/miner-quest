@@ -370,36 +370,63 @@ class Player {
         // Mettre à jour l'affichage de l'inventaire du joueur dans le modal
         this.updateChestInventoryDisplay();
 
-        // Vider et remplir la grille
+        // Vider la grille
         chestGrid.innerHTML = '';
 
         if (content.items && content.items.length > 0) {
-            content.items.forEach((item, index) => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'chest-item';
-                itemDiv.dataset.itemIndex = index;
+            // Afficher une icône par ressource (une icône par item)
+            content.items.forEach((item, itemIndex) => {
+                // Pour chaque unité de la ressource, créer une icône
+                for (let count = 0; count < item.count; count++) {
+                    const iconItem = document.createElement('div');
+                    iconItem.className = 'chest-icon-item';
+                    iconItem.dataset.itemIndex = itemIndex;
+                    iconItem.title = `Cliquer pour prendre 1x ${item.name}`;
 
-                let icon = '';
-                let color = '';
-                switch(item.type) {
-                    case 'stone': icon = '🪨'; color = '#7a7a7a'; break;
-                    case 'iron': icon = '⚙️'; color = '#b87333'; break;
-                    case 'gold': icon = '⭐'; color = '#ffd700'; break;
+                    // Créer une miniature de la tuile
+                    if (item.tileId !== undefined && typeof tileRenderer !== 'undefined') {
+                        // Obtenir l'image de la tuile
+                        const tileImage = tileRenderer.getTile(item.tileId);
+                        
+                        // Créer un petit canvas pour la miniature (16x16 pixels)
+                        const miniCanvas = document.createElement('canvas');
+                        miniCanvas.width = 40;
+                        miniCanvas.height = 40;
+                        const miniCtx = miniCanvas.getContext('2d');
+                        
+                        // Dessiner la tuile en petit
+                        miniCtx.imageSmoothingEnabled = false;
+                        miniCtx.drawImage(tileImage, 0, 0, 40, 40);
+                        
+                        // Créer une image à partir du canvas
+                        const miniImage = miniCanvas.toDataURL();
+                        
+                        iconItem.innerHTML = `
+                            <img src="${miniImage}" alt="${item.name}" style="width: 40px; height: 40px; image-rendering: pixelated;" />
+                        `;
+                    } else {
+                        // Fallback: afficher juste un emoji si pas de tileId
+                        let icon = '';
+                        let color = '';
+                        switch(item.type) {
+                            case 'stone': icon = '🪨'; color = '#7a7a7a'; break;
+                            case 'iron': icon = '⚙️'; color = '#b87333'; break;
+                            case 'gold': icon = '⭐'; color = '#ffd700'; break;
+                            default: icon = '❓'; color = '#666'; break;
+                        }
+                        
+                        iconItem.innerHTML = `
+                            <div class="chest-icon-resource" style="color: ${color};">${icon}</div>
+                        `;
+                    }
+
+                    // Ajouter l'événement de clic
+                    iconItem.addEventListener('click', () => {
+                        this.takeOneItemFromChest(itemIndex, levelManager);
+                    });
+
+                    chestGrid.appendChild(iconItem);
                 }
-
-                itemDiv.innerHTML = `
-                    <div class="chest-item-icon" style="background: ${color};">${icon}</div>
-                    <span class="chest-item-name">${item.name}</span>
-                    <span class="chest-item-value">${item.count}</span>
-                    <button class="chest-btn-take" data-index="${index}">✋</button>
-                `;
-
-                const btnTake = itemDiv.querySelector('.chest-btn-take');
-                btnTake.addEventListener('click', () => {
-                    this.takeOneItemFromChest(index, levelManager);
-                });
-
-                chestGrid.appendChild(itemDiv);
             });
         } else {
             chestGrid.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">Le coffre est vide</p>';
@@ -457,6 +484,37 @@ class Player {
         levelManager.saveLevelsToStorage();
 
         // Jouer un son de prise d'item
+        this.playPickupSound();
+
+        // Rafraîchir l'affichage du coffre
+        this.openChest(x, y, levelManager);
+    }
+
+    // Prendre tous les items du coffre
+    takeAllFromChest(x, y, levelManager) {
+        const content = levelManager.getChestContent(x, y);
+        if (!content.items || content.items.length === 0) return;
+
+        // Boucler pour prendre tous les items
+        while (content.items.length > 0) {
+            const item = content.items[0];
+            
+            // Ajouter toute la quantité à l'inventaire
+            this.inventory[item.type] += item.count;
+            
+            // Retirer l'item du coffre
+            content.items.splice(0, 1);
+        }
+
+        // Mettre à jour l'inventaire
+        this.updateInventoryUI();
+        this.updateChestInventoryDisplay();
+
+        // Sauvegarder le coffre vide
+        levelManager.setChestContent(x, y, content);
+        levelManager.saveLevelsToStorage();
+
+        // Jouer le son de prise d'item
         this.playPickupSound();
 
         // Rafraîchir l'affichage du coffre
