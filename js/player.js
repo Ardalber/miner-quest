@@ -46,9 +46,9 @@ class Player {
             if (dx > 0) this.direction = 'right';
             else if (dx < 0) this.direction = 'left';
             
-            // Vérifier si la nouvelle position est valide pour les deux tuiles de hauteur
-            const canMove = !this.checkCollisionDirectional(newX, Math.floor(this.y), dx, 0, levelManager) && 
-                           !this.checkCollisionDirectional(newX, Math.floor(this.y) - 1, dx, 0, levelManager);
+            // Tester la collision avec la vraie position Y (pas une position entière)
+            // checkCollisionDirectional() calculera les bonnes tuiles occupées
+            const canMove = !this.checkCollisionDirectional(newX, this.y, dx, 0, levelManager);
             
             if (canMove) {
                 this.x = newX;
@@ -95,60 +95,55 @@ class Player {
     }
     
     // Vérifier la collision selon la direction du mouvement
+    // x, y sont la NOUVELLE position après mouvement
+    // dx, dy indiquent la direction du mouvement
     checkCollisionDirectional(x, y, dx, dy, levelManager) {
-        // Tester toutes les tuiles que le joueur occupera après le mouvement
-        // Le joueur occupe 1 tuile de [x, x+1) x [y, y+1)
+        // Le joueur occupe [x, x+1) x [y, y+1) à la nouvelle position
         
+        // Calculer les tuiles que le joueur va occuper
         const minTileX = Math.floor(x);
-        const maxTileX = Math.floor(x + 0.999); // +0.999 au lieu de +1 pour tester correctement
+        const maxTileX = Math.floor(x + 0.999);
         const minTileY = Math.floor(y);
         const maxTileY = Math.floor(y + 0.999);
         
-        // Tester les tuiles dans la direction du mouvement
-        // Si on va à droite, tester la colonne la plus à droite
-        // Si on va à gauche, tester la colonne la plus à gauche
-        // Si on va en bas, tester la ligne la plus basse
-        // Si on va en haut, tester la ligne la plus haute
+        // console.log(`🔍 Check collision: newPos=(${x.toFixed(2)}, ${y.toFixed(2)}), dir=(${dx},${dy}), tiles X:[${minTileX},${maxTileX}], Y:[${minTileY},${maxTileY}]`);
         
         if (dx > 0) {
-            // Mouvement à droite : tester les tuiles à droite
+            // Mouvement à droite : tester le bord GAUCHE des tuiles qu'on occupe
             for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-                if (levelManager.isSolid(maxTileX, tileY)) {
+                if (levelManager.hasCollisionEdge(maxTileX, tileY, 'left')) {
+                    console.log(`🚫 Collision DROITE bloquée: tuile[${maxTileX},${tileY}] bord left`);
                     return true;
                 }
             }
-        } else if (dx < 0) {
-            // Mouvement à gauche : tester les tuiles à gauche
+        }
+        
+        if (dx < 0) {
+            // Mouvement à gauche : tester le bord DROIT des tuiles qu'on occupe
             for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-                if (levelManager.isSolid(minTileX, tileY)) {
+                if (levelManager.hasCollisionEdge(minTileX, tileY, 'right')) {
+                    console.log(`🚫 Collision GAUCHE bloquée: tuile[${minTileX},${tileY}] bord right`);
                     return true;
                 }
             }
         }
         
         if (dy > 0) {
-            // Mouvement en bas : tester les tuiles en bas
+            // Mouvement en bas : tester le bord HAUT des tuiles qu'on occupe
             for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-                if (levelManager.isSolid(tileX, maxTileY)) {
-                    return true;
-                }
-            }
-        } else if (dy < 0) {
-            // Mouvement en haut : tester les tuiles en haut
-            for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-                if (levelManager.isSolid(tileX, minTileY)) {
+                if (levelManager.hasCollisionEdge(tileX, maxTileY, 'top')) {
+                    console.log(`🚫 Collision BAS bloquée: tuile[${tileX},${maxTileY}] bord top`);
                     return true;
                 }
             }
         }
         
-        // Pas de mouvement (cas statique) : tester toutes les tuiles
-        if (dx === 0 && dy === 0) {
+        if (dy < 0) {
+            // Mouvement en haut : tester le bord BAS des tuiles qu'on occupe
             for (let tileX = minTileX; tileX <= maxTileX; tileX++) {
-                for (let tileY = minTileY; tileY <= maxTileY; tileY++) {
-                    if (levelManager.isSolid(tileX, tileY)) {
-                        return true;
-                    }
+                if (levelManager.hasCollisionEdge(tileX, minTileY, 'bottom')) {
+                    console.log(`🚫 Collision HAUT bloquée: tuile[${tileX},${minTileY}] bord bottom`);
+                    return true;
                 }
             }
         }
@@ -186,7 +181,7 @@ class Player {
         
         if (this.velocityY > 0) {
             // Descente : vérifier collision au sol
-            if (this.checkCollisionDirectional(Math.floor(this.x), footY + 1, 0, 1, levelManager)) {
+            if (this.checkCollisionDirectional(this.x, newY, 0, 1, levelManager)) {
                 // Il y a un sol sous les pieds
                 this.y = footY;
                 this.velocityY = 0;
@@ -199,7 +194,7 @@ class Player {
             }
         } else if (this.velocityY < 0) {
             // Montée : vérifier collision avec le plafond
-            if (this.checkCollisionDirectional(Math.floor(this.x), headY - 1, 0, -1, levelManager)) {
+            if (this.checkCollisionDirectional(this.x, newY, 0, -1, levelManager)) {
                 // Il y a un plafond
                 this.velocityY = 0;
                 this.y = Math.ceil(this.y);

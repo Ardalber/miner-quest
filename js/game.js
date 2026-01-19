@@ -346,12 +346,10 @@ function update(deltaTime) {
         // Appliquer la vélocité avec vérification de collision
         if (player.velocityX !== 0) {
             const newX = player.x + player.velocityX;
-            const footY = Math.floor(player.y);
-            const headY = Math.floor(player.y) - 1;
+            const dx = Math.sign(player.velocityX);
             
-            // Vérifier si la nouvelle position est valide
-            if (!levelManager.isSolid(Math.floor(newX), footY) && 
-                !levelManager.isSolid(Math.floor(newX), headY)) {
+            // Vérifier collision avec le système de bords
+            if (!player.checkCollisionDirectional(newX, player.y, dx, 0, levelManager)) {
                 player.x = newX;
                 
                 // Mettre à jour la direction
@@ -359,8 +357,8 @@ function update(deltaTime) {
                 else if (player.velocityX < 0) player.direction = 'left';
                 
                 // Vérifier les warps
-                if (levelManager.isWarp(Math.floor(newX), footY)) {
-                    const targetLevel = levelManager.getWarpDestination(Math.floor(newX), footY);
+                if (levelManager.isWarp(Math.floor(newX), Math.floor(player.y))) {
+                    const targetLevel = levelManager.getWarpDestination(Math.floor(newX), Math.floor(player.y));
                     if (targetLevel && window.onWarpActivated) {
                         window.onWarpActivated(targetLevel);
                     }

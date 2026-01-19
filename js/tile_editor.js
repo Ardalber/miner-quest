@@ -288,12 +288,41 @@ class PixelCanvas {
 class CustomTileManager {
     constructor() {
         this.customTiles = this.loadCustomTiles();
+        this.migrateOldFormat(); // IMPORTANT: Migrer les anciennes tuiles avec "solid"
         this.nextCustomId = this.getNextCustomId();
     }
 
     loadCustomTiles() {
         const stored = localStorage.getItem('customTiles');
         return stored ? JSON.parse(stored) : {};
+    }
+
+    // Migrer les tuiles anciennes avec "solid" vers le nouveau format "solidEdges"
+    migrateOldFormat() {
+        let hasMigrated = false;
+        
+        for (const [id, tile] of Object.entries(this.customTiles)) {
+            // Si la tuile a "solid" mais pas "solidEdges", la migrer
+            if (tile.hasOwnProperty('solid') && !tile.solidEdges) {
+                if (tile.solid) {
+                    // solid: true → tous les bords solides
+                    tile.solidEdges = { top: true, bottom: true, left: true, right: true };
+                } else {
+                    // solid: false → aucun bord solide
+                    tile.solidEdges = { top: false, bottom: false, left: false, right: false };
+                }
+                // Supprimer la propriété "solid" obsolète
+                delete tile.solid;
+                hasMigrated = true;
+                console.log(`✅ Migrated tile ${id} (${tile.name}): solid → solidEdges`);
+            }
+        }
+        
+        // Si on a migré, re-sauvegarder immédiatement
+        if (hasMigrated) {
+            console.log('💾 Saving migrated tiles to localStorage...');
+            this.saveCustomTiles();
+        }
     }
 
     saveCustomTiles() {
@@ -378,11 +407,24 @@ function restoreCustomTilesToConfig() {
                     interactive = false;
                 }
                 
+                // MIGRATION: Convertir solid (ancien) en solidEdges (nouveau)
+                let solidEdges;
+                if (config.solidEdges) {
+                    // Tuile nouvelle avec solidEdges
+                    solidEdges = config.solidEdges;
+                } else if (config.solid) {
+                    // Tuile ancienne avec solid: true → convertir tous les bords en solides
+                    solidEdges = { top: true, bottom: true, left: true, right: true };
+                } else {
+                    // Pas solide
+                    solidEdges = { top: false, bottom: false, left: false, right: false };
+                }
+                
                 const tileConfig = {
                     name: config.name,
                     color: config.color || config.backgroundColor || '#2a2a2a',
                     backgroundColor: config.backgroundColor,
-                    solid: config.solid,
+                    solidEdges: solidEdges,
                     minable: config.minable || false,  // Explicitly default to false if missing
                     resource: config.resource,
                     durability: config.durability,
@@ -397,7 +439,7 @@ function restoreCustomTilesToConfig() {
                 };
                 
                 TileConfig[tileId] = tileConfig;
-                console.log(`  ✓ Restored tile ${tileId} (${config.name}), minable=${config.minable}`);
+                console.log(`  ✓ Restored tile ${tileId} (${config.name}), solidEdges=${JSON.stringify(solidEdges)}`);
             }
         }
     } catch (e) {
@@ -821,7 +863,12 @@ function addNewTile() {
         name: name,
         pixelData: pixelCanvas.getPixelData(), // Les pixels en hex
         backgroundColor: '#2a2a2a',
-        solid: document.getElementById('tile-solid').checked,
+        solidEdges: {
+            top: document.getElementById('tile-edge-top').checked,
+            bottom: document.getElementById('tile-edge-bottom').checked,
+            left: document.getElementById('tile-edge-left').checked,
+            right: document.getElementById('tile-edge-right').checked
+        },
         minable: document.getElementById('tile-minable').checked,
         resource: document.getElementById('tile-minable').checked ? 
                   document.getElementById('tile-resource').value : null,
@@ -852,7 +899,7 @@ function createNewTile(tileData, imageData) {
     const tileConfig = {
         name: tileData.name,
         backgroundColor: tileData.backgroundColor,
-        solid: tileData.solid,
+        solidEdges: tileData.solidEdges,
         minable: tileData.minable,
         resource: tileData.resource,
         durability: tileData.durability,
@@ -918,7 +965,7 @@ function updateExistingTile(tileId, tileData, imageData) {
         name: tileData.name,
         pixelData: tileData.pixelData,
         backgroundColor: tileData.backgroundColor,
-        solid: tileData.solid,
+        solidEdges: tileData.solidEdges,
         minable: tileData.minable,
         resource: tileData.resource,
         durability: tileData.durability,
@@ -936,7 +983,7 @@ function updateExistingTile(tileId, tileData, imageData) {
     const tileConfig = {
         name: tileData.name,
         backgroundColor: tileData.backgroundColor,
-        solid: tileData.solid,
+        solidEdges: tileData.solidEdges,
         minable: tileData.minable,
         resource: tileData.resource,
         durability: tileData.durability,
@@ -988,7 +1035,10 @@ function updateExistingTile(tileId, tileData, imageData) {
 
 function resetTileForm() {
     document.getElementById('tile-name').value = '';
-    document.getElementById('tile-solid').checked = true;
+    document.getElementById('tile-edge-top').checked = false;
+    document.getElementById('tile-edge-bottom').checked = false;
+    document.getElementById('tile-edge-left').checked = false;
+    document.getElementById('tile-edge-right').checked = false;
     document.getElementById('tile-minable').checked = false;
     document.getElementById('tile-resource').value = '';
     document.getElementById('tile-durability').value = '1';
@@ -1133,7 +1183,12 @@ function createTileItemElement(id, config, isCustom) {
         // Charger les propriétés si c'est une tuile personnalisée
         if (isCustom) {
             document.getElementById('tile-name').value = config.name || '';
-            document.getElementById('tile-solid').checked = config.solid || false;
+            if (config.solidEdges) {
+                document.getElementById('tile-edge-top').checked = config.solidEdges.top || false;
+                document.getElementById('tile-edge-bottom').checked = config.solidEdges.bottom || false;
+                document.getElementById('tile-edge-left').checked = config.solidEdges.left || false;
+                document.getElementById('tile-edge-right').checked = config.solidEdges.right || false;
+            }
             document.getElementById('tile-minable').checked = config.minable || false;
             document.getElementById('tile-resource').value = config.resource || '';
             document.getElementById('tile-durability').value = config.durability || 1;
@@ -1177,11 +1232,15 @@ function showTilePreview() {
     
     document.getElementById('preview-name').textContent = `🎨 ${name}`;
     
-    const solid = document.getElementById('tile-solid').checked;
+    const top = document.getElementById('tile-edge-top').checked;
+    const bottom = document.getElementById('tile-edge-bottom').checked;
+    const left = document.getElementById('tile-edge-left').checked;
+    const right = document.getElementById('tile-edge-right').checked;
     const minable = document.getElementById('tile-minable').checked;
     
+    const edges = [top ? '⬆️' : '', bottom ? '⬇️' : '', left ? '⬅️' : '', right ? '➡️' : ''].filter(Boolean).join(' ');
     const properties = [
-        solid ? '🔒 Solide' : '🔓 Non solide',
+        edges || '🔓 Aucun bord solide',
         minable ? '⛏️ Mineable' : '❌ Non mineable'
     ].join(' | ');
     
@@ -1215,7 +1274,10 @@ function showTileInfo(id, config, isCustom) {
     document.getElementById('preview-name').textContent = `📋 ${config.name}`;
     
     const properties = [];
-    properties.push(config.solid ? '🔒 Solide' : '🔓 Non solide');
+    if (config.solidEdges) {
+        const edges = [config.solidEdges.top ? '⬆️' : '', config.solidEdges.bottom ? '⬇️' : '', config.solidEdges.left ? '⬅️' : '', config.solidEdges.right ? '➡️' : ''].filter(Boolean).join(' ');
+        properties.push(edges || '🔓 Aucun bord solide');
+    }
     properties.push(config.minable ? '⛏️ Mineable' : '❌ Non mineable');
     if (config.interactive) properties.push('🖱️ Interactive');
     if (config.resource) properties.push(`💎 Ressource: ${config.resource}`);

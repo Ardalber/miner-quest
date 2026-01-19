@@ -215,20 +215,54 @@ class LevelManager {
         this.commitCurrentLevel();
     }
 
-    // Vérifier si une tuile est solide (sur n'importe quelle couche)
-    isSolid(x, y) {
-        // PRIORITÉ 1: Vérifier la couche BACKGROUND (dessus - visible)
-        const bgTileType = this.getBackgroundTile(x, y);
-        const bgConfig = TileConfig[bgTileType];
-        if (bgConfig && bgConfig.solid) {
-            return true;
+    // Vérifier si il y a une collision avec un bord d'une tuile solide à une position donnée
+    // direction: 'top', 'bottom', 'left', 'right'
+    // x, y: position en tuiles (peut être fractionnaire)
+    // retourne true si il y a collision, false sinon
+    hasCollisionEdge(x, y, direction) {
+        const tileX = Math.floor(x);
+        const tileY = Math.floor(y);
+        
+        // Vérifier la couche BACKGROUND en priorité
+        let tileType = this.getBackgroundTile(tileX, tileY);
+        let config = TileConfig[tileType];
+        
+        // Si pas de tuile dans background, vérifier foreground
+        if (!config || !config.solidEdges) {
+            tileType = this.getTile(tileX, tileY);
+            config = TileConfig[tileType];
         }
         
-        // PRIORITÉ 2: Vérifier la couche FOREGROUND (dessous - hidden)
-        const tileType = this.getTile(x, y);
-        const config = TileConfig[tileType];
-        if (config && config.solid) {
-            return true;
+        // Vérifier si cette tuile a un bord solide dans la direction demandée
+        if (config && config.solidEdges) {
+            const isColliding = config.solidEdges[direction];
+            
+            // DEBUG: Log uniquement pour les collisions détectées
+            if (isColliding) {
+                console.log(`🚫 Collision détectée: tuile[${tileX},${tileY}] (id=${tileType}, nom=${config.name}) bord ${direction} solide`);
+            }
+            
+            return isColliding;
+        }
+        
+        return false;
+    }
+
+    // Alias pour compatibilité - vérifie si une tuile entière est solide
+    // (tous les bords solides)
+    isSolid(x, y) {
+        const tileType = this.getBackgroundTile(Math.floor(x), Math.floor(y));
+        let config = TileConfig[tileType];
+        
+        if (!config || !config.solidEdges) {
+            const fgType = this.getTile(Math.floor(x), Math.floor(y));
+            config = TileConfig[fgType];
+        }
+        
+        if (config && config.solidEdges) {
+            // Une tuile est "solide" si tous ses bords le sont
+            return config.solidEdges.top && config.solidEdges.bottom && 
+                   config.solidEdges.left && config.solidEdges.right;
         }
         
         return false;

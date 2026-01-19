@@ -3,7 +3,7 @@
   "width": 32,
   "height": 16,
   "startX": 16,
-  "startY": 8,
+  "startY": 10,
   "exits": [],
   "tiles": [
     [
@@ -1104,26 +1104,8 @@
         {
           "type": "stone",
           "name": "pierre",
-          "count": 1,
+          "count": 6,
           "tileId": 119
-        },
-        {
-          "type": "iron",
-          "name": "fer",
-          "count": 1,
-          "tileId": 120
-        },
-        {
-          "type": "gold",
-          "name": "or",
-          "count": 1,
-          "tileId": 121
-        },
-        {
-          "type": "custom",
-          "name": "bronze",
-          "count": 1,
-          "tileId": 122
         }
       ]
     }

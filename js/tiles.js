@@ -8,7 +8,8 @@ const TileConfig = {
     [TileTypes.EMPTY]: {
         name: 'Vide',
         color: 'transparent',
-        solid: false,
+        // solidEdges: { top: false, bottom: false, left: false, right: false }
+        // Les tuiles EMPTY n'ont pas de bords solides par défaut
         minable: false,
         resource: null
     }
