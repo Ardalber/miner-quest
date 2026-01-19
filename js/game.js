@@ -416,7 +416,10 @@ function render() {
 
 // Dessiner le niveau
 function drawLevel() {
-    if (!levelManager.currentLevel) return;
+    if (!levelManager.currentLevel) {
+        console.warn('❌ currentLevel est null');
+        return;
+    }
 
     const level = levelManager.currentLevel;
     const tileSize = 32; // Taille fixe de 32x32 pixels
@@ -425,6 +428,14 @@ function drawLevel() {
     if (canvas.width !== level.width * tileSize || canvas.height !== level.height * tileSize) {
         canvas.width = level.width * tileSize;
         canvas.height = level.height * tileSize;
+    }
+    
+    // DEBUG: Log les info du niveau
+    if (!window.drawLevelLogged) {
+        console.log(`📊 DrawLevel - Niveau: ${level.name}, Size: ${level.width}x${level.height}`);
+        console.log(`📊 tiles[0][0] = ${level.tiles[0][0]}, tiles[0][1] = ${level.tiles[0][1]}`);
+        console.log(`📊 TileConfig keys available: ${Object.keys(TileConfig).filter(k => !isNaN(k)).sort((a,b)=>a-b).slice(0, 10).join(',')}`);
+        window.drawLevelLogged = true;
     }
     
     // Dessiner d'abord la couche AVANT-PLAN (tiles) en dessous - PLEINE OPACITÉ

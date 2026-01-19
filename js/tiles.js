@@ -166,8 +166,16 @@ class TileRenderer {
 
         const config = TileConfig[type];
 
+        // DEBUG: Log chaque génération de tuile (max 5 fois)
+        if (!window.tileGenerationLogged) window.tileGenerationLogged = {};
+        if (!window.tileGenerationLogged[type]) {
+            console.log(`🎨 Génération tuile ${type}: config=${config ? config.name : 'UNDEFINED'}`);
+            window.tileGenerationLogged[type] = true;
+        }
+
         // Si la tuile est inconnue ou mal définie, retourner un placeholder
         if (!config) {
+            console.warn(`⚠️ Tuile ${type} non définie dans TileConfig!`);
             ctx.fillStyle = '#ff0000';
             ctx.fillRect(0, 0, this.tileSize, this.tileSize);
             ctx.strokeStyle = '#fff';
