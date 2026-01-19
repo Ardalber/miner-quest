@@ -159,6 +159,10 @@ async function init() {
     const editorBtn = document.getElementById('btn-editor');
     if (editorBtn) {
         editorBtn.addEventListener('click', () => {
+            // Passer le niveau actuel à l'éditeur
+            if (levelManager.currentLevel) {
+                sessionStorage.setItem('gameEditorLevel', levelManager.currentLevel.name || 'level_1');
+            }
             window.location.href = 'editor.html';
         });
     }
@@ -281,13 +285,13 @@ async function init() {
 function handleKeyDown(e) {
     keys[e.key.toLowerCase()] = true;
 
-    // Empêcher le défilement avec les flèches
+    // Empêcher le défilement avec les flèches et la barre espace
     if (['z', 'q', 's', 'd', ' '].includes(e.key.toLowerCase())) {
         e.preventDefault();
     }
 
-    // Miner avec Espace
-    if (e.key === ' ') {
+    // Interagir avec E
+    if (e.key.toLowerCase() === 'e') {
         player.startMining(levelManager);
     }
     
@@ -366,8 +370,8 @@ function update(deltaTime) {
             }
         }
         
-        // Saut avec Z
-        if (keys['z']) {
+        // Saut avec Espace
+        if (keys[' ']) {
             player.jump(levelManager);
         }
     } else {

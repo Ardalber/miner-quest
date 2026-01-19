@@ -84,6 +84,13 @@ let levelsFolderHandle = null; // Handle du dossier levels pour l'API File Syste
 let canvasScale = 1; // Scale du canvas pour les calculs de souris
 let currentLayer = 'foreground'; // 'foreground' ou 'background'
 
+// Vérifier si on vient du jeu avec un niveau à charger
+const gameEditorLevel = sessionStorage.getItem('gameEditorLevel');
+if (gameEditorLevel) {
+    currentLevelName = gameEditorLevel;
+    sessionStorage.removeItem('gameEditorLevel'); // Nettoyer après utilisation
+}
+
 // Initialisation de l'éditeur
 async function initEditor() {
     editorCanvas = document.getElementById('editorCanvas');
@@ -115,10 +122,11 @@ async function initEditor() {
     // Charger la liste des niveaux
     updateLevelList();
 
-    // Charger le niveau par défaut ou créer un nouveau
+    // Charger le niveau par défaut ou celui spécifié depuis le jeu
     const levelList = levelManager.getLevelList();
     if (levelList.length > 0) {
-        const defaultLevel = levelList.includes('level_1') ? 'level_1' : levelList[0];
+        // Utiliser currentLevelName qui a pu être défini par gameEditorLevel
+        const defaultLevel = levelList.includes(currentLevelName) ? currentLevelName : (levelList.includes('level_1') ? 'level_1' : levelList[0]);
         loadEditorLevel(defaultLevel);
     } else {
         // Créer un premier niveau si aucun n'existe

@@ -424,7 +424,7 @@ class Player {
                 }
             });
         } else {
-            chestGrid.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">Le coffre est vide</p>';
+            chestGrid.innerHTML = '';
         }
 
         modal.classList.add('show');
