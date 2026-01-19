@@ -392,6 +392,8 @@ const recentColors = new Set(); // Tracker des couleurs récentes
 const MAX_RECENT_COLORS = 8;
 const savedColors = new Set(); // Couleurs sauvegardées par l'utilisateur
 const SAVED_COLORS_KEY = 'tileEditorSavedColors';
+// Tuiles cœur du jeu qu'on ne doit pas supprimer
+const RESERVED_TILE_IDS = new Set([0, 1, 2, 3, 4, 5, 10, 11, 12, 20, 21, 30, 40, 41, 42, 43, 111]);
 
 // Restaurer les tuiles personnalisées dans TileConfig global au démarrage
 function restoreCustomTilesToConfig() {
@@ -1088,6 +1090,8 @@ function renderTilesList(filter = 'all') {
 function createTileItemElement(id, config, isCustom) {
     const div = document.createElement('div');
     div.className = `tile-item ${isCustom ? 'custom' : ''}`;
+    const isReserved = RESERVED_TILE_IDS.has(id);
+    const isDeletable = isCustom || !isReserved; // tout ce qui n'est pas cœur du jeu peut être supprimé
     
     const display = document.createElement('div');
     display.className = 'tile-item-display';
@@ -1165,8 +1169,35 @@ function createTileItemElement(id, config, isCustom) {
             e.stopPropagation();
             showTileInfo(id, config, isCustom);
         });
-        
         actions.appendChild(previewBtn);
+
+        // Autoriser la suppression pour les tuiles non réservées
+        if (isDeletable) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'tile-item-action-btn delete';
+            deleteBtn.textContent = '✕';
+            deleteBtn.title = 'Supprimer';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm(`❌ Êtes-vous sûr de vouloir supprimer la tuile "${config.name}" ?`)) {
+                    // Nettoyer TileConfig et éventuelle entrée custom
+                    if (customTileManager.getTile(id)) {
+                        customTileManager.deleteTile(id);
+                    }
+                    // Supprimer l'entrée dans TileConfig et TileTypes
+                    delete TileConfig[id];
+                    for (const key of Object.keys(TileTypes)) {
+                        if (TileTypes[key] === id) {
+                            delete TileTypes[key];
+                        }
+                    }
+                    renderTilesList();
+                    showNotification(`Tuile "${config.name}" supprimée`);
+                }
+            });
+            actions.appendChild(deleteBtn);
+        }
+
         div.appendChild(actions);
     }
     
