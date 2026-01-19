@@ -23,131 +23,164 @@ const TileTypes = {
 
 console.log('✓ TileTypes defined:', Object.keys(TileTypes));
 
-// Configuration de chaque type de tuile
-const TileConfig = {
-    [TileTypes.EMPTY]: {
-        name: 'Vide',
-        color: 'transparent',
-        minable: false,
-        resource: null
-    },
-    [TileTypes.EARTH]: {
-        name: 'Terre',
-        color: '#8B4513',
-        minable: true,
-        resource: 'stone',
-        drawFunction: 'drawGrass'
-    },
-    [TileTypes.STONE]: {
-        name: 'Pierre',
-        color: '#808080',
-        minable: true,
-        resource: 'stone',
-        drawFunction: 'drawStone'
-    },
-    [TileTypes.IRON]: {
-        name: 'Fer',
-        color: '#8b5a3c',
-        minable: true,
-        resource: 'iron',
-        drawFunction: 'drawIron'
-    },
-    [TileTypes.GOLD]: {
-        name: 'Or',
-        color: '#daa520',
-        minable: true,
-        resource: 'gold',
-        drawFunction: 'drawGold'
-    },
-    [TileTypes.WALL]: {
-        name: 'Mur',
-        color: '#2a2a2a',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawWall'
-    },
-    [TileTypes.GRASS]: {
-        name: 'Herbe',
-        color: '#4a9d4e',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawGrass'
-    },
-    [TileTypes.CHEST]: {
-        name: 'Coffre',
-        color: '#8b5a2b',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawChest'
-    },
-    [TileTypes.SIGN]: {
-        name: 'Panneau',
-        color: '#4a9d4e',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawSign'
-    },
-    [TileTypes.WARP]: {
-        name: 'Portail',
-        color: '#9370DB',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawWarp'
-    },
-    [TileTypes.BARRIER_H]: {
-        name: 'Barrière H',
-        color: '#4a9d4e',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawBarrierH'
-    },
-    [TileTypes.BARRIER_V]: {
-        name: 'Barrière V',
-        color: '#4a9d4e',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawBarrierV'
-    },
-    [TileTypes.TREE]: {
-        name: 'Arbre',
-        color: '#4a9d4e',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawTree'
-    },
-    [TileTypes.BARRIER_L_NE]: {
-        name: 'Barrière L NE',
-        color: '#4a9d4e',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawBarrierL_NE'
-    },
-    [TileTypes.BARRIER_L_SE]: {
-        name: 'Barrière L SE',
-        color: '#4a9d4e',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawBarrierL_SE'
-    },
-    [TileTypes.BARRIER_L_SW]: {
-        name: 'Barrière L SW',
-        color: '#4a9d4e',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawBarrierL_SW'
-    },
-    [TileTypes.BARRIER_L_NW]: {
-        name: 'Barrière L NW',
-        color: '#4a9d4e',
-        minable: false,
-        resource: null,
-        drawFunction: 'drawBarrierL_NW'
-    }
+// Configuration de chaque type de tuile - UTILISER STRING KEYS
+const TileConfig = {};
+
+// Tuile EMPTY
+TileConfig[0] = {
+    name: 'Vide',
+    color: 'transparent',
+    minable: false,
+    resource: null
+};
+
+// Tuile EARTH
+TileConfig[1] = {
+    name: 'Terre',
+    color: '#8B4513',
+    minable: true,
+    resource: 'stone',
+    drawFunction: 'drawGrass'
+};
+
+// Tuile STONE
+TileConfig[2] = {
+    name: 'Pierre',
+    color: '#808080',
+    minable: true,
+    resource: 'stone',
+    drawFunction: 'drawStone'
+};
+
+// Tuile IRON
+TileConfig[3] = {
+    name: 'Fer',
+    color: '#8b5a3c',
+    minable: true,
+    resource: 'iron',
+    drawFunction: 'drawIron'
+};
+
+// Tuile GOLD
+TileConfig[4] = {
+    name: 'Or',
+    color: '#daa520',
+    minable: true,
+    resource: 'gold',
+    drawFunction: 'drawGold'
+};
+
+// Tuile WALL
+TileConfig[5] = {
+    name: 'Mur',
+    color: '#2a2a2a',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawWall'
+};
+
+// Tuile GRASS (ID 111)
+TileConfig[111] = {
+    name: 'Herbe',
+    color: '#4a9d4e',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawGrass'
+};
+
+// Tuile CHEST
+TileConfig[10] = {
+    name: 'Coffre',
+    color: '#8b5a2b',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawChest'
+};
+
+// Tuile SIGN
+TileConfig[11] = {
+    name: 'Panneau',
+    color: '#4a9d4e',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawSign'
+};
+
+// Tuile WARP
+TileConfig[12] = {
+    name: 'Portail',
+    color: '#9370DB',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawWarp'
+};
+
+// Tuile BARRIER_H
+TileConfig[20] = {
+    name: 'Barrière H',
+    color: '#4a9d4e',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawBarrierH'
+};
+
+// Tuile BARRIER_V
+TileConfig[21] = {
+    name: 'Barrière V',
+    color: '#4a9d4e',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawBarrierV'
+};
+
+// Tuile TREE
+TileConfig[30] = {
+    name: 'Arbre',
+    color: '#4a9d4e',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawTree'
+};
+
+// Tuile BARRIER_L_NE
+TileConfig[40] = {
+    name: 'Barrière L NE',
+    color: '#4a9d4e',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawBarrierL_NE'
+};
+
+// Tuile BARRIER_L_SE
+TileConfig[41] = {
+    name: 'Barrière L SE',
+    color: '#4a9d4e',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawBarrierL_SE'
+};
+
+// Tuile BARRIER_L_SW
+TileConfig[42] = {
+    name: 'Barrière L SW',
+    color: '#4a9d4e',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawBarrierL_SW'
+};
+
+// Tuile BARRIER_L_NW
+TileConfig[43] = {
+    name: 'Barrière L NW',
+    color: '#4a9d4e',
+    minable: false,
+    resource: null,
+    drawFunction: 'drawBarrierL_NW'
 };
 
 console.log('✓ TileConfig defined with keys:', Object.keys(TileConfig).filter(k => !isNaN(k)).sort((a,b)=>a-b));
-console.log('✓ TileConfig[0]:', TileConfig[0]);
-console.log('✓ TileConfig[111]:', TileConfig[111]);
+console.log('✓ TileConfig[0]:', TileConfig[0]?.name);
+console.log('✓ TileConfig[111]:', TileConfig[111]?.name);
 
 // Classe pour gérer la génération des tuiles
 class TileRenderer {
