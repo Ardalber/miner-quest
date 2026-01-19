@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vérify tiles.js sur Netlify</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        pre { background: #000; padding: 10px; border-left: 3px solid #0f0; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Vérification du contenu de tiles.js sur Netlify</h1>
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        async function checkTilesFile() {
+            try {
+                const response = await fetch('/js/tiles.js');
+                const content = await response.text();
+                
+                // Afficher les 500 premiers caractères
+                output.innerHTML = `<h2>✓ Fichier chargé (${content.length} caractères)</h2>`;
+                output.innerHTML += `<h3>Premiers 1000 caractères:</h3>`;
+                output.innerHTML += `<pre>${content.substring(0, 1000)}</pre>`;
+                
+                // Vérifier la présence de clés strings
+                output.innerHTML += `<h3>Vérifications:</h3>`;
+                output.innerHTML += `<p>Contient "TileConfig = {"?: ${content.includes('TileConfig = {') ? '✓ OUI' : '✗ NON'}</p>`;
+                output.innerHTML += `<p>Contient "GRASS: 111"?: ${content.includes('GRASS: 111') ? '✓ OUI' : '✗ NON'}</p>`;
+                output.innerHTML += `<p>Contient "TileTypes.GRASS"?: ${content.includes('TileTypes.GRASS') ? '✓ OUI' : '✗ NON'}</p>`;
+                output.innerHTML += `<p>Contient "🎨 Loading tiles.js"?: ${content.includes('🎨 Loading tiles.js') ? '✓ OUI' : '✗ NON'}</p>`;
+                
+                // Chercher les lignes importantes
+                output.innerHTML += `<h3>Vérification des tuiles:</h3>`;
+                const lines = content.split('\n');
+                lines.forEach((line, i) => {
+                    if (line.includes('TileTypes.GRASS') || line.includes('[111]') || line.includes('GRASS: 111')) {
+                        output.innerHTML += `<p>Ligne ${i+1}: <code>${line}</code></p>`;
+                    }
+                });
+                
+            } catch (e) {
+                output.innerHTML = `<p style="color: red;">❌ Erreur: ${e.message}</p>`;
+            }
+        }
+        
+        checkTilesFile();
+    </script>
+</body>
+</html>
