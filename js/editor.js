@@ -186,6 +186,7 @@ async function initEditor() {
     document.getElementById('btn-load').addEventListener('click', loadFromFile);
     document.getElementById('file-input').addEventListener('change', handleFileLoad);
     document.getElementById('btn-save').addEventListener('click', saveCurrentLevel);
+    document.getElementById('btn-export-json').addEventListener('click', exportLevelToJSON);
     
     // Boutons de sélection de couche
     document.getElementById('btn-layer-foreground').addEventListener('click', () => {
@@ -540,6 +541,39 @@ async function saveCurrentLevel() {
     }
     
     // Ne PAS recharger le niveau - l'affichage reste inchangé
+}
+
+// Exporter le niveau en JSON pour déploiement Netlify
+function exportLevelToJSON() {
+    if (!levelManager.currentLevel) {
+        showEditorToast('✗ Aucun niveau à exporter', 'error', 2000);
+        return;
+    }
+
+    const name = document.getElementById('level-name').value;
+    
+    // Mettre à jour les propriétés du niveau avant export
+    levelManager.currentLevel.name = name;
+    levelManager.currentLevel.startX = parseInt(document.getElementById('start-x').value);
+    levelManager.currentLevel.startY = parseInt(document.getElementById('start-y').value);
+
+    // Créer le JSON
+    const json = JSON.stringify(levelManager.currentLevel, null, 2);
+    
+    // Créer un blob
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    // Créer un lien de téléchargement
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showEditorToast(`💾 ${name}.json téléchargé! Remplacez le fichier dans levels/ puis git commit/push`, 'success', 5000);
 }
 
 // Tester le niveau
