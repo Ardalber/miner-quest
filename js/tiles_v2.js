@@ -1,5 +1,13 @@
 // Tuiles de jeu - VERSION 2 COMPLÈTE ET SIMPLE
-console.log('✓✓✓ LOADING TILES_V2.JS ✓✓✓');
+alert('✓✓✓ TILES_V2.JS LOADED! ✓✓✓');
+console.log('%c✓✓✓ LOADING TILES_V2.JS ✓✓✓', 'background: green; color: white; font-size: 16px;');
+
+// Vérifier que TileConfig n'existe pas déjà
+if (typeof TileConfig !== 'undefined') {
+    console.warn('⚠️ TileConfig already exists!');
+} else {
+    console.log('✓ TileConfig does NOT exist - creating it now');
+}
 
 // Définir TileConfig directement
 window.TileConfig = {};
@@ -55,6 +63,12 @@ window.TileConfig[43] = { name: 'Barrière L NW', color: '#4a9d4e', minable: fal
 // Tuile 111: GRASS (LA TUILE IMPORTANTE!)
 window.TileConfig[111] = { name: 'Herbe', color: '#4a9d4e', minable: false, resource: null, drawFunction: 'drawGrass' };
 
-console.log('✓✓✓ TileConfig[111] =', window.TileConfig[111]);
-console.log('✓✓✓ All TileConfig keys:', Object.keys(window.TileConfig).filter(k => !isNaN(k)).sort((a,b)=>a-b).join(', '));
-console.log('✓✓✓ TILES_V2.JS LOADED SUCCESSFULLY ✓✓✓');
+// Vérifier que TileConfig[111] existe MAINTENANT
+if (window.TileConfig[111]) {
+    console.log('%c✓✓✓ TileConfig[111] SUCCESSFULLY CREATED! ✓✓✓', 'background: green; color: white; font-size: 14px;', window.TileConfig[111]);
+} else {
+    console.error('❌ TileConfig[111] IS STILL UNDEFINED!');
+}
+
+console.log('%c✓✓✓ All TileConfig keys: ' + Object.keys(window.TileConfig).filter(k => !isNaN(k)).sort((a,b)=>a-b).join(', '), 'background: green; color: white;');
+console.log('%c✓✓✓ TILES_V2.JS LOADED SUCCESSFULLY ✓✓✓', 'background: green; color: white; font-size: 16px;');

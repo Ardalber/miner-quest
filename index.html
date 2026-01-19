@@ -192,10 +192,16 @@
         </div>
     </div>
 
-    <script src="js/tiles_v2.js?t=9999999"></script>
-    <script src="js/level.js?t=9999999"></script>
-    <script src="js/player.js?t=9999999"></script>
-    <script src="js/tile_editor.js?t=9999999"></script>
-    <script src="js/game.js?t=9999999"></script>
+    <!-- FORCING NEW DEPLOYMENT: 2026-01-19-20:00 -->
+    <script>
+        window.DEPLOY_TIME = '2026-01-19-20:00';
+        console.log('🚀 DEPLOY_TIME:', window.DEPLOY_TIME);
+        console.log('🚀 PAGE LOADED AT:', new Date().toISOString());
+    </script>
+    <script src="js/tiles_v2.js?nocache=2026011920"></script>
+    <script src="js/level.js?nocache=2026011920"></script>
+    <script src="js/player.js?nocache=2026011920"></script>
+    <script src="js/tile_editor.js?nocache=2026011920"></script>
+    <script src="js/game.js?nocache=2026011920"></script>
 </body>
 </html>
