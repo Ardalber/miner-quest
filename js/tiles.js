@@ -1,4 +1,6 @@
 // Définition des types de tuiles
+console.log('🎨 Loading tiles.js...');
+
 const TileTypes = {
     EMPTY: 0,
     EARTH: 1,
@@ -18,6 +20,8 @@ const TileTypes = {
     BARRIER_L_SW: 42,
     BARRIER_L_NW: 43
 };
+
+console.log('✓ TileTypes defined:', Object.keys(TileTypes));
 
 // Configuration de chaque type de tuile
 const TileConfig = {
@@ -140,6 +144,10 @@ const TileConfig = {
         drawFunction: 'drawBarrierL_NW'
     }
 };
+
+console.log('✓ TileConfig defined with keys:', Object.keys(TileConfig).filter(k => !isNaN(k)).sort((a,b)=>a-b));
+console.log('✓ TileConfig[0]:', TileConfig[0]);
+console.log('✓ TileConfig[111]:', TileConfig[111]);
 
 // Classe pour gérer la génération des tuiles
 class TileRenderer {
