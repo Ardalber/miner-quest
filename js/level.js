@@ -57,16 +57,26 @@ class LevelManager {
         for (let y = 0; y < level.height; y++) {
             for (let x = 0; x < level.width; x++) {
                 const tileType = level.tiles[y][x];
-                // Si la tuile n'existe pas dans TileConfig, la remplacer par EMPTY
-                if (!TileConfig[tileType]) {
-                    level.tiles[y][x] = 0; // EMPTY
-                    migratedCount++;
+                // Si la tuile n'existe pas dans TileConfig ET qu'elle n'est pas EMPTY
+                // NE PAS LA REMPLACER - laisser generateTile() la créer dynamiquement!
+                if (tileType !== 0 && !TileConfig[tileType]) {
+                    // CRÉER UNE TUILE PAR DÉFAUT au lieu de la supprimer
+                    if (!TileConfig[tileType]) {
+                        TileConfig[tileType] = {
+                            name: `Tuile ${tileType}`,
+                            color: '#4a9d4e',
+                            minable: false,
+                            resource: null
+                        };
+                        console.log(`✓ Tuile ${tileType} créée dynamiquement`);
+                        migratedCount++;
+                    }
                 }
             }
         }
         
         if (migratedCount > 0) {
-            console.log(`🔄 Migration: ${migratedCount} tuiles invalides remplacées par EMPTY`);
+            console.log(`✓ Création dynamique: ${migratedCount} tuiles créées`);
         }
     }
 
