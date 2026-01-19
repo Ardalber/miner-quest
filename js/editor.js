@@ -186,7 +186,13 @@ async function initEditor() {
     document.getElementById('btn-load').addEventListener('click', loadFromFile);
     document.getElementById('file-input').addEventListener('change', handleFileLoad);
     document.getElementById('btn-save').addEventListener('click', saveCurrentLevel);
-    document.getElementById('btn-export-json').addEventListener('click', exportLevelToJSON);
+    document.getElementById('btn-github-config').addEventListener('click', () => {
+        if (window.githubSaver) {
+            window.githubSaver.showConfigModal();
+        } else {
+            alert('Erreur: GitHubSaver non chargé');
+        }
+    });
     
     // Boutons de sélection de couche
     document.getElementById('btn-layer-foreground').addEventListener('click', () => {
@@ -520,6 +526,7 @@ async function saveCurrentLevel() {
         delete levelManager.levels[currentLevelName];
     }
 
+    // Sauvegarder dans localStorage
     levelManager.saveLevel(name, levelManager.currentLevel);
     
     // Mettre à jour currentLevelName AVANT updateLevelList
@@ -531,13 +538,20 @@ async function saveCurrentLevel() {
     // Mettre à jour l'état initial
     initialLevelState = JSON.stringify(levelManager.currentLevel);
 
-    // Sauvegarder dans le dossier levels
-    const json = levelManager.exportLevel(name);
-    if (json) {
-        const success = await saveToLevelsFolder(name, json);
-        if (success) {
-            showEditorToast(`✓ Sauvegardé dans ${name}.json`, 'success', 2000);
+    // NOUVEAU: Sauvegarder automatiquement sur GitHub
+    if (window.githubSaver && window.githubSaver.isConfigured()) {
+        try {
+            showEditorToast('🔄 Sauvegarde sur GitHub...', 'info', 2000);
+            await window.githubSaver.saveLevel(name, levelManager.currentLevel);
+            showEditorToast(`✅ ${name} sauvegardé sur GitHub! Netlify va redéployer automatiquement.`, 'success', 4000);
+        } catch (error) {
+            console.error('Erreur GitHub:', error);
+            showEditorToast(`❌ Erreur GitHub: ${error.message}`, 'error', 5000);
+            // Continuer quand même avec sauvegarde locale
         }
+    } else {
+        // Token non configuré
+        showEditorToast(`⚠️ Sauvegardé localement. Cliquez "⚙️ Config GitHub" pour sauvegarder sur Netlify automatiquement.`, 'warning', 5000);
     }
     
     // Ne PAS recharger le niveau - l'affichage reste inchangé
