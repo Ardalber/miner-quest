@@ -192,9 +192,30 @@
         </div>
     </div>
 
-    <!-- INITIALISER TILECONFIG EN PREMIER DANS LE HTML -->
+    <!-- INITIALISER TILECONFIG ET TILETYPES EN PREMIER DANS LE HTML -->
     <script>
-        // CRÉER TILECONFIG IMMÉDIATEMENT - AVANT TOUT AUTRE SCRIPT
+        // CRÉER TILETYPES ET TILECONFIG IMMÉDIATEMENT - AVANT TOUT AUTRE SCRIPT
+        window.TileTypes = {
+            EMPTY: 0,
+            EARTH: 1,
+            STONE: 2,
+            IRON: 3,
+            GOLD: 4,
+            WALL: 5,
+            GRASS: 111,
+            CHEST: 10,
+            SIGN: 11,
+            WARP: 12,
+            BARRIER_H: 20,
+            BARRIER_V: 21,
+            TREE: 30,
+            BARRIER_L_NE: 40,
+            BARRIER_L_SE: 41,
+            BARRIER_L_SW: 42,
+            BARRIER_L_NW: 43
+        };
+        console.log('✓ TileTypes définis');
+        
         if (typeof TileConfig === 'undefined') {
             window.TileConfig = {};
             console.log('✓ TileConfig initialisé en inline script');

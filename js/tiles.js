@@ -21,6 +21,9 @@ const TileTypes = {
     BARRIER_L_NW: 43
 };
 
+// ASSURER QUE TILETYPES EST ACCESSIBLE GLOBALEMENT
+window.TileTypes = TileTypes;
+
 console.log('✓ TileTypes defined:', Object.keys(TileTypes));
 
 // Configuration de chaque type de tuile - UTILISER STRING KEYS

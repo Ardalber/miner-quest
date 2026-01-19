@@ -2,6 +2,32 @@
 alert('✓✓✓ TILES_V2.JS LOADED! ✓✓✓');
 console.log('%c✓✓✓ LOADING TILES_V2.JS ✓✓✓', 'background: green; color: white; font-size: 16px;');
 
+// VÉRIFIER/CRÉER TILETYPES
+if (typeof TileTypes === 'undefined') {
+    window.TileTypes = {
+        EMPTY: 0,
+        EARTH: 1,
+        STONE: 2,
+        IRON: 3,
+        GOLD: 4,
+        WALL: 5,
+        GRASS: 111,
+        CHEST: 10,
+        SIGN: 11,
+        WARP: 12,
+        BARRIER_H: 20,
+        BARRIER_V: 21,
+        TREE: 30,
+        BARRIER_L_NE: 40,
+        BARRIER_L_SE: 41,
+        BARRIER_L_SW: 42,
+        BARRIER_L_NW: 43
+    };
+    console.log('✓✓✓ TileTypes créés dans tiles_v2.js');
+} else {
+    console.log('ℹ️ TileTypes déjà défini');
+}
+
 // Vérifier que TileConfig n'existe pas déjà
 if (typeof TileConfig !== 'undefined') {
     console.warn('⚠️ TileConfig already exists!');
