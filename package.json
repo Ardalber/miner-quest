@@ -1,0 +1,24 @@
+{
+  "name": "miner-quest",
+  "version": "1.0.0",
+  "description": "Un jeu d'aventure en HTML5/CSS3/JavaScript - Explorez des mines et collectez des ressources!",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000",
+    "serve": "python -m http.server 8000"
+  },
+  "keywords": [
+    "game",
+    "html5",
+    "javascript",
+    "adventure",
+    "mining"
+  ],
+  "author": "Votre nom",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/votre-username/MINER-QUEST.git"
+  }
+}

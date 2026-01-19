@@ -1,0 +1,32 @@
+# Dépendances
+node_modules/
+package-lock.json
+yarn.lock
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# Build et distribution
+dist/
+build/
+.cache/
+
+# Fichiers système
+*~
+.DS_Store

@@ -1,0 +1,38 @@
+# Configuration Netlify pour Miner Quest
+
+# Chemin de sortie (pour les futurs builds si nécessaire)
+[build]
+  publish = "."
+  command = "echo 'No build required for static site'"
+
+# Redirection pour les routes SPA (si besoin dans le futur)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Contrôle du cache
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "max-age=3600"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "max-age=604800"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "max-age=604800"
+
+[[headers]]
+  for = "/levels/*"
+  [headers.values]
+    Cache-Control = "max-age=3600"
