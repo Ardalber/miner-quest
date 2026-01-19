@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test TileConfig</title>
+</head>
+<body>
+    <h1>Test TileConfig</h1>
+    <pre id="output"></pre>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(msg) {
+            console.log(msg);
+            output.textContent += msg + '\n';
+        }
+        
+        log('=== Test TileConfig ===');
+        log('Before loading tiles.js');
+        log('typeof TileConfig: ' + typeof TileConfig);
+    </script>
+    
+    <!-- Charger le fichier tiles.js -->
+    <script src="js/tiles.js"></script>
+    
+    <script>
+        log('After loading tiles.js');
+        log('typeof TileConfig: ' + typeof TileConfig);
+        log('TileConfig keys: ' + Object.keys(TileConfig).join(', '));
+        log('TileConfig[0]: ' + TileConfig[0]);
+        log('TileConfig[111]: ' + TileConfig[111]);
+        log('');
+        log('All numeric keys:');
+        Object.keys(TileConfig).filter(k => !isNaN(k)).sort((a,b)=>a-b).forEach(k => {
+            log(`  TileConfig[${k}] = ${TileConfig[k]?.name || 'undefined'}`);
+        });
+    </script>
+</body>
+</html>
