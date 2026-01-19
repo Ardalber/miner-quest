@@ -747,5 +747,8 @@ class TileRenderer {
 // Instance globale
 const tileRenderer = new TileRenderer();
 
+// ASSURER QUE TILERENDERER EST ACCESSIBLE GLOBALEMENT
+window.tileRenderer = tileRenderer;
+
 // Callback global pour redraw après chargement d'images
 let onTileImageLoaded = null;
