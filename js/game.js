@@ -67,6 +67,11 @@ async function init() {
     // Restaurer les tuiles personnalisées dans TileConfig (si pas déjà fait)
     if (typeof restoreCustomTilesToConfig === 'function') {
         console.log('📦 Before restoreCustomTilesToConfig - TileConfig keys:', Object.keys(TileConfig).filter(k => !isNaN(k)).sort((a,b) => a-b).join(','));
+        console.log('📦 TileConfig[0]:', TileConfig[0]);
+        console.log('📦 TileConfig[111]:', TileConfig[111]);
+        console.log('📦 TileConfig.EMPTY:', TileConfig.EMPTY);
+        console.log('📦 TileConfig.GRASS:', TileConfig.GRASS);
+        console.log('📦 TileTypes.GRASS:', TileTypes?.GRASS);
         restoreCustomTilesToConfig();
         console.log('📦 After restoreCustomTilesToConfig - TileConfig keys:', Object.keys(TileConfig).filter(k => !isNaN(k)).sort((a,b) => a-b).join(','));
         // Log les propriétés minable de toutes les tuiles
