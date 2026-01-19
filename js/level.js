@@ -498,7 +498,21 @@ class LevelManager {
 
     // Charger un niveau individuel depuis localStorage ou fichier
     async loadLevelFromStorage(levelName) {
-        // Essayer de charger depuis un fichier individuel
+        // PRIORITÉ 1: Essayer depuis localStorage (niveau créé/édité par l'utilisateur)
+        try {
+            const data = localStorage.getItem(`minerquest_level_${levelName}`);
+            if (data) {
+                this.levels[levelName] = JSON.parse(data);
+                // Migrer les tuiles invalides si nécessaire
+                this.migrateTiles(this.levels[levelName]);
+                console.log(`✅ Niveau ${levelName} chargé depuis localStorage (priorité)`);
+                return true;
+            }
+        } catch (e) {
+            console.error('Erreur de chargement depuis localStorage:', e);
+        }
+        
+        // PRIORITÉ 2: Si pas dans localStorage, essayer de charger depuis un fichier
         try {
             const response = await fetch(`levels/${levelName}.json`);
             if (response.ok) {
@@ -506,25 +520,11 @@ class LevelManager {
                 this.levels[levelName] = data;
                 // Migrer les tuiles invalides si nécessaire
                 this.migrateTiles(this.levels[levelName]);
-                console.log(`Niveau ${levelName} chargé depuis fichier`);
+                console.log(`📁 Niveau ${levelName} chargé depuis fichier (fallback)`);
                 return true;
             }
         } catch (e) {
             // Fichier non trouvé, continuer
-        }
-        
-        // Essayer depuis localStorage
-        try {
-            const data = localStorage.getItem(`minerquest_level_${levelName}`);
-            if (data) {
-                this.levels[levelName] = JSON.parse(data);
-                // Migrer les tuiles invalides si nécessaire
-                this.migrateTiles(this.levels[levelName]);
-                console.log(`Niveau ${levelName} chargé depuis localStorage`);
-                return true;
-            }
-        } catch (e) {
-            console.error('Erreur de chargement:', e);
         }
         
         return false;
