@@ -1,6 +1,22 @@
 // Définition des types de tuiles
 const TileTypes = {
-    EMPTY: 0
+    EMPTY: 0,
+    EARTH: 1,
+    STONE: 2,
+    IRON: 3,
+    GOLD: 4,
+    WALL: 5,
+    GRASS: 111,
+    CHEST: 10,
+    SIGN: 11,
+    WARP: 12,
+    BARRIER_H: 20,
+    BARRIER_V: 21,
+    TREE: 30,
+    BARRIER_L_NE: 40,
+    BARRIER_L_SE: 41,
+    BARRIER_L_SW: 42,
+    BARRIER_L_NW: 43
 };
 
 // Configuration de chaque type de tuile
@@ -8,10 +24,120 @@ const TileConfig = {
     [TileTypes.EMPTY]: {
         name: 'Vide',
         color: 'transparent',
-        // solidEdges: { top: false, bottom: false, left: false, right: false }
-        // Les tuiles EMPTY n'ont pas de bords solides par défaut
         minable: false,
         resource: null
+    },
+    [TileTypes.EARTH]: {
+        name: 'Terre',
+        color: '#8B4513',
+        minable: true,
+        resource: 'stone',
+        drawFunction: 'drawGrass'
+    },
+    [TileTypes.STONE]: {
+        name: 'Pierre',
+        color: '#808080',
+        minable: true,
+        resource: 'stone',
+        drawFunction: 'drawStone'
+    },
+    [TileTypes.IRON]: {
+        name: 'Fer',
+        color: '#8b5a3c',
+        minable: true,
+        resource: 'iron',
+        drawFunction: 'drawIron'
+    },
+    [TileTypes.GOLD]: {
+        name: 'Or',
+        color: '#daa520',
+        minable: true,
+        resource: 'gold',
+        drawFunction: 'drawGold'
+    },
+    [TileTypes.WALL]: {
+        name: 'Mur',
+        color: '#2a2a2a',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawWall'
+    },
+    [TileTypes.GRASS]: {
+        name: 'Herbe',
+        color: '#4a9d4e',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawGrass'
+    },
+    [TileTypes.CHEST]: {
+        name: 'Coffre',
+        color: '#8b5a2b',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawChest'
+    },
+    [TileTypes.SIGN]: {
+        name: 'Panneau',
+        color: '#4a9d4e',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawSign'
+    },
+    [TileTypes.WARP]: {
+        name: 'Portail',
+        color: '#9370DB',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawWarp'
+    },
+    [TileTypes.BARRIER_H]: {
+        name: 'Barrière H',
+        color: '#4a9d4e',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawBarrierH'
+    },
+    [TileTypes.BARRIER_V]: {
+        name: 'Barrière V',
+        color: '#4a9d4e',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawBarrierV'
+    },
+    [TileTypes.TREE]: {
+        name: 'Arbre',
+        color: '#4a9d4e',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawTree'
+    },
+    [TileTypes.BARRIER_L_NE]: {
+        name: 'Barrière L NE',
+        color: '#4a9d4e',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawBarrierL_NE'
+    },
+    [TileTypes.BARRIER_L_SE]: {
+        name: 'Barrière L SE',
+        color: '#4a9d4e',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawBarrierL_SE'
+    },
+    [TileTypes.BARRIER_L_SW]: {
+        name: 'Barrière L SW',
+        color: '#4a9d4e',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawBarrierL_SW'
+    },
+    [TileTypes.BARRIER_L_NW]: {
+        name: 'Barrière L NW',
+        color: '#4a9d4e',
+        minable: false,
+        resource: null,
+        drawFunction: 'drawBarrierL_NW'
     }
 };
 
@@ -147,7 +273,10 @@ class TileRenderer {
             // (laisser le canvas transparent)
         }
 
-        // Ajouter des détails selon le type - plus de types de base
+        // Appeler la fonction de dessin personnalisée si elle existe
+        if (config.drawFunction && typeof this[config.drawFunction] === 'function') {
+            this[config.drawFunction](ctx);
+        }
 
         // Bordure pour tous les types sauf vide
         if (type !== TileTypes.EMPTY) {
