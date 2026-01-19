@@ -26,8 +26,16 @@ window.TileTypes = TileTypes;
 
 console.log('✓ TileTypes defined:', Object.keys(TileTypes));
 
-// Configuration de chaque type de tuile - UTILISER STRING KEYS
-const TileConfig = {};
+// Configuration de chaque type de tuile - VÉRIFIER SI TILECONFIG EXISTE DÉJÀ DANS WINDOW
+// (Créé en inline script dans index.html)
+let TileConfig;
+if (typeof window.TileConfig !== 'undefined' && Object.keys(window.TileConfig).length > 0) {
+    console.log('ℹ️ tiles.js: Using window.TileConfig which already exists with keys:', Object.keys(window.TileConfig).filter(k => !isNaN(k)).join(', '));
+    TileConfig = window.TileConfig;
+} else {
+    console.log('ℹ️ tiles.js: Creating new TileConfig');
+    TileConfig = window.TileConfig = {};
+}
 
 // Tuile EMPTY
 TileConfig[0] = {
