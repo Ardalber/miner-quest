@@ -256,10 +256,10 @@
       111,
       111,
       111,
-      111,
-      111,
       109,
       110,
+      110,
+      111,
       111,
       117,
       111,
@@ -1099,19 +1099,31 @@
   ],
   "type": "topdown",
   "chestData": {
-    "13_7": {
+    "11_7": {
       "items": [
         {
           "type": "stone",
           "name": "pierre",
-          "count": 6,
+          "count": 7,
           "tileId": 119
+        },
+        {
+          "type": "iron",
+          "name": "fer",
+          "count": 10,
+          "tileId": 120
+        },
+        {
+          "type": "gold",
+          "name": "or",
+          "count": 9,
+          "tileId": 121
         }
       ]
     }
   },
   "signData": {
-    "14_7": "sqdsqdqsdqsd"
+    "13_7": "tot"
   },
   "warpData": {
     "16_7": "level_2"
