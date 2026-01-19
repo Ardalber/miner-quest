@@ -1100,26 +1100,7 @@
   "type": "topdown",
   "chestData": {
     "11_7": {
-      "items": [
-        {
-          "type": "stone",
-          "name": "pierre",
-          "count": 7,
-          "tileId": 119
-        },
-        {
-          "type": "iron",
-          "name": "fer",
-          "count": 10,
-          "tileId": 120
-        },
-        {
-          "type": "gold",
-          "name": "or",
-          "count": 9,
-          "tileId": 121
-        }
-      ]
+      "items": []
     }
   },
   "signData": {
