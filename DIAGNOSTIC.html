@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Netlify - Miner Quest</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .diagnostic {
+            background: #0a0a0a;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .ok { color: #00ff00; }
+        .error { color: #ff0000; }
+        .warning { color: #ffff00; }
+        h1 { color: #667eea; }
+        h2 { color: #00ffff; }
+        .code {
+            background: #000;
+            padding: 10px;
+            border-left: 3px solid #667eea;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Diagnostic Netlify - Miner Quest</h1>
+    
+    <div class="diagnostic">
+        <h2>📋 Informations du navigateur</h2>
+        <p>User Agent: <span id="ua"></span></p>
+        <p>URL actuelle: <span id="url"></span></p>
+        <p>Chemin de la page: <span id="path"></span></p>
+    </div>
+
+    <div class="diagnostic">
+        <h2>✅ Test de chargement des fichiers</h2>
+        <div id="files-test"></div>
+    </div>
+
+    <div class="diagnostic">
+        <h2>📁 Test CORS & Access</h2>
+        <div id="cors-test"></div>
+    </div>
+
+    <div class="diagnostic">
+        <h2>🎮 État du jeu</h2>
+        <div id="game-state"></div>
+    </div>
+
+    <div class="diagnostic">
+        <h2>❌ Erreurs détectées</h2>
+        <div id="errors"></div>
+    </div>
+
+    <script>
+        // Afficher les infos du navigateur
+        document.getElementById('ua').textContent = navigator.userAgent;
+        document.getElementById('url').textContent = window.location.href;
+        document.getElementById('path').textContent = window.location.pathname;
+
+        // Liste des fichiers à tester
+        const files = [
+            'js/game.js',
+            'js/player.js',
+            'js/level.js',
+            'js/tiles.js',
+            'js/editor.js',
+            'js/tile_editor.js',
+            'css/game.css',
+            'levels/level_1.json',
+            'levels/level_2.json',
+            'index.html'
+        ];
+
+        // Tester chaque fichier
+        let filesHtml = '<ul>';
+        const promises = files.map(file => {
+            return fetch(file)
+                .then(r => {
+                    filesHtml += `<li><span class="ok">✓</span> ${file} (${r.status})</li>`;
+                    return true;
+                })
+                .catch(e => {
+                    filesHtml += `<li><span class="error">✗</span> ${file} - ${e.message}</li>`;
+                    return false;
+                });
+        });
+
+        Promise.all(promises).then(() => {
+            filesHtml += '</ul>';
+            document.getElementById('files-test').innerHTML = filesHtml;
+        });
+
+        // Capturer les erreurs
+        let errorList = '';
+        window.addEventListener('error', (e) => {
+            errorList += `<p><span class="error">ERROR:</span> ${e.message}</p>`;
+            document.getElementById('errors').innerHTML = errorList;
+        });
+
+        // Vérifier l'accès localStorage
+        let corsHtml = '<ul>';
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+            corsHtml += '<li><span class="ok">✓</span> localStorage accessible</li>';
+        } catch(e) {
+            corsHtml += `<li><span class="error">✗</span> localStorage: ${e.message}</li>`;
+        }
+
+        // Vérifier les objets globaux
+        corsHtml += '<li>';
+        if (typeof window.gameCanvas !== 'undefined') {
+            corsHtml += '<span class="ok">✓</span> gameCanvas disponible';
+        } else {
+            corsHtml += '<span class="warning">?</span> gameCanvas non trouvé (normal avant le chargement)';
+        }
+        corsHtml += '</li>';
+
+        corsHtml += '<li>';
+        if (typeof window.game !== 'undefined') {
+            corsHtml += '<span class="ok">✓</span> game object disponible';
+        } else {
+            corsHtml += '<span class="warning">?</span> game object non trouvé (normal avant le chargement)';
+        }
+        corsHtml += '</li>';
+
+        corsHtml += '</ul>';
+        document.getElementById('cors-test').innerHTML = corsHtml;
+
+        // Afficher l'état du jeu
+        setTimeout(() => {
+            let gameStateHtml = '<ul>';
+            gameStateHtml += `<li>window.game: ${typeof window.game}</li>`;
+            gameStateHtml += `<li>window.Player: ${typeof window.Player}</li>`;
+            gameStateHtml += `<li>window.Level: ${typeof window.Level}</li>`;
+            gameStateHtml += `<li>window.GameTile: ${typeof window.GameTile}</li>`;
+            gameStateHtml += `<li>Canvas Element: ${document.getElementById('gameCanvas') ? 'Trouvé' : 'NON TROUVÉ'}</li>`;
+            gameStateHtml += '</ul>';
+            document.getElementById('game-state').innerHTML = gameStateHtml;
+        }, 2000);
+
+        console.log('🔧 Diagnostic page chargée - vérifiez la console pour les erreurs');
+    </script>
+</body>
+</html>
