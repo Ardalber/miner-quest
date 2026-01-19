@@ -86,9 +86,19 @@ let currentLayer = 'foreground'; // 'foreground' ou 'background'
 
 // Vérifier si on vient du jeu avec un niveau à charger
 const gameEditorLevel = sessionStorage.getItem('gameEditorLevel');
+const gameEditorLevelDataRaw = sessionStorage.getItem('gameEditorLevelData');
+let gameEditorLevelData = null;
 if (gameEditorLevel) {
     currentLevelName = gameEditorLevel;
     sessionStorage.removeItem('gameEditorLevel'); // Nettoyer après utilisation
+}
+if (gameEditorLevelDataRaw) {
+    try {
+        gameEditorLevelData = JSON.parse(gameEditorLevelDataRaw);
+    } catch (err) {
+        console.warn('Impossible de parser gameEditorLevelData:', err);
+    }
+    sessionStorage.removeItem('gameEditorLevelData');
 }
 
 // Initialisation de l'éditeur
@@ -115,6 +125,13 @@ async function initEditor() {
 
     // Charger les niveaux depuis les fichiers et localStorage
     await levelManager.loadLevelsFromStorage();
+
+    // Si le niveau vient directement du jeu, l'injecter dans le manager
+    if (gameEditorLevelData) {
+        const injectedName = gameEditorLevelData.name || currentLevelName;
+        levelManager.levels[injectedName] = gameEditorLevelData;
+        currentLevelName = injectedName;
+    }
 
     // Créer la palette de tuiles
     createTilePalette();

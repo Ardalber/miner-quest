@@ -167,6 +167,12 @@ async function init() {
             // Passer le niveau actuel à l'éditeur
             if (levelManager.currentLevel) {
                 sessionStorage.setItem('gameEditorLevel', levelManager.currentLevel.name || 'level_1');
+                // Envoyer le contenu complet du niveau pour éviter l'écran noir dans l'éditeur
+                try {
+                    sessionStorage.setItem('gameEditorLevelData', JSON.stringify(levelManager.currentLevel));
+                } catch (err) {
+                    console.warn('Impossible de sérialiser le niveau pour l’éditeur:', err);
+                }
             }
             window.location.href = 'editor.html';
         });
