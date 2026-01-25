@@ -11,39 +11,32 @@ Une aventure de minage en HTML5, CSS3 et JavaScript pur. Explorez des mines, col
 - **Pas de dépendances** : Pur HTML5, CSS3 et JavaScript
 - **Responsive** : Adapté aux différentes résolutions
 
-## 🚀 Déploiement sur Netlify
+## 🚀 Déploiement
 
-### Démarrage rapide
+### Hostinger (recommandé pour ce repo)
 
-1. **Fork ou clone ce repository**
+1. Préparer le bundle :
+   ```bash
+   npm install
+   npm run build:hostinger
+   ```
+2. Uploadez le contenu de `dist/hostinger/` dans `public_html` (gestionnaire de fichiers ou FTP).
+3. Le fichier `.htaccess` généré gère le cache et la réécriture vers `index.html`.
+
+Consultez [DEPLOYMENT_HOSTINGER.md](./DEPLOYMENT_HOSTINGER.md) pour le pas-à-pas détaillé.
+
+### Netlify
+
+1. Fork/clone ce repository puis poussez sur GitHub :
    ```bash
    git clone https://github.com/votre-username/MINER-QUEST.git
    cd "MINER QUEST"
+   git add . && git commit -m "Initial commit" && git push origin main
    ```
+2. Sur [Netlify](https://app.netlify.com), créez "New site from Git" et sélectionnez le dépôt.
+3. La configuration est automatique via `netlify.toml`.
 
-2. **Poussez sur GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-3. **Déployez sur Netlify**
-   - Visitez [Netlify](https://app.netlify.com)
-   - Cliquez "New site from Git"
-   - Connectez GitHub et sélectionnez ce repository
-   - La configuration se fait **automatiquement** via `netlify.toml`
-   - C'est tout! 🎉
-
-### Configuration (déjà incluse)
-
-Le fichier `netlify.toml` contient:
-- ✅ Configuration du build pour site statique
-- ✅ Gestion du cache optimisée
-- ✅ Règles d'en-têtes pour les fichiers statiques
-- ✅ Redirection SPA si nécessaire
-
-Voir [DEPLOYMENT.md](./DEPLOYMENT.md) pour plus de détails.
+Voir [DEPLOYMENT.md](./DEPLOYMENT.md) pour plus de détails Netlify.
 
 ## 📁 Structure du projet
 
@@ -110,6 +103,12 @@ Puis visitez `http://localhost:8000`
 **Avec Node.js :**
 ```bash
 npx http-server
+```
+
+**Bundle Hostinger localement :**
+```bash
+npm run build:hostinger
+# Résultat dans dist/hostinger
 ```
 
 **Avec PHP :**
